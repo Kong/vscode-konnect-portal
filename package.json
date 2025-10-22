@@ -2,6 +2,7 @@
   "name": "vscode-konnect-portal",
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
+  "icon": "images/icon.png",
   "version": "0.0.1",
   "publisher": "kong",
   "repository": {
@@ -75,7 +76,7 @@
     "documentation"
   ],
   "galleryBanner": {
-    "color": "#1e1e1e",
+    "color": "#0044f4",
     "theme": "dark"
   },
   "main": "./dist/extension.cjs",
