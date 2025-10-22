@@ -436,27 +436,6 @@ export class PreviewProvider implements Disposable {
   }
 
   /**
-   * Adds the preview=true and preview_id query parameters to a URL
-   * @param url The base URL to add preview parameters to
-   * @returns The URL with preview parameters added
-   */
-  private addPreviewParams(url: string): string {
-    if (!url) return url
-
-    try {
-      const urlObj = new URL(url)
-      urlObj.searchParams.set('preview', 'true')
-      urlObj.searchParams.set('preview_id', this.previewId)
-      return urlObj.toString()
-    } catch (error) {
-      debug.warn('Failed to parse URL for preview params:', { url, error })
-      // Fallback: simple string manipulation
-      const separator = url.includes('?') ? '&' : '?'
-      return `${url}${separator}preview=true&preview_id=${encodeURIComponent(this.previewId)}`
-    }
-  }
-
-  /**
    * Generates the HTML content for the webview
    * @param webview The webview instance to generate content for
    * @param config Portal preview configuration settings
