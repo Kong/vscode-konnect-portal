@@ -28,23 +28,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup PNPM with Dependencies
         uses: ./.github/actions/setup-pnpm-with-dependencies/
 
-      - name: Bump version and create release
-        id: release
-        uses: googleapis/release-please-action@c2a5a2bd6a758a0937f1ddb1e8950609867ed15c # v4.3.0
-        with:
-          release-type: node
-          skip-github-pull-request: true
-          # Since branch protections are on (pushing commits) you need to use a bot PAT
-          token: ${{ secrets.KONGPONENTS_BOT_PAT }}
+      - name: Configure Git
+        run: |
+          git config user.email "konnectx-engineers+kongponents-bot@konghq.com"
+          git config user.name "Kong UI Bot"
 
-      - name: Build and package extension
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Version the package and generate changelog with semantic-release
+        id: semantic-release
+        uses: cycjimmy/semantic-release-action@16ca923e6ccbb50770c415a0ccd43709a8c5f7a4 # v4.2.2
+        env:
+          # Since branch protections are on (pushing commits) you need to use a bot PAT
+          GITHUB_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
+
+      - name: Build extension package
+        if: steps.semantic-release.outputs.new_release_published == 'true'
         run: pnpm package
 
-      # - name: Publish extension
-      #   if: ${{ steps.release.outputs.release_created }}
+      # - name: Publish extension to marketplace
+      #   if: steps.semantic.outputs.new_release_published == 'true'
       #   run: pnpm publish
