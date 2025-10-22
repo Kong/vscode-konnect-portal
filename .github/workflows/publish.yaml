@@ -44,3 +44,7 @@ jobs:
       - name: Build and package extension
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm package
+
+      # - name: Publish extension
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   run: pnpm publish
