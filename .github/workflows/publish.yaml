@@ -1,0 +1,36 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel in progress jobs to ensure code is deployed
+  cancel-in-progress: false
+
+jobs:
+  run-tests:
+    name: Tests
+    uses: ./.github/workflows/test.yaml
+
+  publish:
+    name: Publish Extension
+    needs: [run-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Setup PNPM with Dependencies
+        uses: ./.github/actions/setup-pnpm-with-dependencies/
+
+      # - name: Download extension build artifacts
+      #   uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      #   with:
+      #     name: extension-build-output-artifact
+      #     path: apps/portal
+
+
