@@ -1,3 +1,10 @@
+## [0.0.3](https://github.com/Kong/vscode-konnect-portal/compare/v0.0.2...v0.0.3) (2025-10-22)
+
+
+### Bug Fixes
+
+* package command ([0f3e276](https://github.com/Kong/vscode-konnect-portal/commit/0f3e27624e3de64849a8a75d82336745de16f373))
+
 ## [0.0.2](https://github.com/Kong/vscode-konnect-portal/compare/v0.0.1...v0.0.2) (2025-10-22)
 
 
