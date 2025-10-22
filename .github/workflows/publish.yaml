@@ -42,6 +42,21 @@ jobs:
           # Since branch protections are on (pushing commits) you need to use a bot PAT
           token: ${{ secrets.KONGPONENTS_BOT_PAT }}
 
+      - name: Update package.json and commit back to main
+        if: ${{ steps.release.outputs.releases_created }}
+        run: |
+          # Update package.json with the new version
+          npm version ${{ steps.release.outputs.version }} --no-git-tag-version
+
+          # Commit the version update back to main
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: bump version to ${{ steps.release.outputs.version }} [skip ci]"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
+
       - name: Build and package extension
         if: ${{ steps.release.outputs.releases_created }}
         run: pnpm package
