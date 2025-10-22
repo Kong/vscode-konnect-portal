@@ -1,0 +1,265 @@
+/*
+ * VS Code Portal Preview - Webview Styles
+ * This file contains all styling for the portal preview webview panel
+ */
+
+/* ========================================
+ * Base Layout & Typography
+ * ======================================== */
+
+/* Reset and base styles using VS Code theme variables */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--vscode-font-family);
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+
+/* Main container - full height with padding */
+.container {
+  padding: 20px;
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================
+ * Status Bar & Header
+ * ======================================== */
+
+/* Status indicator showing active portal URL */
+.status {
+  background-color: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+/* ========================================
+ * Iframe Container & Portal Display
+ * ======================================== */
+
+/* Container for the portal iframe - takes remaining space */
+.iframe-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Portal iframe styling */
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* ========================================
+ * Loading States & Progress Indicators
+ * ======================================== */
+
+/* Loading overlay - covers iframe while portal loads */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--vscode-editor-background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+/* Hide loading overlay when portal is ready */
+.loading-overlay.hidden {
+  display: none;
+}
+
+/* Loading content card with VS Code styling */
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  background-color: var(--vscode-sideBar-background);
+  border: 1px solid var(--vscode-sideBar-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress bar container */
+.loading-progress {
+  width: 200px;
+  height: 4px;
+  background-color: var(--vscode-progressBar-background);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated progress bar - simple sliding bar */
+.loading-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 50px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+  animation: slideAnimation 1s linear infinite;
+}
+
+/* Loading state typography */
+.loading-title {
+  color: var(--vscode-foreground);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.loading-text {
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+  text-align: center;
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* ========================================
+ * Animations
+ * ======================================== */
+
+/* Simple sliding animation for progress bar */
+@keyframes slideAnimation {
+  0% {
+    transform: translateX(-50px);
+  }
+  50% {
+    transform: translateX(100px);
+  }
+  100% {
+    transform: translateX(250px);
+  }
+}
+
+/* Generic spinning animation for spinners */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+ * Error States & Error Handling
+ * ======================================== */
+
+/* Error overlay - shown when portal fails to load */
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--vscode-editor-background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+/* Hide error overlay when not needed */
+.error-overlay.hidden {
+  display: none;
+}
+
+/* Error content card with VS Code error styling */
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  background-color: var(--vscode-inputValidation-errorBackground);
+  border: 1px solid var(--vscode-inputValidation-errorBorder);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  text-align: center;
+}
+
+/* Error state typography */
+.error-title {
+  color: var(--vscode-inputValidation-errorForeground);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.error-text {
+  color: var(--vscode-inputValidation-errorForeground);
+  font-size: 13px;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Error code display - monospace font for technical details */
+.error-code {
+  background-color: var(--vscode-textCodeBlock-background);
+  color: var(--vscode-textPreformat-foreground);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* ========================================
+ * Empty State & Configuration Prompts
+ * ======================================== */
+
+/* Empty state - shown when no portal URL is configured */
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--vscode-inputValidation-infoBackground);
+  border: 1px solid var(--vscode-inputValidation-infoBorder);
+  color: var(--vscode-inputValidation-infoForeground);
+  padding: 32px;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Empty state typography */
+.empty-state h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.empty-state p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+/* Remove margin from last paragraph in empty state */
+.empty-state p:last-child {
+  margin-bottom: 0;
+}

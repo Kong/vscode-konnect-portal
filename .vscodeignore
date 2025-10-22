@@ -1,0 +1,55 @@
+# Source files
+src/**
+.vscode-test/**
+out/test/**
+
+# Build config
+vite.config.ts
+tsconfig.json
+
+# Development files
+.vscode/**
+.gitignore
+.gitattributes
+.editorconfig
+.eslintrc.*
+.prettierrc.*
+
+# Dependency management
+.npmrc
+pnpm-lock.yaml
+node_modules/**
+
+# Testing
+**/*.test.ts
+**/*.spec.ts
+test/**
+tests/**
+
+# Documentation (keep README.md)
+CONTRIBUTING.md
+CHANGELOG.md
+
+# CI/CD
+.github/**
+.gitlab-ci.yml
+.travis.yml
+.circleci/**
+
+# Git hooks
+.lefthook.yml
+.husky/**
+
+# Misc
+*.log
+*.vsix
+.DS_Store
+Thumbs.db
+
+# Keep only production files
+!dist/**
+!package.json
+!README.md
+!LICENSE
+!icon.png
+!language-configuration.json
