@@ -27,10 +27,10 @@ jobs:
           save-cache: true
 
       - name: Lint
-        run: pnpm -r lint
+        run: pnpm lint
 
       - name: Typecheck
-        run: pnpm -r typecheck
+        run: pnpm typecheck
 
       # TODO: Enable when tests exist
       # - name: Run all tests
