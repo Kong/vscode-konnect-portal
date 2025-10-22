@@ -10,6 +10,11 @@ concurrency:
   # Never cancel in progress jobs to ensure code is deployed
   cancel-in-progress: false
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   run-tests:
     name: Tests
@@ -27,10 +32,15 @@ jobs:
       - name: Setup PNPM with Dependencies
         uses: ./.github/actions/setup-pnpm-with-dependencies/
 
-      # - name: Download extension build artifacts
-      #   uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-      #   with:
-      #     name: extension-build-output-artifact
-      #     path: apps/portal
+      - name: Bump version and create release
+        id: release
+        uses: googleapis/release-please-action@c2a5a2bd6a758a0937f1ddb1e8950609867ed15c # v4.3.0
+        with:
+          release-type: node
+          skip-github-pull-request: true
+          # Since branch protections are on (pushing commits) you need to use a bot PAT
+          token: ${{ secrets.KONGPONENTS_BOT_PAT }}
 
-
+      - name: Build and package extension
+        if: ${{ steps.release.outputs.release_created }}
+        run: pnpm package

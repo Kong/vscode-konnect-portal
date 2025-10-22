@@ -35,29 +35,7 @@ jobs:
       - name: Run all tests
         run: pnpm test
 
-  build:
-    name: Build extension
-    runs-on: ubuntu-latest
-    needs: [test]
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      # We build and package here to ensure the build process works before merging to main
+      - name: Build and package extension
+        run: pnpm package
 
-      - name: Setup PNPM with Dependencies
-        uses: ./.github/actions/setup-pnpm-with-dependencies/
-
-      - name: Build Extension
-        run: |
-          pnpm build
-
-      # - name: Upload extension build artifacts
-      #   uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-      #   with:
-      #     name: extension-build-output-artifact
-      #     path: |
-      #       apps/portal
-      #       !apps/portal/node_modules/**
-      #     include-hidden-files: 'true'

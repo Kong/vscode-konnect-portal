@@ -100,7 +100,7 @@ pnpm lint:fix
 pnpm build
 
 # Package
-pnpm package:vsix
+pnpm package
 ```
 
 ### Committing Changes
@@ -180,7 +180,7 @@ pnpm lint
 pnpm build
 
 # 2. Create VSIX package for testing
-pnpm package:vsix
+pnpm package
 ```
 
 **Publishing:**

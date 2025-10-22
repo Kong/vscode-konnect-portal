@@ -30,10 +30,9 @@
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "test": "vscode-test",
-    "build": "vite build",
     "watch": "vite build --watch",
-    "package": "vite build --mode production",
-    "package:vsix": "pnpm run package && vsce package",
+    "build": "vite build --mode production",
+    "package": "pnpm run build && vsce package",
     "publish": "pnpm run package && vsce publish",
     "vscode:prepublish": "pnpm run package",
     "commit": "cz"
