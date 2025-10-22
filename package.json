@@ -34,8 +34,8 @@
     "watch": "vite build --watch",
     "build": "vite build --mode production",
     "package": "pnpm run build && vsce package",
-    "publish": "pnpm run package && vsce publish",
-    "vscode:prepublish": "pnpm run package",
+    "publish": "vsce publish",
+    "vscode:prepublish": "pnpm run build",
     "commit": "cz"
   },
   "dependencies": {
