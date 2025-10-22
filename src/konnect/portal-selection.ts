@@ -9,10 +9,20 @@ import { showApiError } from '../utils/error-handling'
  * Service for managing portal selection workflow
  */
 export class PortalSelectionService {
+  /** Service for making Konnect API requests */
   private readonly apiService: KonnectApiService
+
+  /** Service for managing secure storage of portal configuration */
   private readonly storageService: PortalStorageService
+
+  /** VS Code extension context for accessing extension resources */
   private readonly context: vscode.ExtensionContext
 
+  /**
+   * Creates a new PortalSelectionService instance
+   * @param storageService Service for managing portal configuration storage
+   * @param context VS Code extension context
+   */
   constructor(storageService: PortalStorageService, context: vscode.ExtensionContext) {
     this.apiService = new KonnectApiService()
     this.storageService = storageService

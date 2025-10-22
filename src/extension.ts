@@ -19,9 +19,16 @@ import {
   MDCExtensionActions,
 } from './types/ui-actions'
 
+/** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
+
+/** Global instance of the storage service for managing credentials and portal config */
 let storageService: PortalStorageService | undefined
+
+/** Global instance of the portal selection service for managing portal selection workflow */
 let portalSelectionService: PortalSelectionService | undefined
+
+/** Global reference to the extension context for accessing extension resources */
 let extensionContext: ExtensionContext | undefined
 
 /**
@@ -76,6 +83,8 @@ function showMDCExtensionRecommendation(): void {
 
 /**
  * Activates the Portal Preview extension
+ * Initializes services, registers commands, and sets up event listeners
+ * @param context VS Code extension context for accessing extension resources
  */
 export function activate(context: ExtensionContext) {
   debug.log('Portal Preview extension is now active!', undefined, true)

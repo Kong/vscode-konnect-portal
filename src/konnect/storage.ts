@@ -13,8 +13,13 @@ const SECRET_KEYS = {
  * Service for managing secure storage of Konnect credentials and portal configuration
  */
 export class PortalStorageService {
+  /** VS Code's secret storage for secure credential management */
   private readonly secretStorage: SecretStorage
 
+  /**
+   * Creates a new PortalStorageService instance
+   * @param context VS Code extension context for accessing secret storage
+   */
   constructor(context: ExtensionContext) {
     this.secretStorage = context.secrets
   }

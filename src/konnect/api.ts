@@ -5,9 +5,18 @@ import type { ApiErrorInfo } from '../types'
  * Custom error class for API errors with trace ID support
  */
 export class ApiError extends Error {
+  /** Datadog Trace ID for debugging API requests */
   public readonly traceId?: string
+
+  /** HTTP status code from the failed request */
   public readonly statusCode?: number
 
+  /**
+   * Creates a new ApiError instance
+   * @param message Error message describing the issue
+   * @param traceId Optional trace ID for debugging
+   * @param statusCode Optional HTTP status code
+   */
   constructor(message: string, traceId?: string, statusCode?: number) {
     super(message)
     this.name = 'ApiError'
@@ -17,6 +26,7 @@ export class ApiError extends Error {
 
   /**
    * Creates error info object for VS Code error handling
+   * @returns ApiErrorInfo object containing error details
    */
   toErrorInfo(): ApiErrorInfo {
     return {
@@ -37,9 +47,16 @@ const API_VERSION = 'v3'
  * Service for interacting with the Konnect API
  */
 export class KonnectApiService {
+  /** Base URL for all API requests */
   private readonly baseUrl: string
+
+  /** Request timeout in milliseconds */
   private readonly timeout: number
 
+  /**
+   * Creates a new KonnectApiService instance
+   * @param timeout Request timeout in milliseconds (default: 10000)
+   */
   constructor(timeout = 10000) {
     this.baseUrl = `${KONNECT_BASE_URL}/${API_VERSION}`
     this.timeout = timeout

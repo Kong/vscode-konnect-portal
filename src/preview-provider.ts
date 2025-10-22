@@ -29,12 +29,26 @@ import {
  * Manages the preview webview panel and handles content updates
  */
 export class PreviewProvider implements Disposable {
+  /** The webview panel type identifier */
   private static readonly viewType = 'portalPreview'
+
+  /** Current state of the preview panel including visibility and active document */
   private panelState: PreviewPanelState = { isVisible: false }
+
+  /** Timeout handle for debounced content updates */
   private updateTimeout: NodeJS.Timeout | undefined
+
+  /** Collection of disposable resources to clean up */
   private disposables: Disposable[] = []
+
+  /** Unique identifier for this preview instance */
   private previewId: string
 
+  /**
+   * Creates a new PreviewProvider instance
+   * @param context VS Code extension context for accessing resources
+   * @param storageService Service for managing portal configuration storage
+   */
   constructor(
     private readonly context: ExtensionContext,
     private readonly storageService: PortalStorageService,
@@ -423,6 +437,8 @@ export class PreviewProvider implements Disposable {
 
   /**
    * Adds the preview=true and preview_id query parameters to a URL
+   * @param url The base URL to add preview parameters to
+   * @returns The URL with preview parameters added
    */
   private addPreviewParams(url: string): string {
     if (!url) return url
@@ -442,6 +458,10 @@ export class PreviewProvider implements Disposable {
 
   /**
    * Generates the HTML content for the webview
+   * @param webview The webview instance to generate content for
+   * @param config Portal preview configuration settings
+   * @param portalConfig Portal-specific configuration
+   * @returns Complete HTML content string for the webview
    */
   private getWebviewContent(webview: Webview, config: PortalPreviewConfig, portalConfig: StoredPortalConfig): string {
     const cssContent = loadWebviewCSS(this.context.extensionPath)
