@@ -25,20 +25,17 @@
     "vscode": "^1.85.0"
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run package",
+    "dev": "vite build --watch --mode development",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vscode-test",
     "build": "vite build",
     "watch": "vite build --watch",
-    "dev": "vite build --watch --mode development",
     "package": "vite build --mode production",
     "package:vsix": "pnpm run package && vsce package",
     "publish": "pnpm run package && vsce publish",
-    "typecheck": "tsc --noEmit",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "pnpm run compile-tests && pnpm run build && pnpm run lint",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
-    "test": "vscode-test",
+    "vscode:prepublish": "pnpm run package",
     "commit": "cz"
   },
   "dependencies": {
