@@ -4,12 +4,6 @@ Thank you for your interest in contributing to the Konnect Dev Portal Toolkit! T
 
 ## Getting Started
 
-### Prerequisites
-
-- **Node.js**: Version 22.0.0 or higher
-- **pnpm**: Version 10.4.0 or higher
-- **VS Code**: Version 1.85.0 or higher
-
 ### 1. Fork and Clone
 
 ```bash
@@ -104,40 +98,10 @@ pnpm lint:fix
 
 # Full build
 pnpm build
+
+# Package
+pnpm package
 ```
-
-## Making Changes
-
-### Development Guidelines
-
-- **TypeScript**: Use TypeScript for all code
-- **Code Style**: No semicolons, single quotes, trailing commas
-- **Imports**: Use `verbatimModuleSyntax` (separate type imports)
-- **Comments**: Add JSDoc comments for public APIs
-- **Testing**: Test thoroughly in Extension Development Host
-
-### Adding Features
-
-1. **Plan Your Changes**
-   - Check existing issues first
-   - Create an issue for major features
-   - Follow existing patterns
-
-2. **Common Tasks**
-
-   **Adding Configuration Options:**
-   ```typescript
-   // 1. Update package.json contributes.configuration.properties
-   // 2. Add type to src/types/index.ts
-   // 3. Handle in getConfiguration() function
-   ```
-
-   **Modifying Webview:**
-   ```typescript
-   // 1. Update generateWebviewHTML() in src/utils/webview.ts
-   // 2. Modify CSS in src/webview/webview.css
-   // 3. Update JS in src/webview/webview.js
-   ```
 
 ### Committing Changes
 
@@ -182,6 +146,48 @@ Additionally, CI will use `commitlint` to validate the commits associated with a
 
 - **Issues**: [GitHub Issues](https://github.com/Kong/vscode-konnect-portal/issues)
 - **Documentation**: [README.md](README.md)
+
+## Publishing and Releases
+
+### Version Management
+
+**Important**: Version updates in `package.json` are handled automatically by CI/CD workflows. Do not manually update the version number.
+
+### Release Workflow
+
+#### 1. Automated Releases (Recommended)
+
+The extension is published automatically via CI/CD when:
+- Changes are merged to the main branch
+- CI builds and tests pass successfully
+- Version is automatically bumped based on commit types (via Conventional Commits)
+
+#### 2. Manual Release Process
+
+If manual publishing is required, follow these steps:
+
+**Prerequisites:**
+```bash
+# Ensure you have publishing permissions and vsce token configured
+# Contact repository maintainers for access credentials
+```
+
+**Build and Package:**
+```bash
+# 1. Ensure clean state
+pnpm typecheck
+pnpm lint
+pnpm build
+
+# 2. Create VSIX package for testing
+pnpm package
+```
+
+**Publishing:**
+```bash
+# For VS Code Marketplace (requires appropriate permissions)
+pnpm publish
+```
 
 ---
 

@@ -39,15 +39,5 @@
         }
       }
     },
-    {
-      "label": "compile-tests",
-      "type": "npm",
-      "script": "compile-tests",
-      "group": "build",
-      "presentation": {
-        "panel": "shared"
-      },
-      "problemMatcher": "$tsc"
-    }
   ]
 }

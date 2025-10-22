@@ -2,6 +2,7 @@
   "name": "vscode-konnect-portal",
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
+  "icon": "images/icon.png",
   "version": "0.0.1",
   "publisher": "kong",
   "repository": {
@@ -20,25 +21,21 @@
   "type": "module",
   "packageManager": "pnpm@10.18.3",
   "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=10.4.0",
+    "node": ">=22.20.0",
+    "pnpm": ">=10.18.3",
     "vscode": "^1.85.0"
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run package",
-    "build": "vite build",
-    "watch": "vite build --watch",
     "dev": "vite build --watch --mode development",
-    "package": "vite build --mode production",
-    "package:vsix": "pnpm run package && vsce package",
-    "publish": "pnpm run package && vsce publish",
-    "typecheck": "tsc --noEmit",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "pnpm run compile-tests && pnpm run build && pnpm run lint",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit",
     "test": "vscode-test",
+    "watch": "vite build --watch",
+    "build": "vite build --mode production",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "vscode:prepublish": "pnpm run build",
     "commit": "cz"
   },
   "dependencies": {
@@ -79,7 +76,7 @@
     "documentation"
   ],
   "galleryBanner": {
-    "color": "#1e1e1e",
+    "color": "#0044f4",
     "theme": "dark"
   },
   "main": "./dist/extension.cjs",

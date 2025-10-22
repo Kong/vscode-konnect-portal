@@ -24,7 +24,6 @@
       "outFiles": [
         "${workspaceFolder}/out/test/**/*.js"
       ],
-      "preLaunchTask": "compile-tests"
     }
   ]
 }

@@ -82,7 +82,9 @@ export class PortalStorageService {
   }
 
   /**
-   * Clears all stored data (useful for uninstall or reset)
+   * Clears all stored data including Konnect token and portal configuration
+   * This is useful for complete reset, uninstall cleanup, or switching accounts
+   * @returns Promise that resolves when all data is cleared
    */
   async clearAll(): Promise<void> {
     await Promise.all([

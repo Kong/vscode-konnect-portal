@@ -1,0 +1,42 @@
+name: Tests
+
+on:
+  pull_request:
+
+  # Allow workflow to be called by another workflow
+  workflow_call:
+
+  # Allow calling manually from GitHub
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Lint, Type Check, and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Setup PNPM with Dependencies
+        uses: ./.github/actions/setup-pnpm-with-dependencies/
+        with:
+          force-install: true
+          save-cache: true
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # TODO: Enable when tests exist
+      # - name: Run all tests
+      #   run: pnpm test
+
+      # We build and package here to ensure the build process works before merging to main
+      - name: Build and package extension
+        run: pnpm package
+

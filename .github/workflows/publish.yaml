@@ -1,0 +1,50 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel in progress jobs to ensure code is deployed
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  run-tests:
+    name: Tests
+    uses: ./.github/workflows/test.yaml
+
+  publish:
+    name: Publish Extension
+    needs: [run-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Setup PNPM with Dependencies
+        uses: ./.github/actions/setup-pnpm-with-dependencies/
+
+      - name: Bump version and create release
+        id: release
+        uses: googleapis/release-please-action@c2a5a2bd6a758a0937f1ddb1e8950609867ed15c # v4.3.0
+        with:
+          release-type: node
+          skip-github-pull-request: true
+          # Since branch protections are on (pushing commits) you need to use a bot PAT
+          token: ${{ secrets.KONGPONENTS_BOT_PAT }}
+
+      - name: Build and package extension
+        if: ${{ steps.release.outputs.release_created }}
+        run: pnpm package
+
+      # - name: Publish extension
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   run: pnpm publish

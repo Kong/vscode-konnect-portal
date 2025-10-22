@@ -1,0 +1,73 @@
+name: Setup PNPM with Dependencies
+description: Reusable composition of setup-node, cache, and pnpm install actions
+inputs:
+  nodejs-version:
+    description: 'Version of NodeJS to use (ex: 22.20.0)'
+    default: '22.20.0'
+  force-install:
+    description: When 'true', pnpm install will be executed regardless of a cache hit
+    required: false
+    default: 'false'
+  frozen-lockfile:
+    description: When false, pnpm install will use the --no-frozen-lockfile flag
+    required: false
+    default: 'true'
+  save-cache:
+    description: Saves the cache when `true'
+    default: 'false'
+outputs:
+  cache-hit:
+    description: Whether or not there was a cache hit
+    value: ${{ steps.dependency-cache.outputs.cache-hit }}
+runs:
+  using: composite
+  steps:
+    - name: get Node version
+      id: node-version
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: |
+        enginesNodeVersion=$(cat package.json|jq -r ".engines.node")
+        if [[ $enginesNodeVersion == null ]]; then
+          enginesNodeVersion="${{ inputs.nodejs-version }}"
+        fi
+        packageManagerVersion=$(cat package.json|jq -r ".packageManager")
+        if [[ $packageManagerVersion == null ]]; then
+          packageManagerVersion="pnpm@10.18.3"
+        fi
+
+        echo "node-version=${enginesNodeVersion}">> $GITHUB_OUTPUT
+        echo "package-manager-version=${packageManagerVersion}">> $GITHUB_OUTPUT
+        echo "cache-key=${packageManagerVersion}-node-${enginesNodeVersion}-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}">> $GITHUB_OUTPUT
+
+    - name: Install PNPM
+      shell: bash
+      run: |
+        npm i -g ${{ steps.node-version.outputs.package-manager-version }}
+        pnpm --version
+
+    - name: Setup Node
+      uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      with:
+        node-version: ${{ steps.node-version.outputs.node-version }}
+
+    - name: Restore Dependency Cache
+      id: dependency-cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: './node_modules'
+        key: ${{ steps.node-version.outputs.cache-key }}
+
+    - name: Install Dependencies
+      if: ${{ inputs.force-install == 'true' || steps.dependency-cache.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: pnpm i${{ inputs.frozen-lockfile == 'false' && ' --no-frozen-lockfile' || '' }}
+
+    - name: Save Dependency Cache
+      id: dependency-cache-save
+      # So only prepare job saves cache, all consecutive parallel jobs do not attempt to re-save
+      if: ${{ inputs.save-cache == 'true' && steps.dependency-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: './node_modules'
+        key: ${{ steps.node-version.outputs.cache-key }}

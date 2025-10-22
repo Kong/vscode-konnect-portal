@@ -87,7 +87,7 @@ function showMDCExtensionRecommendation(): void {
  * @param context VS Code extension context for accessing extension resources
  */
 export function activate(context: ExtensionContext) {
-  debug.log('Portal Preview extension is now active!', undefined, true)
+  debug.log('Portal Preview extension is now active.', undefined, true)
 
   // Store context for use in error handling
   extensionContext = context
@@ -337,14 +337,22 @@ export function activate(context: ExtensionContext) {
 
 /**
  * Deactivates the Portal Preview extension
+ * Cleans up resources but preserves stored credentials and data
+ * Note: Use "Portal Preview: Clear Credentials" command to manually clear stored data
  */
 export function deactivate() {
-  debug.log('Portal Preview extension is now deactivated', undefined, true)
+  debug.log('Portal Preview extension is now deactivated.')
+
+  // Dispose of preview provider and clean up resources
   previewProvider?.dispose()
+
+  // Clear global references
   previewProvider = undefined
   storageService = undefined
   portalSelectionService = undefined
   extensionContext = undefined
+
+  debug.log('Portal Preview extension deactivation complete.')
 }
 
 /**
