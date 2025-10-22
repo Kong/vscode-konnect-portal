@@ -37,7 +37,9 @@ jobs:
         uses: googleapis/release-please-action@c2a5a2bd6a758a0937f1ddb1e8950609867ed15c # v4.3.0
         with:
           release-type: node
+          include-component-in-tag: false
           skip-github-pull-request: true
+          manifest-file: .release-please-manifest.json
           # Since branch protections are on (pushing commits) you need to use a bot PAT
           token: ${{ secrets.KONGPONENTS_BOT_PAT }}
 
