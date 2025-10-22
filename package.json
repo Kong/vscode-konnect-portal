@@ -36,6 +36,7 @@
     "package": "vsce package",
     "publish": "vsce publish",
     "vscode:prepublish": "pnpm run build",
+    "semantic-release": "semantic-release",
     "commit": "cz"
   },
   "dependencies": {
@@ -48,6 +49,8 @@
     "@digitalroute/cz-conventional-changelog-for-jira": "^8.0.1",
     "@evilmartians/lefthook": "^1.13.6",
     "@kong/eslint-config-kong-ui": "^1.5.6",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@stylistic/stylelint-plugin": "^4.0.0",
     "@types/node": "~24.8.1",
     "@types/vscode": "^1.85.0",
@@ -58,6 +61,7 @@
     "@vscode/vsce": "^3.6.2",
     "commitizen": "^4.3.1",
     "eslint": "^9.38.0",
+    "semantic-release": "^25.0.1",
     "typescript": "^5.3.3",
     "vite": "^7.1.10"
   },
@@ -219,5 +223,47 @@
       "jiraPrepend": "[",
       "jiraAppend": "]"
     }
+  },
+  "release": {
+    "branches": [
+      "+([0-9])?(.{+([0-9]),x}).x",
+      "main",
+      "next",
+      "next-major",
+      {
+        "name": "beta",
+        "prerelease": true
+      },
+      {
+        "name": "alpha",
+        "prerelease": true
+      }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md"
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": false
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "CHANGELOG.md",
+            "package.json"
+          ]
+        }
+      ],
+      "@semantic-release/github"
+    ]
   }
 }
