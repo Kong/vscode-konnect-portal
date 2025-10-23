@@ -52,6 +52,7 @@
     "@kong/eslint-config-kong-ui": "^1.5.6",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
+    "@semantic-release/release-notes-generator": "^14.1.0",
     "@stylistic/stylelint-plugin": "^4.0.0",
     "@types/node": "~24.8.1",
     "@types/vscode": "^1.105.0",
