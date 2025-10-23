@@ -1,17 +1,13 @@
 import type * as vscode from 'vscode'
 
-/**
- * Log levels for the debug logging utility
- */
+/** Log levels for the debug logging utility */
 export enum LogLevel {
   LOG = 'log',
   WARN = 'warn',
   ERROR = 'error',
 }
 
-/**
- * Structured error information for API errors with trace ID support
- */
+/** Structured error information for API errors with trace ID support */
 export interface ApiErrorInfo {
   /** The main error message */
   message: string
@@ -21,9 +17,7 @@ export interface ApiErrorInfo {
   statusCode?: number
 }
 
-/**
- * Parameters for the debug logging utility function
- */
+/** Parameters for the debug logging utility function */
 export interface LogParams {
   /** The log level/type (defaults to LOG) */
   type?: LogLevel

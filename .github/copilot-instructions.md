@@ -2,6 +2,9 @@
 
 ## General coding guidelines
 - Always add relevant comments in the code
+- Use single-line JSDoc style (/** ... */) for short, single-line comments in JavaScript and TypeScript files.
+- Use multi-line JSDoc style for function/interface/type documentation or parameter descriptions.
+- Place comments above the relevant code.
 - Make minimal changes and/or refactors to code as possible between commits to keep changesets small and reviewable
 - Files should be well-organized as per standard conventions in a modern VS Code extension.
 - Consult official VS Code extension documentation and linked pages for best practices: https://code.visualstudio.com/api

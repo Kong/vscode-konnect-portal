@@ -1,10 +1,10 @@
 /**
- * Portal Preview Webview JavaScript
+ * Portal Preview Webview TypeScript
  *
- * !IMPORTANT: This file must remain native JavaScript, not TypeScript.
+ * !IMPORTANT: This file is compiled to JavaScript in the `build:webview` script
+ * and injected into the webview as part of the main build process.
  *
- * This file contains all the JavaScript functionality for the VS Code webview that hosts
- * the portal preview iframe. It handles:
+ * It handles:
  * - Communication between VS Code extension and webview
  * - Portal iframe lifecycle management
  * - Message passing to/from the portal
@@ -12,130 +12,113 @@
  * - Configuration updates
  */
 
-// Initialize VS Code API and DOM elements
-const vscode = acquireVsCodeApi()
-const loadingOverlay = document.getElementById('loading-overlay')
-const errorOverlay = document.getElementById('error-overlay')
-const errorMessage = document.getElementById('error-message')
-const errorCode = document.getElementById('error-code')
-const iframe = document.getElementById('portal-preview')
 
-// State management
+/** VS Code API for webview messaging (injected by VS Code at runtime) */
+// @ts-ignore - acquireVsCodeApi is injected by VS Code webview runtime
+const vscode = acquireVsCodeApi()
+
+
+/** DOM element for the loading overlay */
+const loadingOverlay = document.getElementById('loading-overlay') as HTMLElement | null
+/** DOM element for the error overlay */
+const errorOverlay = document.getElementById('error-overlay') as HTMLElement | null
+/** DOM element for the error message text */
+const errorMessage = document.getElementById('error-message') as HTMLElement | null
+/** DOM element for the error code details */
+const errorCode = document.getElementById('error-code') as HTMLElement | null
+/** DOM element for the portal preview iframe */
+const iframe = document.getElementById('portal-preview') as HTMLIFrameElement | null
+
+
+/** Tracks whether the portal iframe is ready to receive messages */
 let iframeReady = false
-let pendingMessage = null
-let readyTimeout = null
+/** Stores a pending message to send to the iframe when ready */
+let pendingMessage: any = null
+/** Timeout handle for portal ready state */
+let readyTimeout: ReturnType<typeof setTimeout> | null = null
+/** Whether debug logging is enabled */
 let debugEnabled = false
 
-// Configuration values (will be set by template replacement at runtime)
-// These will be replaced by actual values when the webview is loaded
-let readyTimeoutMs = parseInt('{%%READY_TIMEOUT_MS%%}') || 5000
 
+/** Timeout in milliseconds to wait for portal ready signal (replaced at runtime via template variable) */
+const readyTimeoutMs: number = parseInt('{%%READY_TIMEOUT_MS%%}') || 5000
+
+
+/** Prefix for debug log messages */
 const DEBUG_LOG_PREFIX = '[Portal Preview Webview]'
 
-/**
- * Simple debug logging wrapper
- */
+
+/** Debug logging utility for the webview */
 const debug = {
-  log: (message, ...args) => debugEnabled && console.log(`${DEBUG_LOG_PREFIX} ${message}`, ...args),
-  warn: (message, ...args) => debugEnabled && console.warn(`${DEBUG_LOG_PREFIX} ${message}`, ...args),
-  error: (message, ...args) => console.error(`${DEBUG_LOG_PREFIX} ${message}`, ...args), // Always log errors
+  /** Logs a debug message if enabled */
+  log: (message: string, ...args: unknown[]) => debugEnabled && console.log(`${DEBUG_LOG_PREFIX} ${message}`, ...args),
+  /** Logs a warning if enabled */
+  warn: (message: string, ...args: unknown[]) => debugEnabled && console.warn(`${DEBUG_LOG_PREFIX} ${message}`, ...args),
+  /** Always logs an error */
+  error: (message: string, ...args: unknown[]) => console.error(`${DEBUG_LOG_PREFIX} ${message}`, ...args),
 }
 
-/**
- * Shows the loading overlay
- */
-function showLoading() {
-  if (loadingOverlay) {
-    loadingOverlay.classList.remove('hidden')
-  }
-  if (errorOverlay) {
-    errorOverlay.classList.add('hidden')
-  }
+
+/** Shows the loading overlay and hides the error overlay */
+function showLoading(): void {
+  if (loadingOverlay) loadingOverlay.classList.remove('hidden')
+  if (errorOverlay) errorOverlay.classList.add('hidden')
 }
 
-/**
- * Hides the loading overlay
- */
-function hideLoading() {
-  if (loadingOverlay) {
-    loadingOverlay.classList.add('hidden')
-  }
+
+/** Hides the loading overlay */
+function hideLoading(): void {
+  if (loadingOverlay) loadingOverlay.classList.add('hidden')
 }
 
-/**
- * Shows an error message in the preview panel
- * @param {string} message - The error message to display
- * @param {string} type - The type of error (general, invalid-url, load-failed, etc.)
- * @param {string} details - Additional error details to display
- */
-function showError(message, type = 'general', details = null) {
+function showError(message: string, type = 'general', details: string | null = null): void {
+  /**
+   * Shows an error message in the preview panel
+   * @param message - The error message to display
+   * @param type - The type of error (general, invalid-url, load-failed, etc.)
+   * @param details - Additional error details to display
+   */
   console.error('Showing error:', { message, type, details })
-
-  if (errorMessage) {
-    errorMessage.textContent = message
-  }
-
+  if (errorMessage) errorMessage.textContent = message
   if (errorCode && details) {
     errorCode.textContent = details
     errorCode.style.display = 'block'
   } else if (errorCode) {
     errorCode.style.display = 'none'
   }
-
-  if (loadingOverlay) {
-    loadingOverlay.classList.add('hidden')
-  }
-  if (errorOverlay) {
-    errorOverlay.classList.remove('hidden')
-  }
-
-  // Send error message to extension
-  vscode.postMessage({
-    type: 'webview:error',
-    error: message,
-    errorType: type,
-  })
+  if (loadingOverlay) loadingOverlay.classList.add('hidden')
+  if (errorOverlay) errorOverlay.classList.remove('hidden')
+  vscode.postMessage({ type: 'webview:error', error: message, errorType: type })
 }
 
-/**
- * Starts the timeout for waiting for portal ready signal
- */
-function startReadyTimeout() {
-  clearTimeout(readyTimeout)
-  debug.log(`Starting ready timeout (${readyTimeoutMs}ms)...`)
 
+/** Starts the timeout for waiting for portal ready signal */
+function startReadyTimeout(): void {
+  clearTimeout(readyTimeout as any)
+  debug.log(`Starting ready timeout (${readyTimeoutMs}ms)...`)
   readyTimeout = setTimeout(() => {
     debug.warn('Portal ready timeout reached, sending content anyway...')
-
-    // Send warning message to VS Code
     vscode.postMessage({
       type: 'webview:warning',
       warning: 'Portal preview took longer than expected to load. Continuing with content updates, but preview may not work correctly. Check your Dev Portal Base URL and network connection.',
       warningType: 'timeout',
     })
-
-    // Mark as ready and proceed
     iframeReady = true
     hideLoading()
-
-    // Send pending content or request current content
     if (pendingMessage) {
       debug.log('Timeout reached - sending stored pending message:', pendingMessage)
       sendMessageToIframe(pendingMessage)
       pendingMessage = null
     } else {
       debug.log('Timeout reached - requesting current content from extension')
-      vscode.postMessage({
-        type: 'webview:request:content',
-      })
+      vscode.postMessage({ type: 'webview:request:content' })
     }
   }, readyTimeoutMs)
 }
 
-/**
- * Clears the portal ready timeout
- */
-function clearReadyTimeout() {
+
+/** Clears the portal ready timeout */
+function clearReadyTimeout(): void {
   if (readyTimeout) {
     debug.log('Clearing ready timeout')
     clearTimeout(readyTimeout)
@@ -145,9 +128,9 @@ function clearReadyTimeout() {
 
 /**
  * Handles content update messages from the extension
- * @param {Object} message - The content update message
+ * @param message - The content update message
  */
-function handleContentUpdate(message) {
+function handleContentUpdate(message: any): void {
   debug.log('handleContentUpdate called with:', {
     hasIframe: !!iframe,
     hasConfig: !!message.config,
@@ -157,7 +140,6 @@ function handleContentUpdate(message) {
     previewId: message.previewId,
     iframeReady: iframeReady,
   })
-
   if (!iframe || !message.config || !message.portalConfig?.origin) {
     debug.warn('Missing required elements for content update:', {
       iframe: !!iframe,
@@ -166,33 +148,28 @@ function handleContentUpdate(message) {
     })
     return
   }
-
-  // Ensure we always have content and action as per PostPortalStudioMessageData interface
   const portalMessage = {
     preview_id: message.previewId || 'default-preview-id',
     path: '/',
     snippet_name: undefined,
-    content: message.content || '', // Always include content, even if empty
-    action: 'portal:preview:update', // Always include this specific action
+    content: message.content || '',
+    action: 'portal:preview:update',
   }
-
   debug.log('Created portal message:', portalMessage)
-
   if (iframeReady) {
     debug.log('Iframe is ready, sending message immediately')
     sendMessageToIframe(portalMessage)
   } else {
     debug.log('Iframe not ready, storing as pending message')
-    // Store the message to send when iframe is ready
     pendingMessage = portalMessage
   }
 }
 
 /**
  * Sends a message to the portal iframe
- * @param {Object} portalMessage - The message to send to the portal
+ * @param portalMessage - The message to send to the portal
  */
-function sendMessageToIframe(portalMessage) {
+function sendMessageToIframe(portalMessage: any): void {
   debug.log('Attempting to send message to iframe:', {
     hasIframe: !!iframe,
     hasContentWindow: !!(iframe && iframe.contentWindow),
@@ -200,14 +177,10 @@ function sendMessageToIframe(portalMessage) {
     messageContentLength: portalMessage.content ? portalMessage.content.length : 0,
     previewId: portalMessage.preview_id,
   })
-
   try {
     if (iframe && iframe.contentWindow) {
       debug.log('Sending postMessage to iframe with:', portalMessage)
-
-      // Use '*' as targetOrigin to allow cross-origin communication
       iframe.contentWindow.postMessage(portalMessage, '*')
-
       debug.log('postMessage sent successfully!')
     } else {
       console.error('Cannot send message - iframe or contentWindow not available')
@@ -223,34 +196,26 @@ function sendMessageToIframe(portalMessage) {
 
 /**
  * Handles configuration update messages from the extension
- * @param {Object} message - The configuration update message
+ * @param message - The configuration update message
  */
-function handleConfigUpdate(message) {
-  debug.log('Handling config update:', {
-    hasConfig: !!message.config,
-  })
-
+function handleConfigUpdate(message: any): void {
+  debug.log('Handling config update:', { hasConfig: !!message.config })
   if (!message.config) {
     debug.error('No config provided in update message')
     return
   }
-
-  // Update debug setting
   if (message.config.debug !== undefined) {
     debugEnabled = message.config.debug
-    console.log(`${DEBUG_LOG_PREFIX}  Debug logging updated:`, { debugEnabled }) // Always show this
+    console.log(`${DEBUG_LOG_PREFIX}  Debug logging updated:`, { debugEnabled })
   }
-
-  // Configuration updates no longer handle portal URL changes
-  // Portal URL is now managed through portal selection
   debug.log('Config update processed')
 }
 
 /**
  * Handles refresh preview messages from the extension
- * @param {Object} message - The refresh message
+ * @param message - The refresh message
  */
-function handleRefreshPreview(message) {
+function handleRefreshPreview(message: any): void {
   debug.log('Refreshing preview iframe with content update', {
     hasMessage: !!message,
     hasContent: !!(message && message.content),
@@ -258,12 +223,9 @@ function handleRefreshPreview(message) {
     hasPreviewId: !!(message && message.previewId),
     hasConfig: !!(message && message.config),
   })
-
   if (iframe && iframe.src) {
     clearReadyTimeout()
     iframeReady = false
-
-    // Store current content to send when portal signals ready
     if (message && message.content !== undefined) {
       pendingMessage = {
         preview_id: message.previewId || 'default-preview-id',
@@ -281,16 +243,13 @@ function handleRefreshPreview(message) {
       debug.warn('No content provided for refresh, will request from extension when portal ready')
       pendingMessage = null
     }
-
     showLoading()
-    // Force reload - content will be sent when portal sends "ready" message
     const currentSrc = iframe.src
     debug.log('Reloading iframe, will wait for portal:preview:ready signal')
     iframe.src = 'about:blank'
     setTimeout(() => {
       debug.log('Setting iframe src back to:', currentSrc)
       iframe.src = currentSrc
-      // Start timeout to handle case where portal doesn't send ready signal
       startReadyTimeout()
     }, 100)
   } else {
@@ -300,9 +259,9 @@ function handleRefreshPreview(message) {
 
 /**
  * Handles loading state messages from the extension
- * @param {Object} message - The loading state message
+ * @param message - The loading state message
  */
-function handleLoadingState(message) {
+function handleLoadingState(message: any): void {
   if (message.loading === true) {
     showLoading()
   } else if (message.loading === false) {
@@ -312,60 +271,48 @@ function handleLoadingState(message) {
 
 /**
  * Handles messages received from the portal iframe
- * @param {Object} message - The message from the portal
+ * @param message - The message from the portal
  */
-function handlePortalMessage(message) {
+function handlePortalMessage(message: any): void {
   debug.log('Portal message received:', {
     action: message.action,
     type: message.type,
     data: message,
   })
-
-  // Handle portal:preview:ready message
   if (message.action === 'portal:preview:ready') {
     debug.log('Portal is ready! Sending current content...')
-
-    // Clear timeout and mark iframe as ready
     clearReadyTimeout()
     iframeReady = true
-
-    // Hide loading overlay
     hideLoading()
-
-    // Send pending message if we have one, or request current content
     if (pendingMessage) {
       debug.log('Sending stored pending message:', pendingMessage)
       sendMessageToIframe(pendingMessage)
       pendingMessage = null
     } else {
       debug.log('No pending message, requesting current content from extension')
-      // Request current content from extension
-      vscode.postMessage({
-        type: 'webview:request:content',
-      })
+      vscode.postMessage({ type: 'webview:request:content' })
     }
   }
 }
 
-// Listen for messages from both extension and iframe
-window.addEventListener('message', function(event) {
-  const message = event.data
 
-  // Check if message is from the iframe (portal)
+/**
+ * Handles messages received from both extension and iframe
+ * @param event - The message event
+ */
+window.addEventListener('message', function(event: MessageEvent) {
+  const message = event.data
   if (event.source === iframe?.contentWindow) {
     debug.log('Received message from portal iframe:', message)
     handlePortalMessage(message)
     return
   }
-
-  // Handle messages from extension
   debug.log('Received message from extension:', {
     type: message.type,
     hasContent: !!(message.content),
     contentPreview: message.content ? message.content.substring(0, 100) + '...' : 'N/A',
     previewId: message.previewId,
   })
-
   switch (message.type) {
     case 'webview:update:content':
       handleContentUpdate(message)
@@ -384,7 +331,8 @@ window.addEventListener('message', function(event) {
   }
 })
 
-// Handle iframe load events
+
+/** Sets up iframe load and error event listeners for portal preview lifecycle */
 if (iframe) {
   iframe.addEventListener('load', function() {
     const currentUrl = iframe.src || 'unknown'
@@ -393,16 +341,11 @@ if (iframe) {
       hasPendingMessage: !!pendingMessage,
       pendingContentLength: pendingMessage?.content?.length || 0,
     })
-
-    // Reset state and start timeout for portal ready signal
     iframeReady = false
     clearReadyTimeout()
     startReadyTimeout()
-
-    // Wait for portal to send "portal:preview:ready" message
     debug.log('Waiting for portal:preview:ready message from iframe...')
   })
-
   iframe.addEventListener('error', function(event) {
     console.error('Iframe failed to load:', event)
     clearReadyTimeout()
@@ -415,11 +358,10 @@ if (iframe) {
   })
 }
 
-// Initial loading state and setup
+
+/** Initializes loading state and starts ready timeout if needed */
 if (iframe && loadingOverlay) {
   showLoading()
-
-  // Start initial timeout if iframe src is already set
   if (iframe.src && iframe.src !== 'about:blank') {
     startReadyTimeout()
   }
