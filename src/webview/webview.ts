@@ -1,7 +1,9 @@
 /**
  * Portal Preview Webview TypeScript
  *
- * This file is compiled to JavaScript and injected into the webview.
+ * !IMPORTANT: This file is compiled to JavaScript in the `build:webview` script
+ * and injected into the webview as part of the main build process.
+ *
  * It handles:
  * - Communication between VS Code extension and webview
  * - Portal iframe lifecycle management
