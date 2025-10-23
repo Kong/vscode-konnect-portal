@@ -8,6 +8,7 @@ import type { ExtensionContext, TextDocument } from 'vscode'
 import { PreviewProvider } from './preview-provider'
 import type { PortalPreviewConfig } from './types'
 import { debug } from './utils/debug'
+import { updatePreviewContext } from './utils/vscode-context'
 import { PortalStorageService } from './konnect/storage'
 import { PortalSelectionService } from './konnect/portal-selection'
 import { KonnectApiService } from './konnect/api'
@@ -32,10 +33,9 @@ let portalSelectionService: PortalSelectionService | undefined
 let extensionContext: ExtensionContext | undefined
 
 /** Updates the VS Code context to reflect preview state */
-function updatePreviewContext(): void {
+function updatePreviewContextFromProvider(): void {
   const hasActivePreview = previewProvider?.hasActivePreview() ?? false
-  commands.executeCommand('setContext', 'portalPreview.hasActivePreview', hasActivePreview)
-  debug.log('Updated preview context:', { hasActivePreview })
+  updatePreviewContext(hasActivePreview)
 }
 
 /**
@@ -113,15 +113,7 @@ export function activate(context: ExtensionContext) {
       }
 
       await previewProvider?.openPreview(activeEditor.document)
-      updatePreviewContext()
-    },
-  )
-
-  const togglePreviewCommand = commands.registerCommand(
-    'portalPreview.togglePreview',
-    () => {
-      previewProvider?.togglePreview()
-      updatePreviewContext()
+      updatePreviewContextFromProvider()
     },
   )
 
@@ -129,7 +121,7 @@ export function activate(context: ExtensionContext) {
     'portalPreview.refreshPreview',
     () => {
       previewProvider?.refreshPreview()
-      updatePreviewContext()
+      updatePreviewContextFromProvider()
     },
   )
 
@@ -311,7 +303,6 @@ export function activate(context: ExtensionContext) {
   // Register all disposables with the extension context
   context.subscriptions.push(
     openPreviewCommand,
-    togglePreviewCommand,
     refreshPreviewCommand,
     configureTokenCommand,
     selectPortalCommand,

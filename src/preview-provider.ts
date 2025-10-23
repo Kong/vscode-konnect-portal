@@ -18,6 +18,7 @@ import type { PortalStorageService } from './konnect/storage'
 import type { StoredPortalConfig } from './types/konnect'
 import { getConfiguration } from './extension'
 import { debug } from './utils/debug'
+import { updatePreviewContext } from './utils/vscode-context'
 import { PortalSetupActions, WebviewTimeoutActions } from './types/ui-actions'
 import {
   generateWebviewHTML,
@@ -97,20 +98,6 @@ export class PreviewProvider implements Disposable {
 
     this.panelState.currentDocument = document
     this.panelState.isVisible = true
-  }
-
-  /** Toggles the preview panel visibility */
-  public togglePreview(): void {
-    if (this.panelState.panel && this.panelState.isVisible) {
-      this.panelState.panel.dispose()
-    } else {
-      const activeEditor = window.activeTextEditor
-      if (activeEditor) {
-        this.openPreview(activeEditor.document)
-      } else {
-        window.showWarningMessage('No active document to preview. Open a Markdown or MDC file first.')
-      }
-    }
   }
 
   /** Checks if there is an active preview panel */
@@ -278,6 +265,8 @@ export class PreviewProvider implements Disposable {
       this.panelState.panel = undefined
       this.panelState.isVisible = false
       this.panelState.currentDocument = undefined
+      // Update VS Code context to reflect that preview is no longer active
+      updatePreviewContext(false)
     }, null, this.disposables)
 
     // Handle panel view state changes (detects when panel is moved between windows)
