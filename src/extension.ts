@@ -31,9 +31,7 @@ let portalSelectionService: PortalSelectionService | undefined
 /** Global reference to the extension context for accessing extension resources */
 let extensionContext: ExtensionContext | undefined
 
-/**
- * Updates the VS Code context to reflect preview state
- */
+/** Updates the VS Code context to reflect preview state */
 function updatePreviewContext(): void {
   const hasActivePreview = previewProvider?.hasActivePreview() ?? false
   commands.executeCommand('setContext', 'portalPreview.hasActivePreview', hasActivePreview)
@@ -60,9 +58,7 @@ function checkMDCExtension(): boolean {
   return true
 }
 
-/**
- * Shows a helpful notification about MDC extension for .mdc files
- */
+/** Shows a helpful notification about MDC extension for .mdc files */
 function showMDCExtensionRecommendation(): void {
   void window
     .showInformationMessage(

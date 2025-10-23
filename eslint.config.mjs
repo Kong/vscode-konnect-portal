@@ -6,6 +6,8 @@ export default [
     ignores: [
       'dist/**/*',
       'out/**/*',
+      // Ignore generated `src/webview/webview.js`
+      'src/webview/webview.js',
     ],
   },
   {

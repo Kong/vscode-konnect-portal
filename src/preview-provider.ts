@@ -25,9 +25,7 @@ import {
   loadWebviewJS,
 } from './utils/webview'
 
-/**
- * Manages the preview webview panel and handles content updates
- */
+/** Manages the preview webview panel and handles content updates */
 export class PreviewProvider implements Disposable {
   /** The webview panel type identifier */
   private static readonly viewType = 'portalPreview'
@@ -101,9 +99,7 @@ export class PreviewProvider implements Disposable {
     this.panelState.isVisible = true
   }
 
-  /**
-   * Toggles the preview panel visibility
-   */
+  /** Toggles the preview panel visibility */
   public togglePreview(): void {
     if (this.panelState.panel && this.panelState.isVisible) {
       this.panelState.panel.dispose()
@@ -117,16 +113,12 @@ export class PreviewProvider implements Disposable {
     }
   }
 
-  /**
-   * Checks if there is an active preview panel
-   */
+  /** Checks if there is an active preview panel */
   public hasActivePreview(): boolean {
     return !!(this.panelState.panel && this.panelState.isVisible)
   }
 
-  /**
-   * Switches the preview to show a different document
-   */
+  /** Switches the preview to show a different document */
   public async switchDocument(document: TextDocument): Promise<void> {
     if (!this.hasActivePreview()) {
       return
@@ -146,9 +138,7 @@ export class PreviewProvider implements Disposable {
     await this.updateContent(document)
   }
 
-  /**
-   * Refreshes the preview by reloading the iframe, or opens preview if not already open
-   */
+  /** Refreshes the preview by reloading the iframe, or opens preview if not already open */
   public refreshPreview(): void {
     // If no active preview panel, try to open one with the current active document
     if (!this.panelState.panel || !this.panelState.isVisible) {
@@ -183,9 +173,7 @@ export class PreviewProvider implements Disposable {
     this.panelState.panel.webview.postMessage(message)
   }
 
-  /**
-   * Sends the current document content to the webview
-   */
+  /** Sends the current document content to the webview */
   private sendCurrentContent(): void {
     if (!this.panelState.panel || !this.panelState.currentDocument) {
       debug.log('Cannot send current content - no panel or document available')
@@ -203,9 +191,7 @@ export class PreviewProvider implements Disposable {
     // Content will be updated by sendContentUpdate, so no need to manually restore lastContent
   }
 
-  /**
-   * Updates the content displayed in the webview
-   */
+  /** Updates the content displayed in the webview */
   public async updateContent(document: TextDocument): Promise<void> {
     if (!this.panelState.panel || !this.panelState.isVisible) {
       return
@@ -231,9 +217,7 @@ export class PreviewProvider implements Disposable {
     }, config.updateDelay)
   }
 
-  /**
-   * Updates the configuration in the webview
-   */
+  /** Updates the configuration in the webview */
   public async updateConfiguration(config: PortalPreviewConfig): Promise<void> {
     if (!this.panelState.panel) {
       return
@@ -270,9 +254,7 @@ export class PreviewProvider implements Disposable {
     }
   }
 
-  /**
-   * Creates a new webview panel
-   */
+  /** Creates a new webview panel */
   private async createWebviewPanel(
     document: TextDocument,
     config: PortalPreviewConfig,
@@ -328,9 +310,7 @@ export class PreviewProvider implements Disposable {
     void this.sendContentUpdate(document, config, true)
   }
 
-  /**
-   * Sends content update to the webview
-   */
+  /** Sends content update to the webview */
   private async sendContentUpdate(document: TextDocument, config: PortalPreviewConfig, isInitialLoad = false): Promise<void> {
     if (!this.panelState.panel) {
       debug.log('Cannot send content update - no panel available')
@@ -449,9 +429,7 @@ export class PreviewProvider implements Disposable {
 
 
 
-  /**
-   * Disposes of the preview provider and cleans up resources
-   */
+  /** Disposes of the preview provider and cleans up resources */
   public dispose(): void {
     if (this.updateTimeout) {
       clearTimeout(this.updateTimeout)
