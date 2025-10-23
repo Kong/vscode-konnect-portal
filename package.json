@@ -32,7 +32,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vscode-test",
     "watch": "vite build --watch",
-    "build": "vite build --mode production",
+    "build:webview": "rimraf src/webview/webview.js && tsc --project tsconfig.webview.json",
+    "build": "pnpm run build:webview && vite build --mode production",
     "package": "vsce package",
     "publish": "vsce publish",
     "vscode:prepublish": "pnpm run build",
@@ -61,6 +62,7 @@
     "@vscode/vsce": "^3.6.2",
     "commitizen": "^4.3.1",
     "eslint": "^9.38.0",
+    "rimraf": "^6.0.1",
     "semantic-release": "^25.0.1",
     "typescript": "^5.3.3",
     "vite": "^7.1.10"
