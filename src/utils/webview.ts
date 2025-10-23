@@ -26,9 +26,11 @@ export function addPreviewParams(url: string, previewId: string): string {
   }
 }
 
+// ...existing code...
 /**
- * Generates the HTML content for the webview
- * @param config Portal preview configuration
+ * Generates the HTML content for the webview by loading and processing the HTML template file.
+ * Falls back to a robust inline template if the file cannot be loaded.
+ * @param extensionPath Path to the extension directory
  * @param portalConfig Portal configuration
  * @param previewId Unique preview identifier
  * @param cssContent CSS content to include
@@ -36,65 +38,82 @@ export function addPreviewParams(url: string, previewId: string): string {
  * @returns Complete HTML string for webview
  */
 export function generateWebviewHTML(
-  config: PortalPreviewConfig,
+  extensionPath: string,
   portalConfig: StoredPortalConfig,
   previewId: string,
   cssContent: string,
   jsContent: string,
 ): string {
-  const iframeSrc = addPreviewParams(portalConfig.origin, previewId)
-
-  return `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src *; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-        <title>Portal Preview</title>
-        <style>
-          ${cssContent}
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="iframe-container">
-             <div class="loading-overlay" id="loading-overlay">
-               <div class="loading-content">
-                 <h3 class="loading-title">Loading Portal Preview</h3>
-                 <div class="loading-progress">
-                   <div class="loading-progress-bar"></div>
-                 </div>
-                 <p class="loading-text">Connecting to ${portalConfig.origin}</p>
-               </div>
-             </div>
-             <div class="error-overlay hidden" id="error-overlay">
-               <div class="error-content">
-                 <h3 class="error-title">Portal Preview Error</h3>
-                 <p class="error-text" id="error-message">Unable to connect to the portal preview.</p>
-                 <div class="error-code" id="error-code" style="display: none;"></div>
-               </div>
-             </div>
-             <iframe
-               id="portal-preview"
-               src="${iframeSrc}"
-               title="Portal Preview"
-               width="100%"
-               height="100%"
-               allow="clipboard-read; clipboard-write; storage-access"
-               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads allow-storage-access-by-user-activation"
-               loading="eager"
-               style="border: none; display: block;"
-               credentialless="false"
-             ></iframe>
+  try {
+    const htmlPath = join(extensionPath, 'src', 'webview', 'webview.html')
+    let htmlContent = readFileSync(htmlPath, 'utf8')
+    const iframeSrc = addPreviewParams(portalConfig.origin, previewId)
+    // Replace template variables with actual values
+    htmlContent = htmlContent.replace(/\{%%TEMPLATE_CSS_CONTENT%%\}/g, `<style>${cssContent}</style>`)
+    htmlContent = htmlContent.replace(/\{%%TEMPLATE_JS_CONTENT%%\}/g, `<script>${jsContent}</script>`)
+    htmlContent = htmlContent.replace(/\{%%TEMPLATE_IFRAME_SRC%%\}/g, iframeSrc)
+    htmlContent = htmlContent.replace(/\{%%TEMPLATE_PORTAL_ORIGIN%%\}/g, portalConfig.origin)
+    return htmlContent
+  } catch (error) {
+    debug.error('Failed to load webview HTML template:', error)
+    /**
+     * Fallback HTML template is kept inline here to ensure the extension remains functional
+     * if the external template file is missing or cannot be loaded. This fallback includes
+     * the full loading and error overlays for a consistent user experience.
+     */
+    const iframeSrc = addPreviewParams(portalConfig.origin, previewId)
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src *; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+  <title>Portal Preview</title>
+  <style>
+    ${cssContent}
+  </>
+</head>
+<body>
+  <div class="container">
+    <div class="iframe-container">
+       <div class="loading-overlay" id="loading-overlay">
+         <div class="loading-content">
+           <h3 class="loading-title">Loading Portal Preview</h3>
+           <div class="loading-progress">
+             <div class="loading-progress-bar"></div>
            </div>
-        </div>
-        <script>
-          ${jsContent}
-        </script>
-      </body>
-      </html>
-    `
+           <p class="loading-text">Connecting to ${portalConfig.origin}</p>
+         </div>
+       </div>
+       <div class="error-overlay hidden" id="error-overlay">
+         <div class="error-content">
+           <h3 class="error-title">Portal Preview Error</h3>
+           <p class="error-text" id="error-message">Unable to connect to the portal preview.</p>
+           <div class="error-code" id="error-code" style="display: none;"></div>
+         </div>
+       </div>
+       <iframe
+         id="portal-preview"
+         src="${iframeSrc}"
+         title="Portal Preview"
+         width="100%"
+         height="100%"
+         allow="clipboard-read; clipboard-write; storage-access"
+         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads allow-storage-access-by-user-activation"
+         loading="eager"
+         style="border: none; display: block;"
+         credentialless="false"
+       ></iframe>
+     </div>
+  </div>
+  <script>
+    ${jsContent}
+  </script>
+</body>
+</html>
+`
+  }
 }
 
 /**
