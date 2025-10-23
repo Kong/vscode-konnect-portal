@@ -159,6 +159,7 @@ export function loadWebviewJS(
   previewId: string,
 ): string {
   try {
+    // This file is separately compiled from `src/webview/webview.ts` during the build via the `build:webview` script
     const jsPath = join(extensionPath, 'src', 'webview', 'webview.js')
     let jsContent = readFileSync(jsPath, 'utf8')
 
