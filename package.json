@@ -96,13 +96,7 @@
       {
         "command": "portalPreview.openPreview",
         "title": "Open Portal Preview",
-        "icon": "$(open-preview)",
-        "category": "Portal Preview"
-      },
-      {
-        "command": "portalPreview.togglePreview",
-        "title": "Toggle Portal Preview",
-        "icon": "$(open-preview)",
+        "icon": "$(device-desktop)",
         "category": "Portal Preview"
       },
       {
@@ -138,11 +132,6 @@
           "group": "navigation"
         },
         {
-          "command": "portalPreview.togglePreview",
-          "when": "(resourceExtname == .md || resourceExtname == .mdc) && portalPreview.hasActivePreview",
-          "group": "navigation"
-        },
-        {
           "command": "portalPreview.refreshPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && portalPreview.hasActivePreview",
           "group": "navigation"
@@ -163,9 +152,6 @@
       "commandPalette": [
         {
           "command": "portalPreview.openPreview"
-        },
-        {
-          "command": "portalPreview.togglePreview"
         },
         {
           "command": "portalPreview.refreshPreview"

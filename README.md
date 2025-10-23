@@ -116,7 +116,6 @@ The extension provides the following commands (accessible via Command Palette):
 | Command | Description |
 |---------|-------------|
 | `Portal Preview: Open Portal Preview` | Opens the preview panel for the current MDC/Markdown file |
-| `Portal Preview: Toggle Portal Preview` | Toggles the preview panel visibility |
 | `Portal Preview: Refresh Portal Preview` | Refreshes the preview panel content |
 | `Portal Preview: Configure Konnect Token` | Set up your Konnect Personal Access Token |
 | `Portal Preview: Select Portal` | Choose a portal from your Konnect account |
