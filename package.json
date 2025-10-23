@@ -23,7 +23,7 @@
   "engines": {
     "node": ">=22.20.0",
     "pnpm": ">=10.18.3",
-    "vscode": ">=1.85.0"
+    "vscode": ">=1.105.0"
   },
   "scripts": {
     "dev": "vite build --watch --mode development",
@@ -54,17 +54,17 @@
     "@semantic-release/git": "^10.0.1",
     "@stylistic/stylelint-plugin": "^4.0.0",
     "@types/node": "~24.8.1",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.105.0",
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.3.8",
+    "@vscode/test-electron": "^2.3.10",
     "@vscode/vsce": "^3.6.2",
     "commitizen": "^4.3.1",
     "eslint": "^9.38.0",
     "rimraf": "^6.0.1",
     "semantic-release": "^25.0.1",
-    "typescript": "^5.3.3",
+    "typescript": "^5.9.3",
     "vite": "^7.1.10"
   },
   "categories": [
