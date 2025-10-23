@@ -3,7 +3,7 @@ import {
   window,
   commands,
 } from 'vscode'
-import type { ExtensionContext, TextDocument, Disposable, Webview } from 'vscode'
+import type { ExtensionContext, TextDocument, Disposable } from 'vscode'
 import { basename } from 'path'
 import { randomUUID } from 'uncrypto'
 import type {
@@ -255,7 +255,7 @@ export class PreviewProvider implements Disposable {
       this.panelState.lastContent = undefined
 
       // Regenerate the entire webview HTML with new portal config
-      this.panelState.panel.webview.html = this.getWebviewContent(this.panelState.panel.webview, config, portalConfig)
+      this.panelState.panel.webview.html = this.getWebviewContent(config, portalConfig)
 
       // If we have a current document, send the content
       if (this.panelState.currentDocument) {
@@ -289,7 +289,7 @@ export class PreviewProvider implements Disposable {
     )
 
     // Set webview HTML content
-    panel.webview.html = this.getWebviewContent(panel.webview, config, portalConfig)
+    panel.webview.html = this.getWebviewContent(config, portalConfig)
 
     // Handle panel disposal
     panel.onDidDispose(() => {
@@ -437,16 +437,14 @@ export class PreviewProvider implements Disposable {
 
   /**
    * Generates the HTML content for the webview
-   * @param webview The webview instance to generate content for
    * @param config Portal preview configuration settings
    * @param portalConfig Portal-specific configuration
    * @returns Complete HTML content string for the webview
    */
-  private getWebviewContent(webview: Webview, config: PortalPreviewConfig, portalConfig: StoredPortalConfig): string {
+  private getWebviewContent(config: PortalPreviewConfig, portalConfig: StoredPortalConfig): string {
     const cssContent = loadWebviewCSS(this.context.extensionPath)
     const jsContent = loadWebviewJS(this.context.extensionPath, config, this.previewId)
-
-    return generateWebviewHTML(config, portalConfig, this.previewId, cssContent, jsContent)
+    return generateWebviewHTML(this.context.extensionPath, portalConfig, this.previewId, cssContent, jsContent)
   }
 
 
