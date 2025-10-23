@@ -53,9 +53,7 @@ export function debugLog(params: LogParams): void {
   }
 }
 
-/**
- * Convenience functions for different log levels
- */
+/** Convenience functions for different log levels */
 export const debug = {
   /**
    * Log a debug message

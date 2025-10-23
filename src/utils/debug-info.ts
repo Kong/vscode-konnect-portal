@@ -1,8 +1,6 @@
 import * as vscode from 'vscode'
 
-/**
- * Standard debug information structure for the extension
- */
+/** Standard debug information structure for the extension */
 export interface StandardDebugInfo {
   /** Error or event message */
   message: string

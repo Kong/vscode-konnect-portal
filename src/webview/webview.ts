@@ -12,41 +12,72 @@
  * - Configuration updates
  */
 
-// VS Code API is available in the webview context
+
+/** VS Code API for webview messaging (injected by VS Code at runtime) */
 // @ts-ignore - acquireVsCodeApi is injected by VS Code webview runtime
 const vscode = acquireVsCodeApi()
 
+
+/** DOM element for the loading overlay */
 const loadingOverlay = document.getElementById('loading-overlay') as HTMLElement | null
+/** DOM element for the error overlay */
 const errorOverlay = document.getElementById('error-overlay') as HTMLElement | null
+/** DOM element for the error message text */
 const errorMessage = document.getElementById('error-message') as HTMLElement | null
+/** DOM element for the error code details */
 const errorCode = document.getElementById('error-code') as HTMLElement | null
+/** DOM element for the portal preview iframe */
 const iframe = document.getElementById('portal-preview') as HTMLIFrameElement | null
 
+
+/** Tracks whether the portal iframe is ready to receive messages */
 let iframeReady = false
+/** Stores a pending message to send to the iframe when ready */
 let pendingMessage: any = null
+/** Timeout handle for portal ready state */
 let readyTimeout: ReturnType<typeof setTimeout> | null = null
+/** Whether debug logging is enabled */
 let debugEnabled = false
 
+
+/** Timeout in milliseconds to wait for portal ready signal (replaced at runtime via template variable) */
 const readyTimeoutMs: number = parseInt('{%%READY_TIMEOUT_MS%%}') || 5000
 
+
+/** Prefix for debug log messages */
 const DEBUG_LOG_PREFIX = '[Portal Preview Webview]'
 
+
+/** Debug logging utility for the webview */
 const debug = {
+  /** Logs a debug message if enabled */
   log: (message: string, ...args: unknown[]) => debugEnabled && console.log(`${DEBUG_LOG_PREFIX} ${message}`, ...args),
+  /** Logs a warning if enabled */
   warn: (message: string, ...args: unknown[]) => debugEnabled && console.warn(`${DEBUG_LOG_PREFIX} ${message}`, ...args),
-  error: (message: string, ...args: unknown[]) => console.error(`${DEBUG_LOG_PREFIX} ${message}`, ...args), // Always log errors
+  /** Always logs an error */
+  error: (message: string, ...args: unknown[]) => console.error(`${DEBUG_LOG_PREFIX} ${message}`, ...args),
 }
 
+
+/** Shows the loading overlay and hides the error overlay */
 function showLoading(): void {
   if (loadingOverlay) loadingOverlay.classList.remove('hidden')
   if (errorOverlay) errorOverlay.classList.add('hidden')
 }
 
+
+/** Hides the loading overlay */
 function hideLoading(): void {
   if (loadingOverlay) loadingOverlay.classList.add('hidden')
 }
 
 function showError(message: string, type = 'general', details: string | null = null): void {
+  /**
+   * Shows an error message in the preview panel
+   * @param message - The error message to display
+   * @param type - The type of error (general, invalid-url, load-failed, etc.)
+   * @param details - Additional error details to display
+   */
   console.error('Showing error:', { message, type, details })
   if (errorMessage) errorMessage.textContent = message
   if (errorCode && details) {
@@ -60,6 +91,8 @@ function showError(message: string, type = 'general', details: string | null = n
   vscode.postMessage({ type: 'webview:error', error: message, errorType: type })
 }
 
+
+/** Starts the timeout for waiting for portal ready signal */
 function startReadyTimeout(): void {
   clearTimeout(readyTimeout as any)
   debug.log(`Starting ready timeout (${readyTimeoutMs}ms)...`)
@@ -83,6 +116,8 @@ function startReadyTimeout(): void {
   }, readyTimeoutMs)
 }
 
+
+/** Clears the portal ready timeout */
 function clearReadyTimeout(): void {
   if (readyTimeout) {
     debug.log('Clearing ready timeout')
@@ -91,6 +126,10 @@ function clearReadyTimeout(): void {
   }
 }
 
+/**
+ * Handles content update messages from the extension
+ * @param message - The content update message
+ */
 function handleContentUpdate(message: any): void {
   debug.log('handleContentUpdate called with:', {
     hasIframe: !!iframe,
@@ -126,6 +165,10 @@ function handleContentUpdate(message: any): void {
   }
 }
 
+/**
+ * Sends a message to the portal iframe
+ * @param portalMessage - The message to send to the portal
+ */
 function sendMessageToIframe(portalMessage: any): void {
   debug.log('Attempting to send message to iframe:', {
     hasIframe: !!iframe,
@@ -151,6 +194,10 @@ function sendMessageToIframe(portalMessage: any): void {
   }
 }
 
+/**
+ * Handles configuration update messages from the extension
+ * @param message - The configuration update message
+ */
 function handleConfigUpdate(message: any): void {
   debug.log('Handling config update:', { hasConfig: !!message.config })
   if (!message.config) {
@@ -164,6 +211,10 @@ function handleConfigUpdate(message: any): void {
   debug.log('Config update processed')
 }
 
+/**
+ * Handles refresh preview messages from the extension
+ * @param message - The refresh message
+ */
 function handleRefreshPreview(message: any): void {
   debug.log('Refreshing preview iframe with content update', {
     hasMessage: !!message,
@@ -206,6 +257,10 @@ function handleRefreshPreview(message: any): void {
   }
 }
 
+/**
+ * Handles loading state messages from the extension
+ * @param message - The loading state message
+ */
 function handleLoadingState(message: any): void {
   if (message.loading === true) {
     showLoading()
@@ -214,6 +269,10 @@ function handleLoadingState(message: any): void {
   }
 }
 
+/**
+ * Handles messages received from the portal iframe
+ * @param message - The message from the portal
+ */
 function handlePortalMessage(message: any): void {
   debug.log('Portal message received:', {
     action: message.action,
@@ -236,6 +295,11 @@ function handlePortalMessage(message: any): void {
   }
 }
 
+
+/**
+ * Handles messages received from both extension and iframe
+ * @param event - The message event
+ */
 window.addEventListener('message', function(event: MessageEvent) {
   const message = event.data
   if (event.source === iframe?.contentWindow) {
@@ -267,6 +331,8 @@ window.addEventListener('message', function(event: MessageEvent) {
   }
 })
 
+
+/** Sets up iframe load and error event listeners for portal preview lifecycle */
 if (iframe) {
   iframe.addEventListener('load', function() {
     const currentUrl = iframe.src || 'unknown'
@@ -292,6 +358,8 @@ if (iframe) {
   })
 }
 
+
+/** Initializes loading state and starts ready timeout if needed */
 if (iframe && loadingOverlay) {
   showLoading()
   if (iframe.src && iframe.src !== 'about:blank') {
