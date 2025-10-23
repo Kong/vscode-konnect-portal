@@ -3,7 +3,7 @@
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
   "icon": "images/icon.png",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "kong",
   "repository": {
     "type": "git",
