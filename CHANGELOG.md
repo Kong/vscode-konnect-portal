@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.0.1...v1.0.2) (2025-10-23)
+
+
+### Bug Fixes
+
+* vscode engines ([e6457c1](https://github.com/Kong/vscode-konnect-portal/commit/e6457c19fbf62eb60a5d3c65cbf32722b57ae7f5))
+
 ## [1.0.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.0.0...v1.0.1) (2025-10-23)
 
 
