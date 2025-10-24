@@ -55,7 +55,7 @@ importers:
         specifier: ^0.0.12
         version: 0.0.12
       '@vscode/test-electron':
-        specifier: ^2.3.10
+        specifier: ^2.5.2
         version: 2.5.2
       '@vscode/vsce':
         specifier: ^3.6.2
