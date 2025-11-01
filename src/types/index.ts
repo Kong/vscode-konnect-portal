@@ -39,6 +39,7 @@ export interface PortalPreviewConfig {
   debug: boolean
   showMDCRecommendation: boolean
   pagesDirectory: string
+  snippetsDirectory: string
 }
 
 /**
@@ -94,7 +95,8 @@ export interface WebviewUpdateContentMessage extends BaseWebviewMessage {
     origin: string
   }
   previewId: string
-  path: string
+  path?: string
+  snippetName?: string
 }
 
 /**
@@ -121,7 +123,8 @@ export interface WebviewRefreshMessage extends BaseWebviewMessage {
   content: string
   config: PortalPreviewConfig
   previewId: string
-  path: string
+  path?: string
+  snippetName?: string
 }
 
 /**

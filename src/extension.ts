@@ -391,5 +391,6 @@ export function getConfiguration(): PortalPreviewConfig {
     debug: config.get<boolean>('debug', false),
     showMDCRecommendation: config.get<boolean>('showMDCRecommendation', true),
     pagesDirectory: config.get<string>('pagesDirectory', 'pages'),
+    snippetsDirectory: config.get<string>('snippetsDirectory', 'snippets'),
   }
 }

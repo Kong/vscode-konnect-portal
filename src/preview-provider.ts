@@ -26,7 +26,7 @@ import {
   loadWebviewCSS,
   loadWebviewJS,
 } from './utils/webview'
-import { getPagePath } from './utils/page-path'
+import { getDocumentPathInfo } from './utils/page-path'
 
 /** Manages the preview webview panel and handles content updates */
 export class PreviewProvider implements Disposable {
@@ -164,14 +164,21 @@ export class PreviewProvider implements Disposable {
 
     const content = currentDocument.getText().trim()
     const config = getConfiguration()
-    const path = getPagePath(currentDocument, config.pagesDirectory)
+    const pathInfo = getDocumentPathInfo(currentDocument, config.pagesDirectory, config.snippetsDirectory)
+
+    // Check for error condition and abort if present
+    if (pathInfo.type === 'error') {
+      debug.log('Cannot refresh preview due to error:', pathInfo.errorMessage)
+      return
+    }
 
     const message: WebviewRefreshMessage = {
       type: 'webview:refresh',
       content,
       config,
       previewId: this.previewId,
-      path,
+      path: pathInfo.path,
+      snippetName: pathInfo.snippetName,
     }
 
     this.panelState.panel.webview.postMessage(message)
@@ -348,8 +355,14 @@ export class PreviewProvider implements Disposable {
 
     this.panelState.lastContent = content
 
-    // Calculate the page path using the configured pages directory
-    const path = getPagePath(document, config.pagesDirectory)
+    // Determine document type and calculate appropriate path/snippet info
+    const pathInfo = getDocumentPathInfo(document, config.pagesDirectory, config.snippetsDirectory)
+
+    // Check for error condition and abort if present
+    if (pathInfo.type === 'error') {
+      debug.log('Cannot send content update due to error:', pathInfo.errorMessage)
+      return
+    }
 
     // Send loading state only for initial loads
     if (isInitialLoad) {
@@ -369,7 +382,8 @@ export class PreviewProvider implements Disposable {
         origin: portalConfig.origin,
       },
       previewId: this.previewId, // Ensure previewId is always included
-      path, // Include the calculated page path
+      path: pathInfo.path,
+      snippetName: pathInfo.snippetName,
     }
 
     debug.log('Sending content update to webview:', {
@@ -377,6 +391,8 @@ export class PreviewProvider implements Disposable {
       contentLength: contentUpdateMessage.content?.length || 0,
       previewId: contentUpdateMessage.previewId,
       path: contentUpdateMessage.path,
+      snippetName: contentUpdateMessage.snippetName,
+      documentType: pathInfo.type,
       hasConfig: !!contentUpdateMessage.config,
     })
 
@@ -397,16 +413,23 @@ export class PreviewProvider implements Disposable {
       return
     }
 
-    // Calculate the page path (or use "/" if outside pages directory)
-    const path = getPagePath(document, config.pagesDirectory)
+    // Get document path info (path calculation considers both pages and snippets)
+    const pathInfo = getDocumentPathInfo(document, config.pagesDirectory, config.snippetsDirectory)
+
+    // Check for error condition and abort if present
+    if (pathInfo.type === 'error') {
+      debug.log('Cannot send navigate message due to error:', pathInfo.errorMessage)
+      return
+    }
 
     debug.log('Sending navigate message to webview:', {
       fileName: document.fileName,
-      path,
+      path: pathInfo.path,
+      documentType: pathInfo.type,
       previewId: this.previewId,
     })
 
-    // Send navigation message without content
+    // Send navigation message without content - always use path for navigation
     const navigateMessage: WebviewNavigateMessage = {
       type: 'webview:navigate',
       config,
@@ -414,7 +437,7 @@ export class PreviewProvider implements Disposable {
         origin: portalConfig.origin,
       },
       previewId: this.previewId,
-      path,
+      path: pathInfo.path || '/', // Use default path if none calculated
     }
 
     this.panelState.panel.webview.postMessage(navigateMessage)
@@ -474,8 +497,13 @@ export class PreviewProvider implements Disposable {
     const cssContent = loadWebviewCSS(this.context.extensionPath)
     const jsContent = loadWebviewJS(this.context.extensionPath, config, this.previewId)
 
-    // Calculate the page path if document is provided and pages directory is configured
-    const path = document ? getPagePath(document, config.pagesDirectory) : ''
+    // Calculate the page path if document is provided
+    let path = ''
+    if (document) {
+      const pathInfo = getDocumentPathInfo(document, config.pagesDirectory, config.snippetsDirectory)
+      // Use empty path if there's an error (will show default portal page)
+      path = pathInfo.type === 'error' ? '' : (pathInfo.path || '')
+    }
 
     return generateWebviewHTML(this.context.extensionPath, portalConfig, this.previewId, cssContent, jsContent, path)
   }

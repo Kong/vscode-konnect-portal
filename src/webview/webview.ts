@@ -139,6 +139,7 @@ function handleContentUpdate(message: any): void {
     contentLength: message.content ? message.content.length : 0,
     previewId: message.previewId,
     path: message.path || '/',
+    snippetName: message.snippetName || 'none',
     iframeReady: iframeReady,
   })
   if (!iframe || !message.config || !message.portalConfig?.origin) {
@@ -151,8 +152,8 @@ function handleContentUpdate(message: any): void {
   }
   const portalMessage = {
     preview_id: message.previewId || 'default-preview-id',
-    path: message.path || '/',
-    snippet_name: undefined,
+    path: message.snippetName ? undefined : (message.path || '/'),
+    snippet_name: message.snippetName || undefined,
     content: message.content || '',
     action: 'portal:preview:update',
   }
@@ -225,6 +226,7 @@ function handleRefreshPreview(message: any): void {
     hasPreviewId: !!(message && message.previewId),
     hasConfig: !!(message && message.config),
     path: message?.path || '/',
+    snippetName: message?.snippetName || 'none',
   })
   if (iframe && iframe.src) {
     clearReadyTimeout()
@@ -232,8 +234,8 @@ function handleRefreshPreview(message: any): void {
     if (message && message.content !== undefined) {
       pendingMessage = {
         preview_id: message.previewId || 'default-preview-id',
-        path: message.path || '/',
-        snippet_name: undefined,
+        path: message.snippetName ? undefined : (message.path || '/'),
+        snippet_name: message.snippetName || undefined,
         content: message.content || '',
         action: 'portal:preview:update',
       }
@@ -311,6 +313,7 @@ function handleNavigate(message: any): void {
     portalOrigin: message.portalConfig?.origin || 'none',
     previewId: message.previewId,
     path: message.path || '/',
+    snippetName: message.snippetName || 'none',
     iframeReady: iframeReady,
   })
 
@@ -360,6 +363,7 @@ window.addEventListener('message', function(event: MessageEvent) {
     contentPreview: message.content ? message.content.substring(0, 100) + '...' : 'N/A',
     previewId: message.previewId,
     path: message.path || 'N/A',
+    snippetName: message.snippetName || 'N/A',
   })
   switch (message.type) {
     case 'webview:update:content':
