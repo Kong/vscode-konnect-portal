@@ -4,12 +4,12 @@ import type { TextDocument } from 'vscode'
 import { debug } from './debug'
 
 /**
- * Calculates the page path relative to the configured pages directory
+ * Gets the page path relative to the configured pages directory
  * @param document The VS Code document being previewed
  * @param pagesDirectory The configured pages directory relative to workspace root
  * @returns The calculated page path or '/' if no pages directory is configured or document is outside pages directory
  */
-export function calculatePagePath(document: TextDocument, pagesDirectory: string): string {
+export function getPagePath(document: TextDocument, pagesDirectory: string): string {
   // If no pages directory is configured or it's empty, use default path
   if (!pagesDirectory || pagesDirectory.trim() === '') {
     debug.log('No pages directory configured, using default path "/"')

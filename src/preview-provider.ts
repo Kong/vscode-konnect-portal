@@ -26,7 +26,7 @@ import {
   loadWebviewCSS,
   loadWebviewJS,
 } from './utils/webview'
-import { calculatePagePath } from './utils/path-calculation'
+import { getPagePath } from './utils/page-path'
 
 /** Manages the preview webview panel and handles content updates */
 export class PreviewProvider implements Disposable {
@@ -164,7 +164,7 @@ export class PreviewProvider implements Disposable {
 
     const content = currentDocument.getText().trim()
     const config = getConfiguration()
-    const path = calculatePagePath(currentDocument, config.pagesDirectory)
+    const path = getPagePath(currentDocument, config.pagesDirectory)
 
     const message: WebviewRefreshMessage = {
       type: 'webview:refresh',
@@ -349,7 +349,7 @@ export class PreviewProvider implements Disposable {
     this.panelState.lastContent = content
 
     // Calculate the page path using the configured pages directory
-    const path = calculatePagePath(document, config.pagesDirectory)
+    const path = getPagePath(document, config.pagesDirectory)
 
     // Send loading state only for initial loads
     if (isInitialLoad) {
@@ -398,7 +398,7 @@ export class PreviewProvider implements Disposable {
     }
 
     // Calculate the page path (or use "/" if outside pages directory)
-    const path = calculatePagePath(document, config.pagesDirectory)
+    const path = getPagePath(document, config.pagesDirectory)
 
     debug.log('Sending navigate message to webview:', {
       fileName: document.fileName,
@@ -475,7 +475,7 @@ export class PreviewProvider implements Disposable {
     const jsContent = loadWebviewJS(this.context.extensionPath, config, this.previewId)
 
     // Calculate the page path if document is provided and pages directory is configured
-    const path = document ? calculatePagePath(document, config.pagesDirectory) : ''
+    const path = document ? getPagePath(document, config.pagesDirectory) : ''
 
     return generateWebviewHTML(this.context.extensionPath, portalConfig, this.previewId, cssContent, jsContent, path)
   }
