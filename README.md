@@ -20,7 +20,7 @@ A VS Code extension that provides real-time preview functionality for MDC (Markd
 ## Features
 
 - **Real-time Preview**: Live preview updates as you type in MDC and Markdown files
-- **Konnect Integration**: Token-based authentication with Kong Konnect allows you to interact securely with Konnect APIs.
+- **Konnect Integration**: Token-based authentication with Kong Konnect allows you to interact securely with Konnect APIs
 
 ## Recommended Extensions
 
@@ -63,6 +63,7 @@ The extension provides several configuration options in VS Code settings. You ca
 | `portalPreview.readyTimeout` | `number` | `5000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
 | `portalPreview.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
 | `portalPreview.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
+| `portalPreview.pagesDirectory` | `string` | `"pages"` | Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Leave empty to disable path calculation. | `"pages"`, `"docs/pages"`, `"src/content/documentation"` |
 
 ## Setup and Usage
 
@@ -127,6 +128,14 @@ The extension supports the following file types:
 
 - **Markdown**: `.md` files
 - **MDC (Markdown Components)**: `.mdc` files
+
+### File Organization
+
+For optimal portal preview experience:
+
+- **Organize files** in a dedicated pages directory (e.g., `pages/`)
+- **Configure** the `portalPreview.pagesDirectory` setting to match your structure
+- **Use subdirectories** to organize content hierarchically (e.g., `pages/getting-started/overview.md` → `/getting-started/overview`)
 
 ## Troubleshooting
 
