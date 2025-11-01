@@ -64,6 +64,7 @@ The extension provides several configuration options in VS Code settings. You ca
 | `portalPreview.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
 | `portalPreview.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
 | `portalPreview.pagesDirectory` | `string` | `"pages"` | Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Leave empty to disable path calculation. | `"pages"`, `"docs/pages"`, `"src/content/documentation"` |
+| `portalPreview.snippetsDirectory` | `string` | `"snippets"` | Directory relative to workspace root containing your snippets (.md/.mdc files). When set, snippet names will be extracted from filenames. Subdirectories are not supported. Leave empty to disable snippet detection. | `"snippets"`, `"docs/snippets"`, `"src/content/snippets"` |
 
 ## Setup and Usage
 
@@ -133,9 +134,16 @@ The extension supports the following file types:
 
 For optimal portal preview experience:
 
+**Pages:**
 - **Organize files** in a dedicated pages directory (e.g., `pages/`)
 - **Configure** the `portalPreview.pagesDirectory` setting to match your structure
 - **Use subdirectories** to organize content hierarchically (e.g., `pages/getting-started/overview.md` → `/getting-started/overview`)
+
+**Snippets:**
+- **Organize files** in a dedicated snippets directory (e.g., `snippets/`)
+- **Configure** the `portalPreview.snippetsDirectory` setting to match your structure
+- **Use flat structure** - subdirectories are not supported (files must be in the root of the snippets directory)
+- **File names become snippet names** (e.g., `snippets/api-example.md` → snippet name: `api-example`)
 
 ## Troubleshooting
 
@@ -170,6 +178,46 @@ The extension only activates when:
 - Opening MDC (.mdc) files
 - Opening Markdown (.md) files
 - Running portal preview commands
+
+## Pages vs Snippets
+
+This extension supports two distinct types of content for your Kong Dev Portal:
+
+### Pages
+Pages are full portal documents that represent routes in your portal navigation.
+
+**Configuration:**
+- Set `portalPreview.pagesDirectory` to your pages folder (e.g., `"pages"`, `"docs/pages"`)
+- Supports nested subdirectories for hierarchical organization
+
+**Path Calculation:**
+- File: `pages/getting-started/overview.md` → Portal Path: `/getting-started/overview`
+- File: `pages/home.md` or `pages/home.mdc` → Portal Path: `/` (special home page handling)
+
+### Snippets
+Snippets are reusable content blocks that can be embedded in pages or other snippets.
+
+**Configuration:**
+- Set `portalPreview.snippetsDirectory` to your snippets folder (e.g., `"snippets"`, `"docs/snippets"`)
+- **Flat structure only** - subdirectories are not supported and will show an error
+
+**Important:** Files in snippet subdirectories (e.g., `snippets/category/example.md`) will trigger an error and prevent preview functionality. Move such files to the root of your snippets directory.
+
+### Example Workspace Structure
+
+```
+dev-portal-project/
+├── pages/                          # Configure: portalPreview.pagesDirectory = "pages"
+│   ├── home.md                     # → Portal Path: "/"
+│   ├── getting-started.md          # → Portal Path: "/getting-started"
+│   └── getting-started/
+│       ├── overview.md             # → Portal Path: "/getting-started/overview"
+│       └── installation.md         # → Portal Path: "/getting-started/installation"
+└── snippets/                       # Configure: portalPreview.snippetsDirectory = "snippets"
+    ├── api-example.md              # → Snippet Name: "api-example"
+    ├── code-samples.md            # → Snippet Name: "code-samples"
+    └── troubleshooting.md          # → Snippet Name: "troubleshooting"
+```
 
 ## Security
 
