@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.0.4...v1.1.0) (2025-11-01)
+
+
+### Features
+
+* pages and snippets directory config and navigation events ([#12](https://github.com/Kong/vscode-konnect-portal/issues/12)) ([61e203b](https://github.com/Kong/vscode-konnect-portal/commit/61e203b3f5205816ccf8969dd898946baf5f6b96))
+
 ## [1.0.4](https://github.com/Kong/vscode-konnect-portal/compare/v1.0.3...v1.0.4) (2025-10-23)
 
 
