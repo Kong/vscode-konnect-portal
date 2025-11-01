@@ -215,7 +215,7 @@ dev-portal-project/
 │       └── installation.md         # → Portal Path: "/getting-started/installation"
 └── snippets/                       # Configure: portalPreview.snippetsDirectory = "snippets"
     ├── api-example.md              # → Snippet Name: "api-example"
-    ├── code-samples.md            # → Snippet Name: "code-samples"
+    ├── code-samples.md             # → Snippet Name: "code-samples"
     └── troubleshooting.md          # → Snippet Name: "troubleshooting"
 ```
 
