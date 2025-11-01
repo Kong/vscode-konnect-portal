@@ -390,5 +390,6 @@ export function getConfiguration(): PortalPreviewConfig {
     readyTimeout: config.get<number>('readyTimeout', 5000),
     debug: config.get<boolean>('debug', false),
     showMDCRecommendation: config.get<boolean>('showMDCRecommendation', true),
+    pagesDirectory: config.get<string>('pagesDirectory', 'pages'),
   }
 }

@@ -26,6 +26,7 @@
 
 ## TypeScript Guidelines
 - Use TypeScript for all new code when possible, other than the `src/webview/webview.js` file which must remain JavaScript since it is embedded in the webview HTML.
+- **IMPORTANT: The `src/webview/webview.js` file is compiled from `src/webview/webview.ts`** - Never edit the `.js` file directly as it will be overwritten during build. Always edit the TypeScript source file and run `pnpm run build:webview` to compile changes.
 - Follow functional programming principles where possible
 - Use interfaces for data structures and type definitions
 - Prefer immutable data (const, readonly)

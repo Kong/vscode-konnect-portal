@@ -198,6 +198,16 @@
           "type": "boolean",
           "default": true,
           "description": "Show recommendation to install MDC extension when opening .mdc files"
+        },
+        "portalPreview.pagesDirectory": {
+          "type": "string",
+          "default": "pages",
+          "description": "Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Example: 'pages', 'docs/pages', or 'src/content/documentation'. Leave empty to disable path calculation.",
+          "examples": [
+            "pages",
+            "docs/pages",
+            "src/content/documentation"
+          ]
         }
       }
     }

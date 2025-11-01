@@ -38,6 +38,7 @@ export interface PortalPreviewConfig {
   readyTimeout: number
   debug: boolean
   showMDCRecommendation: boolean
+  pagesDirectory: string
 }
 
 /**
@@ -69,6 +70,8 @@ export interface PostPortalStudioMessageData {
   action:
     /** Update the `content` for the iframe. */
     'portal:preview:update' |
+    /** Navigate to a different page without updating content. */
+    'portal:preview:navigate' |
     /** Exit preview mode. */
     'portal:preview:exit'
 }
@@ -91,6 +94,7 @@ export interface WebviewUpdateContentMessage extends BaseWebviewMessage {
     origin: string
   }
   previewId: string
+  path: string
 }
 
 /**
@@ -117,6 +121,20 @@ export interface WebviewRefreshMessage extends BaseWebviewMessage {
   content: string
   config: PortalPreviewConfig
   previewId: string
+  path: string
+}
+
+/**
+ * Message to navigate to a different page in the webview
+ */
+export interface WebviewNavigateMessage extends BaseWebviewMessage {
+  type: 'webview:navigate'
+  config: PortalPreviewConfig
+  portalConfig: {
+    origin: string
+  }
+  previewId: string
+  path: string
 }
 
 /**
@@ -152,6 +170,7 @@ export type WebviewMessage =
   | WebviewUpdateConfigMessage
   | WebviewLoadingMessage
   | WebviewRefreshMessage
+  | WebviewNavigateMessage
   | WebviewErrorMessage
   | WebviewWarningMessage
   | WebviewRequestContentMessage
