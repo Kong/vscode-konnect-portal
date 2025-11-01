@@ -50,6 +50,15 @@ export function calculatePagePath(document: TextDocument, pagesDirectory: string
   // Remove the file extension and normalize the path
   const pathWithoutExtension = relativePath.replace(/\.(md|mdc)$/i, '')
 
+  // Special case: home.md or home.mdc at the root of pages directory should be "/"
+  if (pathWithoutExtension === 'home') {
+    debug.log('Document is home.md/home.mdc at pages directory root, using path "/"', {
+      relativePath,
+      pathWithoutExtension,
+    })
+    return '/'
+  }
+
   // Convert path separators to forward slashes and sanitize
   let sanitizedPath = pathWithoutExtension.split(sep).join('/')
 
