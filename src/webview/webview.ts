@@ -12,6 +12,18 @@
  * - Configuration updates
  */
 
+/** Portal preview actions sent TO the portal */
+const PortalPreviewAction = {
+  UPDATE: 'portal:preview:update',
+  NAVIGATE: 'portal:preview:navigate',
+  EXIT: 'portal:preview:exit',
+} as const
+
+/** Portal preview actions received FROM the portal */
+const PortalPreviewIncomingAction = {
+  READY: 'portal:preview:ready',
+} as const
+
 
 /** VS Code API for webview messaging (injected by VS Code at runtime) */
 // @ts-ignore - acquireVsCodeApi is injected by VS Code webview runtime
@@ -155,7 +167,7 @@ function handleContentUpdate(message: any): void {
     path: message.snippetName ? undefined : (message.path || '/'),
     snippet_name: message.snippetName || undefined,
     content: message.content || '',
-    action: 'portal:preview:update',
+    action: PortalPreviewAction.UPDATE,
   }
   debug.log('Created portal message:', portalMessage)
   if (iframeReady) {
@@ -237,7 +249,7 @@ function handleRefreshPreview(message: any): void {
         path: message.snippetName ? undefined : (message.path || '/'),
         snippet_name: message.snippetName || undefined,
         content: message.content || '',
-        action: 'portal:preview:update',
+        action: PortalPreviewAction.UPDATE,
       }
       debug.log('Stored content for post-refresh portal:ready signal:', {
         contentLength: pendingMessage.content.length,
@@ -285,7 +297,7 @@ function handlePortalMessage(message: any): void {
     type: message.type,
     data: message,
   })
-  if (message.action === 'portal:preview:ready') {
+  if (message.action === PortalPreviewIncomingAction.READY) {
     debug.log('Portal is ready! Sending current content...')
     clearReadyTimeout()
     iframeReady = true
@@ -331,7 +343,7 @@ function handleNavigate(message: any): void {
     path: message.path || '/',
     snippet_name: undefined,
     // No content for navigation messages
-    action: 'portal:preview:navigate',
+    action: PortalPreviewAction.NAVIGATE,
   }
 
   debug.log('Created portal navigate message:', portalMessage)

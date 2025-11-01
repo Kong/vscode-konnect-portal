@@ -7,6 +7,18 @@ export enum LogLevel {
   ERROR = 'error',
 }
 
+/** Portal preview actions sent TO the portal */
+export enum PortalPreviewAction {
+  UPDATE = 'portal:preview:update',
+  NAVIGATE = 'portal:preview:navigate',
+  EXIT = 'portal:preview:exit',
+}
+
+/** Portal preview actions received FROM the portal */
+export enum PortalPreviewIncomingAction {
+  READY = 'portal:preview:ready',
+}
+
 /** Structured error information for API errors with trace ID support */
 export interface ApiErrorInfo {
   /** The main error message */
@@ -68,13 +80,7 @@ export interface PostPortalStudioMessageData {
     }
   }
   /** The action to target when received. */
-  action:
-    /** Update the `content` for the iframe. */
-    'portal:preview:update' |
-    /** Navigate to a different page without updating content. */
-    'portal:preview:navigate' |
-    /** Exit preview mode. */
-    'portal:preview:exit'
+  action: PortalPreviewAction
 }
 
 /**
