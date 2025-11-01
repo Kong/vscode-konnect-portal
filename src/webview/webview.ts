@@ -12,6 +12,18 @@
  * - Configuration updates
  */
 
+/** Portal preview actions sent TO the portal */
+const PortalPreviewAction = {
+  UPDATE: 'portal:preview:update',
+  NAVIGATE: 'portal:preview:navigate',
+  EXIT: 'portal:preview:exit',
+} as const
+
+/** Portal preview actions received FROM the portal */
+const PortalPreviewIncomingAction = {
+  READY: 'portal:preview:ready',
+} as const
+
 
 /** VS Code API for webview messaging (injected by VS Code at runtime) */
 // @ts-ignore - acquireVsCodeApi is injected by VS Code webview runtime
@@ -138,6 +150,8 @@ function handleContentUpdate(message: any): void {
     portalOrigin: message.portalConfig?.origin || 'none',
     contentLength: message.content ? message.content.length : 0,
     previewId: message.previewId,
+    path: message.path || '/',
+    snippetName: message.snippetName || 'none',
     iframeReady: iframeReady,
   })
   if (!iframe || !message.config || !message.portalConfig?.origin) {
@@ -150,10 +164,10 @@ function handleContentUpdate(message: any): void {
   }
   const portalMessage = {
     preview_id: message.previewId || 'default-preview-id',
-    path: '/',
-    snippet_name: undefined,
+    path: message.snippetName ? undefined : (message.path || '/'),
+    snippet_name: message.snippetName || undefined,
     content: message.content || '',
-    action: 'portal:preview:update',
+    action: PortalPreviewAction.UPDATE,
   }
   debug.log('Created portal message:', portalMessage)
   if (iframeReady) {
@@ -176,6 +190,7 @@ function sendMessageToIframe(portalMessage: any): void {
     messageAction: portalMessage.action,
     messageContentLength: portalMessage.content ? portalMessage.content.length : 0,
     previewId: portalMessage.preview_id,
+    path: portalMessage.path,
   })
   try {
     if (iframe && iframe.contentWindow) {
@@ -222,6 +237,8 @@ function handleRefreshPreview(message: any): void {
     contentLength: message?.content?.length || 0,
     hasPreviewId: !!(message && message.previewId),
     hasConfig: !!(message && message.config),
+    path: message?.path || '/',
+    snippetName: message?.snippetName || 'none',
   })
   if (iframe && iframe.src) {
     clearReadyTimeout()
@@ -229,14 +246,15 @@ function handleRefreshPreview(message: any): void {
     if (message && message.content !== undefined) {
       pendingMessage = {
         preview_id: message.previewId || 'default-preview-id',
-        path: '/',
-        snippet_name: undefined,
+        path: message.snippetName ? undefined : (message.path || '/'),
+        snippet_name: message.snippetName || undefined,
         content: message.content || '',
-        action: 'portal:preview:update',
+        action: PortalPreviewAction.UPDATE,
       }
       debug.log('Stored content for post-refresh portal:ready signal:', {
         contentLength: pendingMessage.content.length,
         previewId: pendingMessage.preview_id,
+        path: pendingMessage.path,
         contentPreview: pendingMessage.content.substring(0, 100) + '...',
       })
     } else {
@@ -279,7 +297,7 @@ function handlePortalMessage(message: any): void {
     type: message.type,
     data: message,
   })
-  if (message.action === 'portal:preview:ready') {
+  if (message.action === PortalPreviewIncomingAction.READY) {
     debug.log('Portal is ready! Sending current content...')
     clearReadyTimeout()
     iframeReady = true
@@ -292,6 +310,50 @@ function handlePortalMessage(message: any): void {
       debug.log('No pending message, requesting current content from extension')
       vscode.postMessage({ type: 'webview:request:content' })
     }
+  }
+}
+
+/**
+ * Handles navigation messages from the extension
+ * @param message - The navigation message
+ */
+function handleNavigate(message: any): void {
+  debug.log('Handling navigate message:', {
+    hasIframe: !!iframe,
+    hasConfig: !!message.config,
+    hasPortalConfig: !!message.portalConfig,
+    portalOrigin: message.portalConfig?.origin || 'none',
+    previewId: message.previewId,
+    path: message.path || '/',
+    snippetName: message.snippetName || 'none',
+    iframeReady: iframeReady,
+  })
+
+  if (!iframe || !message.config || !message.portalConfig?.origin) {
+    debug.warn('Missing required elements for navigation:', {
+      iframe: !!iframe,
+      config: !!message.config,
+      portalOrigin: message.portalConfig?.origin || 'none',
+    })
+    return
+  }
+
+  const portalMessage = {
+    preview_id: message.previewId || 'default-preview-id',
+    path: message.path || '/',
+    snippet_name: undefined,
+    // No content for navigation messages
+    action: PortalPreviewAction.NAVIGATE,
+  }
+
+  debug.log('Created portal navigate message:', portalMessage)
+
+  if (iframeReady) {
+    debug.log('Iframe is ready, sending navigate message immediately')
+    sendMessageToIframe(portalMessage)
+  } else {
+    debug.log('Iframe not ready, storing navigate message as pending')
+    pendingMessage = portalMessage
   }
 }
 
@@ -312,6 +374,8 @@ window.addEventListener('message', function(event: MessageEvent) {
     hasContent: !!(message.content),
     contentPreview: message.content ? message.content.substring(0, 100) + '...' : 'N/A',
     previewId: message.previewId,
+    path: message.path || 'N/A',
+    snippetName: message.snippetName || 'N/A',
   })
   switch (message.type) {
     case 'webview:update:content':
@@ -322,6 +386,9 @@ window.addEventListener('message', function(event: MessageEvent) {
       break
     case 'webview:refresh':
       handleRefreshPreview(message)
+      break
+    case 'webview:navigate':
+      handleNavigate(message)
       break
     case 'webview:loading':
       handleLoadingState(message)

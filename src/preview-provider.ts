@@ -13,6 +13,7 @@ import type {
   WebviewRefreshMessage,
   WebviewLoadingMessage,
   WebviewUpdateContentMessage,
+  WebviewNavigateMessage,
 } from './types'
 import type { PortalStorageService } from './konnect/storage'
 import type { StoredPortalConfig } from './types/konnect'
@@ -25,6 +26,7 @@ import {
   loadWebviewCSS,
   loadWebviewJS,
 } from './utils/webview'
+import { getDocumentPathInfo } from './utils/page-path'
 
 /** Manages the preview webview panel and handles content updates */
 export class PreviewProvider implements Disposable {
@@ -121,8 +123,21 @@ export class PreviewProvider implements Disposable {
       this.panelState.panel.title = `Portal Preview - ${basename(document.fileName)}`
     }
 
-    // Update content without showing loading state (not an initial load)
-    await this.updateContent(document)
+    // Get current configuration
+    const config = getConfiguration()
+
+    // Check if pages directory is configured and send navigation message if needed
+    if (config.pagesDirectory && config.pagesDirectory.trim() !== '') {
+      await this.sendNavigateMessage(document, config)
+
+      // Send content update after 500ms delay
+      setTimeout(async () => {
+        await this.updateContent(document)
+      }, 500)
+    } else {
+      // No pages directory configured, use regular update behavior
+      await this.updateContent(document)
+    }
   }
 
   /** Refreshes the preview by reloading the iframe, or opens preview if not already open */
@@ -149,12 +164,21 @@ export class PreviewProvider implements Disposable {
 
     const content = currentDocument.getText().trim()
     const config = getConfiguration()
+    const pathInfo = getDocumentPathInfo(currentDocument, config.pagesDirectory, config.snippetsDirectory)
+
+    // Check for error condition and abort if present
+    if (pathInfo.type === 'error') {
+      debug.log('Cannot refresh preview due to error:', pathInfo.errorMessage)
+      return
+    }
 
     const message: WebviewRefreshMessage = {
       type: 'webview:refresh',
       content,
       config,
       previewId: this.previewId,
+      path: pathInfo.path,
+      snippetName: pathInfo.snippetName,
     }
 
     this.panelState.panel.webview.postMessage(message)
@@ -226,7 +250,7 @@ export class PreviewProvider implements Disposable {
       this.panelState.lastContent = undefined
 
       // Regenerate the entire webview HTML with new portal config
-      this.panelState.panel.webview.html = this.getWebviewContent(config, portalConfig)
+      this.panelState.panel.webview.html = this.getWebviewContent(config, portalConfig, this.panelState.currentDocument)
 
       // If we have a current document, send the content
       if (this.panelState.currentDocument) {
@@ -258,7 +282,7 @@ export class PreviewProvider implements Disposable {
     )
 
     // Set webview HTML content
-    panel.webview.html = this.getWebviewContent(config, portalConfig)
+    panel.webview.html = this.getWebviewContent(config, portalConfig, document)
 
     // Handle panel disposal
     panel.onDidDispose(() => {
@@ -331,6 +355,15 @@ export class PreviewProvider implements Disposable {
 
     this.panelState.lastContent = content
 
+    // Determine document type and calculate appropriate path/snippet info
+    const pathInfo = getDocumentPathInfo(document, config.pagesDirectory, config.snippetsDirectory)
+
+    // Check for error condition and abort if present
+    if (pathInfo.type === 'error') {
+      debug.log('Cannot send content update due to error:', pathInfo.errorMessage)
+      return
+    }
+
     // Send loading state only for initial loads
     if (isInitialLoad) {
       const loadingMessage: WebviewLoadingMessage = {
@@ -349,16 +382,65 @@ export class PreviewProvider implements Disposable {
         origin: portalConfig.origin,
       },
       previewId: this.previewId, // Ensure previewId is always included
+      path: pathInfo.path,
+      snippetName: pathInfo.snippetName,
     }
 
     debug.log('Sending content update to webview:', {
       type: contentUpdateMessage.type,
       contentLength: contentUpdateMessage.content?.length || 0,
       previewId: contentUpdateMessage.previewId,
+      path: contentUpdateMessage.path,
+      snippetName: contentUpdateMessage.snippetName,
+      documentType: pathInfo.type,
       hasConfig: !!contentUpdateMessage.config,
     })
 
     this.panelState.panel.webview.postMessage(contentUpdateMessage)
+  }
+
+  /** Sends a navigation message to the webview without content */
+  private async sendNavigateMessage(document: TextDocument, config: PortalPreviewConfig): Promise<void> {
+    if (!this.panelState.panel) {
+      debug.log('Cannot send navigate message - no panel available')
+      return
+    }
+
+    // Get the current portal configuration
+    const portalConfig = await this.storageService.getSelectedPortal()
+    if (!portalConfig) {
+      debug.log('Cannot send navigate message - no portal configuration available')
+      return
+    }
+
+    // Get document path info (path calculation considers both pages and snippets)
+    const pathInfo = getDocumentPathInfo(document, config.pagesDirectory, config.snippetsDirectory)
+
+    // Check for error condition and abort if present
+    if (pathInfo.type === 'error') {
+      debug.log('Cannot send navigate message due to error:', pathInfo.errorMessage)
+      return
+    }
+
+    debug.log('Sending navigate message to webview:', {
+      fileName: document.fileName,
+      path: pathInfo.path,
+      documentType: pathInfo.type,
+      previewId: this.previewId,
+    })
+
+    // Send navigation message without content - always use path for navigation
+    const navigateMessage: WebviewNavigateMessage = {
+      type: 'webview:navigate',
+      config,
+      portalConfig: {
+        origin: portalConfig.origin,
+      },
+      previewId: this.previewId,
+      path: pathInfo.path || '/', // Use default path if none calculated
+    }
+
+    this.panelState.panel.webview.postMessage(navigateMessage)
   }
 
   /**
@@ -408,12 +490,22 @@ export class PreviewProvider implements Disposable {
    * Generates the HTML content for the webview
    * @param config Portal preview configuration settings
    * @param portalConfig Portal-specific configuration
+   * @param document Optional document to calculate page path for iframe URL
    * @returns Complete HTML content string for the webview
    */
-  private getWebviewContent(config: PortalPreviewConfig, portalConfig: StoredPortalConfig): string {
+  private getWebviewContent(config: PortalPreviewConfig, portalConfig: StoredPortalConfig, document?: TextDocument): string {
     const cssContent = loadWebviewCSS(this.context.extensionPath)
     const jsContent = loadWebviewJS(this.context.extensionPath, config, this.previewId)
-    return generateWebviewHTML(this.context.extensionPath, portalConfig, this.previewId, cssContent, jsContent)
+
+    // Calculate the page path if document is provided
+    let path = ''
+    if (document) {
+      const pathInfo = getDocumentPathInfo(document, config.pagesDirectory, config.snippetsDirectory)
+      // Use empty path if there's an error (will show default portal page)
+      path = pathInfo.type === 'error' ? '' : (pathInfo.path || '')
+    }
+
+    return generateWebviewHTML(this.context.extensionPath, portalConfig, this.previewId, cssContent, jsContent, path)
   }
 
 

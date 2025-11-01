@@ -7,6 +7,18 @@ export enum LogLevel {
   ERROR = 'error',
 }
 
+/** Portal preview actions sent TO the portal */
+export enum PortalPreviewAction {
+  UPDATE = 'portal:preview:update',
+  NAVIGATE = 'portal:preview:navigate',
+  EXIT = 'portal:preview:exit',
+}
+
+/** Portal preview actions received FROM the portal */
+export enum PortalPreviewIncomingAction {
+  READY = 'portal:preview:ready',
+}
+
 /** Structured error information for API errors with trace ID support */
 export interface ApiErrorInfo {
   /** The main error message */
@@ -38,6 +50,8 @@ export interface PortalPreviewConfig {
   readyTimeout: number
   debug: boolean
   showMDCRecommendation: boolean
+  pagesDirectory: string
+  snippetsDirectory: string
 }
 
 /**
@@ -66,11 +80,7 @@ export interface PostPortalStudioMessageData {
     }
   }
   /** The action to target when received. */
-  action:
-    /** Update the `content` for the iframe. */
-    'portal:preview:update' |
-    /** Exit preview mode. */
-    'portal:preview:exit'
+  action: PortalPreviewAction
 }
 
 /**
@@ -91,6 +101,8 @@ export interface WebviewUpdateContentMessage extends BaseWebviewMessage {
     origin: string
   }
   previewId: string
+  path?: string
+  snippetName?: string
 }
 
 /**
@@ -117,6 +129,21 @@ export interface WebviewRefreshMessage extends BaseWebviewMessage {
   content: string
   config: PortalPreviewConfig
   previewId: string
+  path?: string
+  snippetName?: string
+}
+
+/**
+ * Message to navigate to a different page in the webview
+ */
+export interface WebviewNavigateMessage extends BaseWebviewMessage {
+  type: 'webview:navigate'
+  config: PortalPreviewConfig
+  portalConfig: {
+    origin: string
+  }
+  previewId: string
+  path: string
 }
 
 /**
@@ -152,6 +179,7 @@ export type WebviewMessage =
   | WebviewUpdateConfigMessage
   | WebviewLoadingMessage
   | WebviewRefreshMessage
+  | WebviewNavigateMessage
   | WebviewErrorMessage
   | WebviewWarningMessage
   | WebviewRequestContentMessage

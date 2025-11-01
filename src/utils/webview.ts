@@ -5,24 +5,41 @@ import type { StoredPortalConfig } from '../types/konnect'
 import { debug } from './debug'
 
 /**
- * Adds the preview=true and preview_id query parameters to a URL
+ * Adds the preview=true and preview_id query parameters to a URL, and optionally includes a path
  * @param url The base URL to modify
  * @param previewId The unique preview identifier
- * @returns URL with preview parameters added
+ * @param path Optional path to append to the URL (defaults to empty string)
+ * @returns URL with preview parameters and path added
  */
-export function addPreviewParams(url: string, previewId: string): string {
+export function addPreviewParams(url: string, previewId: string, path = ''): string {
   if (!url) return url
 
   try {
     const urlObj = new URL(url)
     urlObj.searchParams.set('preview', 'true')
     urlObj.searchParams.set('preview_id', previewId)
+
+    // Add path if provided and not just '/'
+    if (path && path !== '/') {
+      // Ensure path starts with '/' and append to pathname
+      const normalizedPath = path.startsWith('/') ? path : `/${path}`
+      urlObj.pathname = urlObj.pathname.replace(/\/$/, '') + normalizedPath
+    }
+
     return urlObj.toString()
   } catch (error) {
     debug.warn('Failed to parse URL for preview params:', { url, error })
     // Fallback: simple string manipulation
     const separator = url.includes('?') ? '&' : '?'
-    return `${url}${separator}preview=true&preview_id=${encodeURIComponent(previewId)}`
+    let resultUrl = `${url}${separator}preview=true&preview_id=${encodeURIComponent(previewId)}`
+
+    // Add path if provided and not just '/'
+    if (path && path !== '/') {
+      const normalizedPath = path.startsWith('/') ? path : `/${path}`
+      resultUrl = url.replace(/\/$/, '') + normalizedPath + `${separator}preview=true&preview_id=${encodeURIComponent(previewId)}`
+    }
+
+    return resultUrl
   }
 }
 
@@ -35,6 +52,7 @@ export function addPreviewParams(url: string, previewId: string): string {
  * @param previewId Unique preview identifier
  * @param cssContent CSS content to include
  * @param jsContent JavaScript content to include
+ * @param path Optional page path for the iframe URL (defaults to empty string)
  * @returns Complete HTML string for webview
  */
 export function generateWebviewHTML(
@@ -43,11 +61,12 @@ export function generateWebviewHTML(
   previewId: string,
   cssContent: string,
   jsContent: string,
+  path = '',
 ): string {
   try {
     const htmlPath = join(extensionPath, 'src', 'webview', 'webview.html')
     let htmlContent = readFileSync(htmlPath, 'utf8')
-    const iframeSrc = addPreviewParams(portalConfig.origin, previewId)
+    const iframeSrc = addPreviewParams(portalConfig.origin, previewId, path)
     // Replace template variables with actual values
     htmlContent = htmlContent.replace(/\{%%TEMPLATE_CSS_CONTENT%%\}/g, `<style>${cssContent}</style>`)
     htmlContent = htmlContent.replace(/\{%%TEMPLATE_JS_CONTENT%%\}/g, `<script>${jsContent}</script>`)
@@ -61,7 +80,7 @@ export function generateWebviewHTML(
      * if the external template file is missing or cannot be loaded. This fallback includes
      * the full loading and error overlays for a consistent user experience.
      */
-    const iframeSrc = addPreviewParams(portalConfig.origin, previewId)
+    const iframeSrc = addPreviewParams(portalConfig.origin, previewId, path)
     return `
 <!DOCTYPE html>
 <html lang="en">
