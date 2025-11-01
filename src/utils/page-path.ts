@@ -17,7 +17,7 @@ export interface DocumentPathInfo {
  * @param pagesDirectory The configured pages directory relative to workspace root
  * @returns The calculated page path or '/' if no pages directory is configured or document is outside pages directory
  */
-export function getPagePath(document: TextDocument, pagesDirectory: string): string {
+function getPagePath(document: TextDocument, pagesDirectory: string): string {
   // If no pages directory is configured or it's empty, use default path
   if (!pagesDirectory || pagesDirectory.trim() === '') {
     debug.log('No pages directory configured, using default path "/"')
@@ -127,7 +127,7 @@ function checkSnippetSubdirectoryError(document: TextDocument, snippetsDirectory
  * @param snippetsDirectory The configured snippets directory relative to workspace root
  * @returns The snippet name or null if document is not a valid snippet
  */
-export function getSnippetName(document: TextDocument, snippetsDirectory: string): string | null {
+function getSnippetName(document: TextDocument, snippetsDirectory: string): string | null {
   // If no snippets directory is configured or it's empty, not a snippet
   if (!snippetsDirectory || snippetsDirectory.trim() === '') {
     debug.log('No snippets directory configured')
