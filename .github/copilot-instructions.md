@@ -99,6 +99,7 @@ if (result === MyDialogActions.ACTION_1) {  // Type safe, refactor safe
 - Follow Vitest best practices
 - Whenever updating existing functionality or adding new features, ensure that unit tests are created or updated accordingly to maintain code coverage and reliability.
 - Do not create brittle or overly complex tests; tests should be easy to read and maintain.
+- Unit tests should not test that constants equal themselves, or other trivial assertions.
 
 ## Project description
 
