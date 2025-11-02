@@ -68,7 +68,11 @@ export async function copyDebugInfoToClipboard(
   context?: vscode.ExtensionContext,
   additionalData?: Record<string, unknown>,
 ): Promise<void> {
-  const debugText = createDebugInfoText(message, context, additionalData)
-  await vscode.env.clipboard.writeText(debugText)
-  vscode.window.showInformationMessage('Debug information copied to clipboard')
+  try {
+    const debugText = createDebugInfoText(message, context, additionalData)
+    await vscode.env.clipboard.writeText(debugText)
+    vscode.window.showInformationMessage('Debug information copied to clipboard')
+  } catch (error) {
+    vscode.window.showErrorMessage(`Failed to copy debug information: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
 }

@@ -15,20 +15,20 @@ export interface DocumentPathInfo {
  * Gets the page path relative to the configured pages directory
  * @param document The VS Code document being previewed
  * @param pagesDirectory The configured pages directory relative to workspace root
- * @returns The calculated page path or '/' if no pages directory is configured or document is outside pages directory
+ * @returns The calculated page path, or null if document is outside pages directory
  */
-function getPagePath(document: TextDocument, pagesDirectory: string): string {
-  // If no pages directory is configured or it's empty, use default path
+function getPagePath(document: TextDocument, pagesDirectory: string): string | null {
+  // If no pages directory is configured or it's empty, not a page
   if (!pagesDirectory || pagesDirectory.trim() === '') {
-    debug.log('No pages directory configured, using default path "/"')
-    return '/'
+    debug.log('No pages directory configured')
+    return null
   }
 
   // Get the workspace folder for this document
   const workspaceFolder = workspace.getWorkspaceFolder(document.uri)
   if (!workspaceFolder) {
-    debug.log('Document is not in a workspace folder, using default path "/"')
-    return '/'
+    debug.log('Document is not in a workspace folder')
+    return null
   }
 
   // Calculate the full path to the pages directory
@@ -49,10 +49,10 @@ function getPagePath(document: TextDocument, pagesDirectory: string): string {
 
   // If the relative path starts with '..', the document is outside the pages directory
   if (relativePath.startsWith('..')) {
-    debug.log('Document is outside pages directory, using default path "/"', {
+    debug.log('Document is outside pages directory', {
       relativePath,
     })
-    return '/'
+    return null
   }
 
   // Remove the file extension and normalize the path
@@ -224,7 +224,7 @@ export function getDocumentPathInfo(
   // Then check if it's a page
   if (pagesDirectory && pagesDirectory.trim() !== '') {
     const pagePath = getPagePath(document, pagesDirectory)
-    if (pagePath !== '/') { // '/' means it wasn't in the pages directory
+    if (pagePath !== null) { // null means it wasn't in the pages directory
       return {
         type: 'page',
         path: pagePath,
