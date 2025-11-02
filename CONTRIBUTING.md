@@ -86,6 +86,84 @@ The extension includes pre-configured debug setups in `.vscode/launch.json`:
 - **Extension Logs**: View → Output → "Log (Extension Host)"
 - **Debug Mode**: Enable `portalPreview.debug` setting for verbose logging
 
+## Testing
+
+The project includes comprehensive unit tests for all utility functions and core components. Testing is handled by [Vitest](https://vitest.dev/) for fast, reliable test execution.
+
+### Unit Tests
+
+Unit tests focus on individual functions and components in isolation:
+
+```bash
+# Run all unit tests
+pnpm test:unit
+
+# Run unit tests with coverage reporting
+pnpm test:unit:coverage
+
+# Run unit tests with interactive UI (great for development)
+pnpm test:unit:ui
+```
+
+### Integration Tests
+
+Integration tests verify the extension works correctly in a VS Code environment:
+
+```bash
+# Run VS Code extension integration tests
+pnpm test
+```
+
+These tests:
+- Launch a real VS Code instance with the extension loaded
+- Test end-to-end workflows and VS Code API integration
+- Verify extension activation and command registration
+
+### Writing Tests
+
+When adding new functionality:
+
+1. **Write unit tests first** for isolated business logic
+2. **Mock external dependencies** (VS Code APIs, file system)
+3. **Test error conditions** not just happy paths
+4. **Use descriptive test names** that explain the scenario
+5. **Follow existing patterns** in the test suite
+
+Example test structure:
+```typescript
+describe('myFunction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should handle valid input correctly', () => {
+    // Test implementation
+  })
+
+  it('should handle invalid input gracefully', () => {
+    // Error case testing
+  })
+})
+```
+
+### Continuous Testing
+
+For active development, use watch mode:
+
+```bash
+# Terminal 1: Start development build with watch mode
+pnpm dev
+
+# Terminal 2: Run tests in watch mode during development
+pnpm test:unit:ui
+```
+
+The UI mode provides an excellent development experience with:
+- **Live test results** as you code
+- **Test filtering** and search capabilities
+- **Coverage visualization**
+- **Failed test debugging** with detailed output
+
 ## Code Quality
 
 ```bash
@@ -95,6 +173,12 @@ pnpm typecheck
 # Linting
 pnpm lint
 pnpm lint:fix
+
+# Unit tests
+pnpm test:unit
+
+# Unit tests with coverage
+pnpm test:unit:coverage
 
 # Full build
 pnpm build
