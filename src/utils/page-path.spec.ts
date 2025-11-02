@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getDocumentPathInfo } from './page-path'
 import { createMockTextDocument, createMockWorkspaceFolder } from '../../tests/test-utils'
 
@@ -12,6 +12,15 @@ describe('page-path', () => {
     // Get mocked modules
     mockWorkspace = (await import('vscode')).workspace
     mockWindow = (await import('vscode')).window
+
+    // Mock workspace.getConfiguration for debug utility
+    mockWorkspace.getConfiguration.mockReturnValue({
+      get: vi.fn(() => false), // Default debug to false
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   describe('getDocumentPathInfo', () => {

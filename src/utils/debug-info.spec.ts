@@ -1,25 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { env, window } from 'vscode'
 import { createDebugInfo, createDebugInfoText, copyDebugInfoToClipboard } from './debug-info'
 import { createMockExtensionContext } from '../../tests/test-utils'
-import * as vscode from 'vscode'
 
 const LOG_TIMESTAMP = '2025-01-01T00:00:00.000Z'
 
 describe('debug-info', () => {
-  let vscode: any
-
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks()
     // Mock Date to have consistent timestamps
     vi.useFakeTimers()
     vi.setSystemTime(new Date(LOG_TIMESTAMP))
-
-    // Get the mocked vscode module
-    vscode = await vi.importMock('vscode')
   })
 
   afterEach(() => {
     vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 
   describe('createDebugInfo', () => {
@@ -152,10 +148,10 @@ describe('debug-info', () => {
         error: 'details',
       }
 
-      expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith(
+      expect(vi.mocked(env.clipboard.writeText)).toHaveBeenCalledWith(
         JSON.stringify(expectedDebugInfo, null, 2),
       )
-      expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+      expect(vi.mocked(window.showInformationMessage)).toHaveBeenCalledWith(
         'Debug information copied to clipboard',
       )
     })
@@ -170,10 +166,10 @@ describe('debug-info', () => {
         timestamp: LOG_TIMESTAMP,
       }
 
-      expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith(
+      expect(vi.mocked(env.clipboard.writeText)).toHaveBeenCalledWith(
         JSON.stringify(expectedDebugInfo, null, 2),
       )
-      expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+      expect(vi.mocked(window.showInformationMessage)).toHaveBeenCalledWith(
         'Debug information copied to clipboard',
       )
     })
@@ -186,11 +182,11 @@ describe('debug-info', () => {
       })
 
       // Mock clipboard writeText to throw an error
-      ;(vscode.env.clipboard.writeText as any).mockRejectedValue(new Error('Clipboard error'))
+      ;(vi.mocked(env.clipboard.writeText) as any).mockRejectedValue(new Error('Clipboard error'))
 
       await copyDebugInfoToClipboard('Test error', context, { error: 'details' })
 
-      expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+      expect(vi.mocked(window.showErrorMessage)).toHaveBeenCalledWith(
         'Failed to copy debug information: Clipboard error',
       )
     })

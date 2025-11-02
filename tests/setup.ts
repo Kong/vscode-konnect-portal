@@ -76,15 +76,6 @@ vi.mock('vscode', async () => {
   }
 })
 
-// Mock debug utility globally
-vi.mock('../src/utils/debug', () => ({
-  debug: {
-    log: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}))
-
 // Setup global test environment
 beforeEach(() => {
   vi.clearAllMocks()
