@@ -31,6 +31,7 @@ export default mergeConfig(viteConfig, defineConfig({
       },
     },
     coverage: {
+      enabled: true,
       provider: 'v8',
       include: ['src/**/*.ts'],
       exclude: [
