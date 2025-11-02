@@ -165,7 +165,7 @@ describe('page-path', () => {
       })
 
       it('should handle document outside workspace', () => {
-        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(null)
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(undefined)
 
         const document = createMockTextDocument({
           fileName: 'external.md',
