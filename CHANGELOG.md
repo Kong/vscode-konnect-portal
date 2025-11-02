@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.1.0...v1.1.1) (2025-11-02)
+
+
+### Bug Fixes
+
+* page paths ([9bc4633](https://github.com/Kong/vscode-konnect-portal/commit/9bc4633a7575b6eb64f59d0f00b5816353946336))
+
 # [1.1.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.0.4...v1.1.0) (2025-11-01)
 
 
