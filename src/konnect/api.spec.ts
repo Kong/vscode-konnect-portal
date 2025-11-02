@@ -401,7 +401,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow()
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(ApiError)
         expect(vi.mocked(clearTimeout)).toHaveBeenCalledWith(123)
       })
     })
