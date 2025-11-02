@@ -251,12 +251,23 @@ pnpm watch
 # Run linting
 pnpm lint
 
-# Run tests
+# Run unit tests
+pnpm test:unit
+
+# Run unit tests with coverage
+pnpm test:unit:coverage
+
+# Run unit tests with UI (interactive)
+pnpm test:unit:ui
+
+# Run integration tests
 pnpm test
 
 # Package extension
 pnpm package
 ```
+
+> **Note**: For detailed testing instructions and development workflows, see the [Contributing Guide](CONTRIBUTING.md).
 
 ## Contributing
 

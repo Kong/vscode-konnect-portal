@@ -4,6 +4,7 @@ import type { StoredPortalConfig } from '../types/konnect'
 import { KonnectApiService, ApiError } from './api'
 import type { PortalStorageService } from './storage'
 import { showApiError } from '../utils/error-handling'
+import { PORTAL_SELECTION_MESSAGES } from '../constants/messages'
 
 /**
  * Service for managing portal selection workflow
@@ -36,19 +37,19 @@ export class PortalSelectionService {
   async selectPortal(): Promise<StoredPortalConfig | undefined> {
     const token = await this.storageService.getToken()
     if (!token) {
-      throw new Error('No Konnect token found. Please configure your Personal Access Token to continue.')
+      throw new Error(PORTAL_SELECTION_MESSAGES.NO_TOKEN)
     }
 
     // Show loading indicator
     return vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: 'Loading portals from Konnect...',
+        title: PORTAL_SELECTION_MESSAGES.LOADING_PORTALS,
         cancellable: true,
       },
       async (progress, cancellationToken) => {
         try {
-          progress.report({ increment: 20, message: 'Fetching portal list...' })
+          progress.report({ increment: 20, message: PORTAL_SELECTION_MESSAGES.FETCHING_PORTAL_LIST })
 
           const portals = await this.apiService.fetchAllPortals(token)
 
@@ -56,16 +57,16 @@ export class PortalSelectionService {
             return undefined
           }
 
-          progress.report({ increment: 60, message: 'Preparing portal selection...' })
+          progress.report({ increment: 60, message: PORTAL_SELECTION_MESSAGES.PREPARING_PORTAL_SELECTION })
 
           if (portals.length === 0) {
             vscode.window.showWarningMessage(
-              'No portals found in your Konnect account. Please create a portal first.',
+              PORTAL_SELECTION_MESSAGES.NO_PORTALS_WARNING,
             )
             return undefined
           }
 
-          progress.report({ increment: 20, message: 'Ready for selection' })
+          progress.report({ increment: 20, message: PORTAL_SELECTION_MESSAGES.READY_FOR_SELECTION })
 
           // Create quick pick items
           const portalItems = portals.map(portal => {
@@ -83,10 +84,10 @@ export class PortalSelectionService {
 
           // Show portal selection
           const selectedItem = await vscode.window.showQuickPick(portalItems, {
-            placeHolder: 'Select a Dev Portal to preview',
+            placeHolder: PORTAL_SELECTION_MESSAGES.PORTAL_SELECTION_PLACEHOLDER,
             matchOnDescription: true,
             matchOnDetail: true,
-            title: 'Portal Selection',
+            title: PORTAL_SELECTION_MESSAGES.PORTAL_SELECTION_TITLE,
           })
 
           if (!selectedItem) {
@@ -107,7 +108,7 @@ export class PortalSelectionService {
           await this.storageService.storeSelectedPortal(config)
 
           vscode.window.showInformationMessage(
-            `Portal "${config.displayName}" selected. (${config.origin})`,
+            PORTAL_SELECTION_MESSAGES.PORTAL_SELECTED(config.displayName!, config.origin),
           )
 
           return config
@@ -117,7 +118,7 @@ export class PortalSelectionService {
             await this.storageService.clearToken()
           }
 
-          await showApiError('Failed to load portals', error, this.context)
+          await showApiError(PORTAL_SELECTION_MESSAGES.LOAD_PORTALS_FAILED, error, this.context)
           return undefined
         }
       },
