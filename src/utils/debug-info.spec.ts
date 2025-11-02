@@ -6,11 +6,16 @@ import * as vscode from 'vscode'
 const LOG_TIMESTAMP = '2025-01-01T00:00:00.000Z'
 
 describe('debug-info', () => {
-  beforeEach(() => {
+  let vscode: any
+
+  beforeEach(async () => {
     vi.clearAllMocks()
     // Mock Date to have consistent timestamps
     vi.useFakeTimers()
     vi.setSystemTime(new Date(LOG_TIMESTAMP))
+
+    // Get the mocked vscode module
+    vscode = await vi.importMock('vscode')
   })
 
   afterEach(() => {

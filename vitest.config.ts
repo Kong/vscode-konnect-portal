@@ -5,7 +5,8 @@ import { resolve } from 'path'
 export default mergeConfig(viteConfig, defineConfig({
   resolve: {
     alias: {
-      // Ensure vscode module can be resolved in test environment
+      // 'vscode' module is not available in Node.js, only in VS Code extension runtime
+      // This alias provides import resolution while actual mocking is done in tests/setup.ts
       vscode: resolve(__dirname, 'tests/mocks/vscode.ts'),
     },
   },
