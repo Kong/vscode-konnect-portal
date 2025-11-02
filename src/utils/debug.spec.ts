@@ -52,7 +52,7 @@ describe('debug', () => {
 
   describe('debugLog', () => {
     describe('when debug mode is disabled', () => {
-      it('should not log normal messages', () => {
+      it('should not log normal messages', async () => {
         debugLog({ message: 'Test message' })
 
         expect(consoleSpy.log).not.toHaveBeenCalled()
@@ -60,13 +60,13 @@ describe('debug', () => {
         expect(consoleSpy.error).not.toHaveBeenCalled()
       })
 
-      it('should log forced messages', () => {
+      it('should log forced messages', async () => {
         debugLog({ message: 'Forced message', force: true })
 
         expect(consoleSpy.log).toHaveBeenCalledWith('[Portal Preview] Forced message')
       })
 
-      it('should log forced messages with data', () => {
+      it('should log forced messages with data', async () => {
         const testData = { error: 'details' }
         debugLog({ message: 'Forced message', data: testData, force: true })
 
@@ -85,38 +85,38 @@ describe('debug', () => {
         } as any)
       })
 
-      it('should log normal log messages', () => {
+      it('should log normal log messages', async () => {
         debugLog({ message: 'Debug message' })
 
         expect(consoleSpy.log).toHaveBeenCalledWith('[Portal Preview] Debug message')
       })
 
-      it('should log warning messages', () => {
+      it('should log warning messages', async () => {
         debugLog({ type: LogLevel.WARN, message: 'Warning message' })
 
         expect(consoleSpy.warn).toHaveBeenCalledWith('[Portal Preview] Warning message')
       })
 
-      it('should log error messages', () => {
+      it('should log error messages', async () => {
         debugLog({ type: LogLevel.ERROR, message: 'Error message' })
 
         expect(consoleSpy.error).toHaveBeenCalledWith('[Portal Preview] Error message')
       })
 
-      it('should log messages with additional data', () => {
+      it('should log messages with additional data', async () => {
         const testData = { userId: 'test-user', action: 'test-action' }
         debugLog({ message: 'Message with data', data: testData })
 
         expect(consoleSpy.log).toHaveBeenCalledWith('[Portal Preview] Message with data', testData)
       })
 
-      it('should handle undefined log type as default log', () => {
+      it('should handle undefined log type as default log', async () => {
         debugLog({ message: 'Default type message' })
 
         expect(consoleSpy.log).toHaveBeenCalledWith('[Portal Preview] Default type message')
       })
 
-      it('should call workspace.getConfiguration with correct parameter', () => {
+      it('should call workspace.getConfiguration with correct parameter', async () => {
         debugLog({ message: 'Test message' })
 
         expect(vi.mocked(workspace.getConfiguration)).toHaveBeenCalledWith('portalPreview')
@@ -134,7 +134,7 @@ describe('debug', () => {
         })
       })
 
-      it('should use console.log for LOG type', () => {
+      it('should use console.log for LOG type', async () => {
         debugLog({ type: LogLevel.LOG, message: 'Log message' })
 
         expect(consoleSpy.log).toHaveBeenCalledWith('[Portal Preview] Log message')
@@ -142,7 +142,7 @@ describe('debug', () => {
         expect(consoleSpy.error).not.toHaveBeenCalled()
       })
 
-      it('should use console.warn for WARN type', () => {
+      it('should use console.warn for WARN type', async () => {
         debugLog({ type: LogLevel.WARN, message: 'Warn message' })
 
         expect(consoleSpy.warn).toHaveBeenCalledWith('[Portal Preview] Warn message')
@@ -150,7 +150,7 @@ describe('debug', () => {
         expect(consoleSpy.error).not.toHaveBeenCalled()
       })
 
-      it('should use console.error for ERROR type', () => {
+      it('should use console.error for ERROR type', async () => {
         debugLog({ type: LogLevel.ERROR, message: 'Error message' })
 
         expect(consoleSpy.error).toHaveBeenCalledWith('[Portal Preview] Error message')
@@ -169,20 +169,20 @@ describe('debug', () => {
     })
 
     describe('debug.log', () => {
-      it('should log with LOG type and default force=false', () => {
+      it('should log with LOG type and default force=false', async () => {
         debug.log('Test log message')
 
         expect(consoleSpy.log).toHaveBeenCalledWith('[Portal Preview] Test log message')
       })
 
-      it('should log with additional data', () => {
+      it('should log with additional data', async () => {
         const testData = { key: 'value' }
         debug.log('Log with data', testData)
 
         expect(consoleSpy.log).toHaveBeenCalledWith('[Portal Preview] Log with data', testData)
       })
 
-      it('should respect force parameter', () => {
+      it('should respect force parameter', async () => {
         // Disable debug mode
         vi.mocked(workspace.getConfiguration).mockReturnValue(
           createWorkspaceConfigMock(false),
@@ -195,20 +195,20 @@ describe('debug', () => {
     })
 
     describe('debug.warn', () => {
-      it('should log with WARN type and default force=false', () => {
+      it('should log with WARN type and default force=false', async () => {
         debug.warn('Test warning')
 
         expect(consoleSpy.warn).toHaveBeenCalledWith('[Portal Preview] Test warning')
       })
 
-      it('should log with additional data', () => {
+      it('should log with additional data', async () => {
         const testData = { warning: 'details' }
         debug.warn('Warning with data', testData)
 
         expect(consoleSpy.warn).toHaveBeenCalledWith('[Portal Preview] Warning with data', testData)
       })
 
-      it('should respect force parameter', () => {
+      it('should respect force parameter', async () => {
         // Disable debug mode
         vi.mocked(workspace.getConfiguration).mockReturnValue(
           createWorkspaceConfigMock(false),
@@ -221,7 +221,7 @@ describe('debug', () => {
     })
 
     describe('debug.error', () => {
-      it('should log with ERROR type and default force=true', () => {
+      it('should log with ERROR type and default force=true', async () => {
         // Disable debug mode - errors should still show due to force=true default
         vi.mocked(workspace.getConfiguration).mockReturnValue(
           createWorkspaceConfigMock(false),
@@ -232,14 +232,14 @@ describe('debug', () => {
         expect(consoleSpy.error).toHaveBeenCalledWith('[Portal Preview] Test error')
       })
 
-      it('should log with additional data', () => {
+      it('should log with additional data', async () => {
         const testData = { error: 'stack trace' }
         debug.error('Error with data', testData)
 
         expect(consoleSpy.error).toHaveBeenCalledWith('[Portal Preview] Error with data', testData)
       })
 
-      it('should allow overriding force parameter to false', () => {
+      it('should allow overriding force parameter to false', async () => {
         // Disable debug mode
         vi.mocked(workspace.getConfiguration).mockReturnValue(
           createWorkspaceConfigMock(false),
@@ -253,7 +253,7 @@ describe('debug', () => {
   })
 
   describe('configuration integration', () => {
-    it('should handle missing debug configuration gracefully', () => {
+    it('should handle missing debug configuration gracefully', async () => {
       // Mock getConfiguration to return undefined for debug setting
       vi.mocked(workspace.getConfiguration).mockReturnValue(
         createWorkspaceConfigMock(undefined),
@@ -264,7 +264,7 @@ describe('debug', () => {
       expect(consoleSpy.log).not.toHaveBeenCalled()
     })
 
-    it('should use default false value when debug setting is undefined', () => {
+    it('should use default false value when debug setting is undefined', async () => {
       // Mock configuration.get to be called with default value
       const mockGet = vi.fn((key: string, defaultValue?: unknown) => defaultValue)
       vi.mocked(workspace.getConfiguration).mockReturnValue({

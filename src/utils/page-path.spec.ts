@@ -30,7 +30,7 @@ describe('page-path', () => {
 
   describe('getDocumentPathInfo', () => {
     describe('pages functionality', () => {
-      it('should return page type with correct path for file in pages directory', () => {
+      it('should return page type with correct path for file in pages directory', async () => {
         const workspaceFolder = createMockWorkspaceFolder({ name: 'workspace', fsPath: '/workspace' })
         const document = createMockTextDocument({
           fileName: 'test.md',
@@ -48,7 +48,7 @@ describe('page-path', () => {
         })
       })
 
-      it('should return page type with nested path for subdirectory file', () => {
+      it('should return page type with nested path for subdirectory file', async () => {
         const workspaceFolder = createMockWorkspaceFolder({ name: 'workspace', fsPath: '/workspace' })
         const document = createMockTextDocument({
           fileName: 'installation.md',
