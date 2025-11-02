@@ -1,6 +1,5 @@
 /**
  * Centralized messages and assertions for the Konnect extension
- * This ensures consistency between implementation and tests for all user-facing text
  */
 
 /**
