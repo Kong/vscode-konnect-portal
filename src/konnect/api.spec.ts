@@ -173,7 +173,7 @@ describe('konnect/api', () => {
 
         const result = await apiService.fetchAllPortals(testTokens.valid)
 
-        // Assert: Verify request behavior
+        // Verify request behavior
         expect(mockFetch).toHaveBeenCalledTimes(1)
         expect(mockFetch).toHaveBeenCalledWith(
           'https://us.api.konghq.com/v3/portals',
@@ -186,12 +186,12 @@ describe('konnect/api', () => {
           }),
         )
 
-        // Assert: Verify data integrity and structure
+        // Verify data integrity and structure
         expect(result).toEqual(mockPortals)
         expect(Array.isArray(result)).toBe(true)
         expect(result).toHaveLength(mockPortals.length)
 
-        // Assert: Verify each portal has required properties
+        // Verify each portal has required properties
         result.forEach(portal => {
           expect(portal).toHaveProperty('id')
           expect(portal).toHaveProperty('name')
@@ -217,14 +217,14 @@ describe('konnect/api', () => {
 
         const result = await apiService.fetchAllPortals(testTokens.valid)
 
-        // Assert: Verify request behavior - should make multiple requests
-        expect(mockFetch).toHaveBeenCalledTimes(2)
-
-        // Assert: Verify pagination handling - combined results from both pages
+        // Verify pagination handling - combined results from both pages
         expect(result).toEqual(mockPortals)
         expect(result).toHaveLength(page1Response.data.length + page2Response.data.length)
 
-        // Assert: Verify data aggregation integrity
+        // Verify pagination requests were made (implementation detail but necessary for pagination)
+        expect(mockFetch).toHaveBeenCalledTimes(2)
+
+        // Verify data aggregation integrity
         const page1Data = page1Response.data
         const page2Data = page2Response.data
         page1Data.forEach(portal => {
@@ -234,7 +234,7 @@ describe('konnect/api', () => {
           expect(result).toContainEqual(portal)
         })
 
-        // Assert: Verify no duplicate portals in aggregated result
+        // Verify no duplicate portals in aggregated result
         const ids = result.map(p => p.id)
         const uniqueIds = new Set(ids)
         expect(uniqueIds.size).toBe(ids.length)
@@ -258,16 +258,16 @@ describe('konnect/api', () => {
           await apiService.fetchAllPortals(testTokens.valid)
           expect.fail('Expected ApiError to be thrown')
         } catch (error) {
-          // Assert: Verify error type and message
+          // Verify error type and message
           expect(error).toBeInstanceOf(ApiError)
           expect((error as ApiError).message).toContain(API_ERROR_MESSAGES.INVALID_TOKEN)
 
-          // Assert: Verify error metadata preservation
+          // Verify error metadata preservation
           const apiError = error as ApiError
           expect(apiError.statusCode).toBe(401)
           expect(apiError.traceId).toBe(traceId)
 
-          // Assert: Verify error info conversion
+          // Verify error info conversion
           const errorInfo = apiError.toErrorInfo()
           expect(errorInfo.statusCode).toBe(401)
           expect(errorInfo.traceId).toBe(traceId)

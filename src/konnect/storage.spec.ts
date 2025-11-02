@@ -43,16 +43,16 @@ describe('konnect/storage', () => {
         const tokenWithWhitespace = storageTestTokens.withWhitespace
         const expectedTrimmedToken = tokenWithWhitespace.trim()
 
-        // Act: Store the token
+        // Store the token
         await storageService.storeToken(tokenWithWhitespace)
 
-        // Assert: Verify storage call
+        // Verify storage call
         expect(mockSecretStorage.store).toHaveBeenCalledWith(
           'konnectaccesstoken',
           expectedTrimmedToken,
         )
 
-        // Assert: Verify state - mock the retrieval to test round-trip behavior
+        // Verify state - mock the retrieval to test round-trip behavior
         mockSecretStorage.get.mockResolvedValueOnce(expectedTrimmedToken)
         const retrievedToken = await storageService.getToken()
         expect(retrievedToken).toBe(expectedTrimmedToken)
@@ -61,21 +61,21 @@ describe('konnect/storage', () => {
       it('should store valid token and maintain data integrity', async () => {
         const originalToken = storageTestTokens.valid
 
-        // Act: Store the token
+        // Store the token
         await storageService.storeToken(originalToken)
 
-        // Assert: Verify storage call
+        // Verify storage call
         expect(mockSecretStorage.store).toHaveBeenCalledWith(
           'konnectaccesstoken',
           originalToken,
         )
 
-        // Assert: Verify round-trip integrity
+        // Verify round-trip integrity
         mockSecretStorage.get.mockResolvedValueOnce(originalToken)
         const retrievedToken = await storageService.getToken()
         expect(retrievedToken).toBe(originalToken)
 
-        // Assert: Verify hasValidToken reflects the change (needs fresh mock)
+        // Verify hasValidToken reflects the change (needs fresh mock)
         mockSecretStorage.get.mockResolvedValueOnce(originalToken)
         const hasValid = await storageService.hasValidToken()
         expect(hasValid).toBe(true)
@@ -84,16 +84,16 @@ describe('konnect/storage', () => {
       it('should store empty token and verify validation behavior', async () => {
         const emptyToken = storageTestTokens.empty
 
-        // Act: Store empty token
+        // Store empty token
         await storageService.storeToken(emptyToken)
 
-        // Assert: Verify storage call
+        // Verify storage call
         expect(mockSecretStorage.store).toHaveBeenCalledWith(
           'konnectaccesstoken',
           emptyToken,
         )
 
-        // Assert: Verify hasValidToken correctly identifies invalid token
+        // Verify hasValidToken correctly identifies invalid token
         mockSecretStorage.get.mockResolvedValueOnce(emptyToken)
         const hasValid = await storageService.hasValidToken()
         expect(hasValid).toBe(false)
@@ -122,23 +122,23 @@ describe('konnect/storage', () => {
 
     describe('clearToken', () => {
       it('should delete stored token and verify state change', async () => {
-        // Arrange: Set up initial state with a token
+        // Set up initial state with a token
         mockSecretStorage.get.mockResolvedValueOnce(storageTestTokens.valid)
         const initiallyHasToken = await storageService.hasValidToken()
         expect(initiallyHasToken).toBe(true)
 
-        // Act: Clear the token
+        // Clear the token
         await storageService.clearToken()
 
-        // Assert: Verify deletion was called
+        // Verify deletion was called
         expect(mockSecretStorage.delete).toHaveBeenCalledWith('konnectaccesstoken')
 
-        // Assert: Verify state change - no token should be retrievable
+        // Verify state change - no token should be retrievable
         mockSecretStorage.get.mockResolvedValueOnce(undefined)
         const afterClearToken = await storageService.getToken()
         expect(afterClearToken).toBeUndefined()
 
-        // Assert: Verify hasValidToken reflects the change
+        // Verify hasValidToken reflects the change
         const hasValidAfterClear = await storageService.hasValidToken()
         expect(hasValidAfterClear).toBe(false)
       })
@@ -148,16 +148,16 @@ describe('konnect/storage', () => {
       it('should store portal config as JSON and verify round-trip integrity', async () => {
         const originalConfig = mockStoredPortalConfig
 
-        // Act: Store the portal config
+        // Store the portal config
         await storageService.storeSelectedPortal(originalConfig)
 
-        // Assert: Verify storage call with serialized data
+        // Verify storage call with serialized data
         expect(mockSecretStorage.store).toHaveBeenCalledWith(
           'selectedPortalConfig',
           mockSerializedPortalConfig,
         )
 
-        // Assert: Verify round-trip integrity
+        // Verify round-trip integrity
         mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
         const retrievedConfig = await storageService.getSelectedPortal()
         expect(retrievedConfig).toEqual(originalConfig)
@@ -167,16 +167,16 @@ describe('konnect/storage', () => {
         const differentConfig = mockStoredPortalConfig2
         const expectedSerialized = JSON.stringify(differentConfig)
 
-        // Act: Store different config
+        // Store different config
         await storageService.storeSelectedPortal(differentConfig)
 
-        // Assert: Verify storage call
+        // Verify storage call
         expect(mockSecretStorage.store).toHaveBeenCalledWith(
           'selectedPortalConfig',
           expectedSerialized,
         )
 
-        // Assert: Verify data consistency through retrieval
+        // Verify data consistency through retrieval
         mockSecretStorage.get.mockResolvedValueOnce(expectedSerialized)
         const retrievedConfig = await storageService.getSelectedPortal()
         expect(retrievedConfig).toEqual(differentConfig)
@@ -186,16 +186,16 @@ describe('konnect/storage', () => {
 
     describe('getSelectedPortal', () => {
       it('should retrieve and parse stored portal config with data integrity', async () => {
-        // Arrange: Mock stored data
+        // Mock stored data
         mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
 
-        // Act: Retrieve the portal config
+        // Retrieve the portal config
         const result = await storageService.getSelectedPortal()
 
-        // Assert: Verify storage access
+        // Verify storage access
         expect(mockSecretStorage.get).toHaveBeenCalledWith('selectedPortalConfig')
 
-        // Assert: Verify data integrity and structure
+        // Verify data integrity and structure
         expect(result).toEqual(mockStoredPortalConfig)
         expect(result).toHaveProperty('id')
         expect(result).toHaveProperty('name')
@@ -205,49 +205,49 @@ describe('konnect/storage', () => {
       })
 
       it('should return undefined when no portal config stored and verify clean state', async () => {
-        // Arrange: Mock no stored data
+        // Mock no stored data
         mockSecretStorage.get.mockResolvedValueOnce(undefined)
 
-        // Act: Attempt to retrieve
+        // Attempt to retrieve
         const result = await storageService.getSelectedPortal()
 
-        // Assert: Verify storage access
+        // Verify storage access
         expect(mockSecretStorage.get).toHaveBeenCalledWith('selectedPortalConfig')
 
-        // Assert: Verify clean state
+        // Verify clean state
         expect(result).toBeUndefined()
       })
 
       it('should handle invalid JSON, clear corrupted data, and verify recovery', async () => {
-        // Arrange: Mock corrupted data
+        // Mock corrupted data
         mockSecretStorage.get.mockResolvedValueOnce(mockInvalidJsonString)
 
-        // Act: Attempt to retrieve (should trigger cleanup)
+        // Attempt to retrieve (should trigger cleanup)
         const result = await storageService.getSelectedPortal()
 
-        // Assert: Verify access attempt
+        // Verify access attempt
         expect(mockSecretStorage.get).toHaveBeenCalledWith('selectedPortalConfig')
 
-        // Assert: Verify cleanup was performed
+        // Verify cleanup was performed
         expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig')
 
-        // Assert: Verify graceful failure
+        // Verify graceful failure
         expect(result).toBeUndefined()
 
-        // Assert: Verify system can recover - subsequent call should work
+        // Verify system can recover - subsequent call should work
         mockSecretStorage.get.mockResolvedValueOnce(undefined) // After cleanup
         const resultAfterCleanup = await storageService.getSelectedPortal()
         expect(resultAfterCleanup).toBeUndefined()
       })
 
       it('should handle empty string, clear data, and maintain system stability', async () => {
-        // Arrange: Mock empty string (edge case)
+        // Mock empty string (edge case)
         mockSecretStorage.get.mockResolvedValueOnce('')
 
-        // Act: Attempt to retrieve
+        // Attempt to retrieve
         const result = await storageService.getSelectedPortal()
 
-        // Assert: Verify graceful handling of empty string
+        // Verify graceful handling of empty string
         expect(result).toBeUndefined()
 
         // Note: Empty string is falsy, so it should return undefined without attempting JSON.parse
@@ -265,7 +265,7 @@ describe('konnect/storage', () => {
 
     describe('clearAll', () => {
       it('should clear both token and portal config and verify complete state reset', async () => {
-        // Arrange: Set up initial state with both token and portal
+        // Set up initial state with both token and portal
         mockSecretStorage.get
           .mockResolvedValueOnce(storageTestTokens.valid) // for hasValidToken check
           .mockResolvedValueOnce(mockSerializedPortalConfig) // for initial portal check
@@ -276,15 +276,10 @@ describe('konnect/storage', () => {
         expect(initialHasToken).toBe(true)
         expect(initialPortal).toEqual(mockStoredPortalConfig)
 
-        // Act: Clear all data
+        // Clear all data
         await storageService.clearAll()
 
-        // Assert: Verify both deletion calls were made
-        expect(mockSecretStorage.delete).toHaveBeenCalledWith('konnectaccesstoken')
-        expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig')
-        expect(mockSecretStorage.delete).toHaveBeenCalledTimes(2)
-
-        // Assert: Verify complete state reset
+        // Verify complete state reset
         mockSecretStorage.get
           .mockResolvedValueOnce(undefined) // token check
           .mockResolvedValueOnce(undefined) // portal check
@@ -293,6 +288,12 @@ describe('konnect/storage', () => {
         const afterClearPortal = await storageService.getSelectedPortal()
 
         expect(afterClearHasToken).toBe(false)
+        expect(afterClearPortal).toBeUndefined()
+
+        // Verify both deletion calls were made (implementation detail but necessary for clearAll)
+        expect(mockSecretStorage.delete).toHaveBeenCalledWith('konnectaccesstoken')
+        expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig')
+        expect(mockSecretStorage.delete).toHaveBeenCalledTimes(2)
         expect(afterClearPortal).toBeUndefined()
       })
     })

@@ -163,35 +163,57 @@ describe('PreviewProvider', () => {
 
   describe('openPreview', () => {
     it('should show warning and configure token when no token is configured', async () => {
+      // No valid token available
       vi.mocked(mockStorageService.hasValidToken).mockResolvedValue(false)
       vi.mocked(window.showWarningMessage).mockResolvedValue(PortalSetupActions.CONFIGURE_TOKEN as any)
 
+      // Attempt to open preview
       await previewProvider.openPreview(mockDocument)
 
+      // User is prompted for token configuration
       expect(window.showWarningMessage).toHaveBeenCalledWith(
         'No Konnect token configured. Please configure your Personal Access Token to continue.',
         PortalSetupActions.CONFIGURE_TOKEN,
       )
+
+      // Token configuration workflow is triggered
       expect(commands.executeCommand).toHaveBeenCalledWith('portalPreview.configureToken')
+
+      // No preview panel should be created without valid setup
+      expect(window.createWebviewPanel).not.toHaveBeenCalled()
     })
 
-    it('should not execute configure command when user cancels token warning', async () => {
+    it('should handle user cancellation gracefully without side effects', async () => {
+      // No valid token, user cancels warning
       vi.mocked(mockStorageService.hasValidToken).mockResolvedValue(false)
       vi.mocked(window.showWarningMessage).mockResolvedValue(undefined)
 
+      // Attempt to open preview
       await previewProvider.openPreview(mockDocument)
 
+      // User was prompted for action
       expect(window.showWarningMessage).toHaveBeenCalled()
+
+      // No commands executed after cancellation
       expect(commands.executeCommand).not.toHaveBeenCalledWith('portalPreview.configureToken')
+
+      // No side effects from cancellation
+      expect(window.createWebviewPanel).not.toHaveBeenCalled()
     })
 
     it('should auto-trigger portal selection when token exists but no portal is selected', async () => {
+      // Valid token but no portal configured
       vi.mocked(mockStorageService.hasValidToken).mockResolvedValue(true)
       vi.mocked(mockStorageService.getSelectedPortal).mockResolvedValue(undefined)
 
+      // Attempt to open preview
       await previewProvider.openPreview(mockDocument)
 
+      // Portal selection workflow is triggered
       expect(commands.executeCommand).toHaveBeenCalledWith('portalPreview.selectPortal')
+
+      // No preview created without complete setup
+      expect(window.createWebviewPanel).not.toHaveBeenCalled()
     })
 
     it('should reveal existing panel when one exists', async () => {
