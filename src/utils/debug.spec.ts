@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { workspace } from 'vscode'
+import type { WorkspaceConfiguration } from 'vscode'
 import { debugLog, debug } from './debug'
 import { LogLevel } from '../types'
 
@@ -10,6 +11,17 @@ describe('debug', () => {
     warn: any
     error: any
   }
+
+  /** Create a complete WorkspaceConfiguration mock with all required properties */
+  const createWorkspaceConfigMock = (debugValue: unknown = false): WorkspaceConfiguration => ({
+    get: vi.fn((key: string, defaultValue?: unknown) => {
+      if (key === 'debug') return debugValue
+      return defaultValue
+    }),
+    has: vi.fn(() => true),
+    inspect: vi.fn(() => ({ key: '', defaultValue: undefined })),
+    update: vi.fn().mockResolvedValue(undefined),
+  })
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -22,12 +34,9 @@ describe('debug', () => {
     }
 
     // Default mock configuration - debug disabled
-    vi.mocked(workspace.getConfiguration).mockReturnValue({
-      get: vi.fn((key: string, defaultValue?: unknown) => {
-        if (key === 'debug') return false
-        return defaultValue
-      }),
-    } as any)
+    vi.mocked(workspace.getConfiguration).mockReturnValue(
+      createWorkspaceConfigMock(false),
+    )
   })
 
   afterEach(() => {
@@ -112,6 +121,9 @@ describe('debug', () => {
         // Enable debug mode for these tests
         vi.mocked(workspace.getConfiguration).mockReturnValue({
           get: vi.fn(() => true),
+          has: vi.fn(() => true),
+          inspect: vi.fn(() => ({ key: '', defaultValue: undefined })),
+          update: vi.fn().mockResolvedValue(undefined),
         })
       })
 
@@ -165,9 +177,9 @@ describe('debug', () => {
 
       it('should respect force parameter', () => {
         // Disable debug mode
-        vi.mocked(workspace.getConfiguration).mockReturnValue({
-          get: vi.fn(() => false),
-        })
+        vi.mocked(workspace.getConfiguration).mockReturnValue(
+          createWorkspaceConfigMock(false),
+        )
 
         debug.log('Forced log', undefined, true)
 
@@ -191,9 +203,9 @@ describe('debug', () => {
 
       it('should respect force parameter', () => {
         // Disable debug mode
-        vi.mocked(workspace.getConfiguration).mockReturnValue({
-          get: vi.fn(() => false),
-        })
+        vi.mocked(workspace.getConfiguration).mockReturnValue(
+          createWorkspaceConfigMock(false),
+        )
 
         debug.warn('Forced warning', undefined, true)
 
@@ -204,9 +216,9 @@ describe('debug', () => {
     describe('debug.error', () => {
       it('should log with ERROR type and default force=true', () => {
         // Disable debug mode - errors should still show due to force=true default
-        vi.mocked(workspace.getConfiguration).mockReturnValue({
-          get: vi.fn(() => false),
-        })
+        vi.mocked(workspace.getConfiguration).mockReturnValue(
+          createWorkspaceConfigMock(false),
+        )
 
         debug.error('Test error')
 
@@ -222,9 +234,9 @@ describe('debug', () => {
 
       it('should allow overriding force parameter to false', () => {
         // Disable debug mode
-        vi.mocked(workspace.getConfiguration).mockReturnValue({
-          get: vi.fn(() => false),
-        })
+        vi.mocked(workspace.getConfiguration).mockReturnValue(
+          createWorkspaceConfigMock(false),
+        )
 
         debug.error('Non-forced error', undefined, false)
 
@@ -236,12 +248,9 @@ describe('debug', () => {
   describe('configuration integration', () => {
     it('should handle missing debug configuration gracefully', () => {
       // Mock getConfiguration to return undefined for debug setting
-      vi.mocked(workspace.getConfiguration).mockReturnValue({
-        get: vi.fn((key: string, defaultValue?: unknown) => {
-          if (key === 'debug') return defaultValue // Should use false as default
-          return defaultValue
-        }),
-      })
+      vi.mocked(workspace.getConfiguration).mockReturnValue(
+        createWorkspaceConfigMock(undefined),
+      )
 
       debugLog({ message: 'Test message' })
 
@@ -251,7 +260,12 @@ describe('debug', () => {
     it('should use default false value when debug setting is undefined', () => {
       // Mock configuration.get to be called with default value
       const mockGet = vi.fn((key: string, defaultValue?: unknown) => defaultValue)
-      vi.mocked(workspace.getConfiguration).mockReturnValue({ get: mockGet })
+      vi.mocked(workspace.getConfiguration).mockReturnValue({
+        get: mockGet,
+        has: vi.fn(() => true),
+        inspect: vi.fn(() => ({ key: '', defaultValue: undefined })),
+        update: vi.fn().mockResolvedValue(undefined),
+      })
 
       debugLog({ message: 'Test message' })
 
