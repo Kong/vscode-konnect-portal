@@ -13,12 +13,14 @@ export default mergeConfig(viteConfig, defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.spec.ts', 'tests/**/*.spec.ts'],
+    include: [
+      'src/**/*.spec.ts',
+    ],
     exclude: [
       './dist/**',
       './out/**',
       'node_modules',
-      'src/webview/**', // webview tests will be separate
+      'src/webview/webview.js',
     ],
     deps: {
       optimizer: {
@@ -33,8 +35,7 @@ export default mergeConfig(viteConfig, defineConfig({
       include: ['src/**/*.ts'],
       exclude: [
         'src/**/*.spec.ts',
-        'src/webview/**',
-        'src/types/**',
+        'src/webview/webview.js',
       ],
       reporter: ['text', 'html', 'json'],
       thresholds: {
