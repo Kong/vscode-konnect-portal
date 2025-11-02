@@ -4,6 +4,13 @@ import type { WorkspaceConfiguration } from 'vscode'
 import { debugLog, debug } from './debug'
 import { LogLevel } from '../types'
 
+// Mock VS Code module - only what this test file needs
+vi.mock('vscode', () => ({
+  workspace: {
+    getConfiguration: vi.fn(),
+  },
+}))
+
 describe('debug', () => {
   // Mock console methods
   let consoleSpy: {

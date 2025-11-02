@@ -1,22 +1,27 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { workspace, window } from 'vscode'
 import { getDocumentPathInfo } from './page-path'
 import { createMockTextDocument, createMockWorkspaceFolder } from '../../tests/test-utils'
 
-describe('page-path', () => {
-  let mockWorkspace: any
-  let mockWindow: any
+// Mock VS Code module - only what this test file needs
+vi.mock('vscode', () => ({
+  workspace: {
+    getConfiguration: vi.fn(),
+    getWorkspaceFolder: vi.fn(),
+  },
+  window: {
+    showErrorMessage: vi.fn(),
+  },
+}))
 
-  beforeEach(async () => {
+describe('page-path', () => {
+  beforeEach(() => {
     vi.clearAllMocks()
 
-    // Get mocked modules
-    mockWorkspace = (await import('vscode')).workspace
-    mockWindow = (await import('vscode')).window
-
     // Mock workspace.getConfiguration for debug utility
-    mockWorkspace.getConfiguration.mockReturnValue({
+    vi.mocked(workspace.getConfiguration).mockReturnValue({
       get: vi.fn(() => false), // Default debug to false
-    })
+    } as any)
   })
 
   afterEach(() => {
@@ -28,18 +33,18 @@ describe('page-path', () => {
       it('should return page type with correct path for file in pages directory', () => {
         const workspaceFolder = createMockWorkspaceFolder({ name: 'workspace', fsPath: '/workspace' })
         const document = createMockTextDocument({
-          fileName: 'about.md',
-          fsPath: '/workspace/pages/about.md',
-          content: '# About',
+          fileName: 'test.md',
+          fsPath: '/workspace/pages/test.md',
+          content: '# Test Page',
         })
 
-        mockWorkspace.getWorkspaceFolder.mockReturnValue(workspaceFolder)
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(workspaceFolder)
 
         const result = getDocumentPathInfo(document, 'pages', '')
 
         expect(result).toEqual({
           type: 'page',
-          path: '/about',
+          path: '/test',
         })
       })
 
@@ -51,7 +56,7 @@ describe('page-path', () => {
           content: '# Installation',
         })
 
-        mockWorkspace.getWorkspaceFolder.mockReturnValue(workspaceFolder)
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(workspaceFolder)
 
         const result = getDocumentPathInfo(document, 'pages', '')
 
@@ -69,7 +74,7 @@ describe('page-path', () => {
           content: '# Home',
         })
 
-        mockWorkspace.getWorkspaceFolder.mockReturnValue(workspaceFolder)
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(workspaceFolder)
 
         const result = getDocumentPathInfo(document, 'pages', '')
 
@@ -84,10 +89,10 @@ describe('page-path', () => {
         const document = createMockTextDocument({
           fileName: 'readme.md',
           fsPath: '/workspace/docs/readme.md',
-          content: '# README',
+          content: '# Readme',
         })
 
-        mockWorkspace.getWorkspaceFolder.mockReturnValue(workspaceFolder)
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(workspaceFolder)
 
         const result = getDocumentPathInfo(document, 'pages', '')
 
@@ -102,41 +107,41 @@ describe('page-path', () => {
       it('should return snippet type with correct name and path for file in snippets directory', () => {
         const workspaceFolder = createMockWorkspaceFolder({ name: 'workspace', fsPath: '/workspace' })
         const document = createMockTextDocument({
-          fileName: 'api-example.md',
-          fsPath: '/workspace/snippets/api-example.md',
-          content: 'Code example',
+          fileName: 'example.md',
+          fsPath: '/workspace/snippets/example.md',
+          content: '# Example snippet',
         })
 
-        mockWorkspace.getWorkspaceFolder.mockReturnValue(workspaceFolder)
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(workspaceFolder)
 
         const result = getDocumentPathInfo(document, '', 'snippets')
 
         expect(result).toEqual({
           type: 'snippet',
-          path: '/_preview-mode/snippets/api-example',
-          snippetName: 'api-example',
+          path: '/_preview-mode/snippets/example',
+          snippetName: 'example',
         })
       })
 
       it('should return error for snippet in subdirectory', () => {
         const workspaceFolder = createMockWorkspaceFolder({ name: 'workspace', fsPath: '/workspace' })
         const document = createMockTextDocument({
-          fileName: 'example.md',
-          fsPath: '/workspace/snippets/nested/example.md',
-          content: '# Example',
+          fileName: 'nested.md',
+          fsPath: '/workspace/snippets/category/nested.md',
+          content: '# Nested snippet',
         })
 
-        mockWorkspace.getWorkspaceFolder.mockReturnValue(workspaceFolder)
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(workspaceFolder)
 
         const result = getDocumentPathInfo(document, '', 'snippets')
 
+        expect(vi.mocked(window.showErrorMessage)).toHaveBeenCalledWith(
+          'Snippets in subdirectories are not supported. Please move "nested.md" to the root of your snippets directory.',
+        )
         expect(result).toEqual({
           type: 'error',
-          errorMessage: 'Snippets in subdirectories are not supported. Please move "example.md" to the root of your snippets directory.',
+          errorMessage: 'Snippets in subdirectories are not supported. Please move "nested.md" to the root of your snippets directory.',
         })
-        expect(mockWindow.showErrorMessage).toHaveBeenCalledWith(
-          'Snippets in subdirectories are not supported. Please move "example.md" to the root of your snippets directory.',
-        )
       })
     })
 
@@ -144,12 +149,12 @@ describe('page-path', () => {
       it('should handle empty directory configurations', () => {
         const workspaceFolder = createMockWorkspaceFolder({ name: 'workspace', fsPath: '/workspace' })
         const document = createMockTextDocument({
-          fileName: 'example.md',
-          fsPath: '/workspace/example.md',
-          content: '# Example',
+          fileName: 'test.md',
+          fsPath: '/workspace/content/test.md',
+          content: '# Test',
         })
 
-        mockWorkspace.getWorkspaceFolder.mockReturnValue(workspaceFolder)
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(workspaceFolder)
 
         const result = getDocumentPathInfo(document, '', '')
 
@@ -160,15 +165,15 @@ describe('page-path', () => {
       })
 
       it('should handle document outside workspace', () => {
+        vi.mocked(workspace.getWorkspaceFolder).mockReturnValue(null)
+
         const document = createMockTextDocument({
-          fileName: 'example.md',
-          fsPath: '/other/example.md',
-          content: '# Example',
+          fileName: 'external.md',
+          fsPath: '/external/external.md',
+          content: '# External',
         })
 
-        mockWorkspace.getWorkspaceFolder.mockReturnValue(null)
-
-        const result = getDocumentPathInfo(document, 'pages', 'snippets')
+        const result = getDocumentPathInfo(document, 'pages', '')
 
         expect(result).toEqual({
           type: 'default',

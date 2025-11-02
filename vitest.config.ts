@@ -6,7 +6,7 @@ export default mergeConfig(viteConfig, defineConfig({
   resolve: {
     alias: {
       // 'vscode' module is not available in Node.js, only in VS Code extension runtime
-      // This alias provides import resolution while actual mocking is done in tests/setup.ts
+      // Each test file mocks only the VS Code APIs it needs using vi.mock()
       vscode: resolve(__dirname, 'tests/mocks/vscode.ts'),
     },
   },
@@ -20,7 +20,6 @@ export default mergeConfig(viteConfig, defineConfig({
       'node_modules',
       'src/webview/**', // webview tests will be separate
     ],
-    setupFiles: ['./tests/setup.ts'],
     deps: {
       optimizer: {
         web: {

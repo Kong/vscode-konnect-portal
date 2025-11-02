@@ -3,6 +3,19 @@ import { env, window } from 'vscode'
 import { createDebugInfo, createDebugInfoText, copyDebugInfoToClipboard } from './debug-info'
 import { createMockExtensionContext } from '../../tests/test-utils'
 
+// Mock VS Code module - only what this test file needs
+vi.mock('vscode', () => ({
+  env: {
+    clipboard: {
+      writeText: vi.fn(),
+    },
+  },
+  window: {
+    showInformationMessage: vi.fn(),
+    showErrorMessage: vi.fn(),
+  },
+}))
+
 const LOG_TIMESTAMP = '2025-01-01T00:00:00.000Z'
 
 describe('debug-info', () => {
