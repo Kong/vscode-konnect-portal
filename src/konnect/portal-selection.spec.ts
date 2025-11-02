@@ -68,7 +68,7 @@ describe('konnect/portal-selection', () => {
       getToken: vi.fn(),
       storeSelectedPortal: vi.fn(),
       clearToken: vi.fn(),
-    } as any
+    } as unknown as PortalStorageService
 
     // Create service instance
     portalSelectionService = new PortalSelectionService(
@@ -142,53 +142,231 @@ describe('konnect/portal-selection', () => {
         expect(result).toBeUndefined()
       })
 
-      it('should successfully select and store portal', async () => {
+      it('should successfully select and store portal with complete workflow verification', async () => {
+        // Arrange: Setup mocks for successful workflow
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
         mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
         mockShowQuickPick.mockResolvedValueOnce(mockQuickPickItems[0])
 
+        const selectedPortal = mockQuickPickItems[0].portal
+        const expectedConfig = {
+          id: selectedPortal.id,
+          name: selectedPortal.name,
+          displayName: selectedPortal.display_name,
+          description: selectedPortal.description,
+          origin: 'https://portal1.example.com',
+          canonicalDomain: selectedPortal.canonical_domain,
+        }
+
+        // Act: Execute portal selection
         const result = await portalSelectionService.selectPortal()
 
-        expect(mockStorageService.storeSelectedPortal).toHaveBeenCalledWith({
-          id: '1',
-          name: 'Portal 1',
-          displayName: 'Portal 1 Display',
-          description: 'Test Portal 1',
-          origin: 'https://portal1.example.com',
-          canonicalDomain: 'portal1.example.com',
-        })
+        // Assert: Verify storage behavior
+        expect(mockStorageService.storeSelectedPortal).toHaveBeenCalledWith(expectedConfig)
 
+        // Assert: Verify user feedback
         expect(mockShowInformationMessage).toHaveBeenCalledWith(
           PORTAL_SELECTION_MESSAGES.PORTAL_SELECTED('Portal 1 Display', 'https://portal1.example.com'),
         )
 
-        expect(result).toEqual({
-          id: '1',
-          name: 'Portal 1',
-          displayName: 'Portal 1 Display',
-          description: 'Test Portal 1',
-          origin: 'https://portal1.example.com',
-          canonicalDomain: 'portal1.example.com',
+        // Assert: Verify return value matches stored config
+        expect(result).toEqual(expectedConfig)
+
+        // Assert: Verify API was called with correct token
+        expect(mockApiService.fetchAllPortals).toHaveBeenCalledWith(testTokens.valid)
+
+        // Assert: Verify complete data structure
+        expect(result).toMatchObject({
+          id: expect.any(String),
+          name: expect.any(String),
+          displayName: expect.any(String),
+          origin: expect.stringMatching(/^https?:\/\//),
+          canonicalDomain: expect.any(String),
         })
       })
 
-      it('should clear token and show error on 401 API error', async () => {
+      it('should clear token and show error on 401 API error with complete error recovery', async () => {
         const apiError = new ApiError('Unauthorized', 'trace-123', 401)
 
+        // Arrange: Setup initial state with token
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
         mockApiService.fetchAllPortals.mockRejectedValueOnce(apiError)
 
         const { showApiError } = await import('../utils/error-handling')
 
+        // Act: Execute portal selection (should fail with 401)
         const result = await portalSelectionService.selectPortal()
 
+        // Assert: Verify token cleanup was triggered
         expect(mockStorageService.clearToken).toHaveBeenCalledWith()
+
+        // Assert: Verify error handling maintains context
         expect(showApiError).toHaveBeenCalledWith(
           PORTAL_SELECTION_MESSAGES.LOAD_PORTALS_FAILED,
           apiError,
           mockContext,
         )
+
+        // Assert: Verify graceful failure
         expect(result).toBeUndefined()
+
+        // Assert: Verify error object structure is preserved
+        expect(showApiError).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            statusCode: 401,
+            traceId: 'trace-123',
+            message: expect.any(String),
+          }),
+          expect.any(Object),
+        )
+      })
+    })
+
+    describe('Portal Selection Workflow Integration Tests', () => {
+      let mockShowWarningMessage: any
+      let mockShowInformationMessage: any
+      let mockShowQuickPick: any
+      let mockWithProgress: any
+
+      beforeEach(async () => {
+        const vscode = await import('vscode')
+        mockShowWarningMessage = vi.mocked(vscode.window.showWarningMessage)
+        mockShowInformationMessage = vi.mocked(vscode.window.showInformationMessage)
+        mockShowQuickPick = vi.mocked(vscode.window.showQuickPick)
+        mockWithProgress = vi.mocked(vscode.window.withProgress)
+
+        // Setup default progress mock
+        mockWithProgress.mockImplementation(async (options: any, callback: any) => {
+          const progress = createMockProgress()
+          const cancellationToken = createMockCancellationToken()
+          return await callback(progress, cancellationToken)
+        })
+      })
+
+      describe('complete workflow scenarios', () => {
+        it('should handle complete successful portal selection workflow', async () => {
+          // Step 1: Token validation
+          mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
+
+          // Step 2: API call for portals
+          mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
+
+          // Step 3: User portal selection
+          mockShowQuickPick.mockResolvedValueOnce(mockQuickPickItems[0])
+
+          // Execute complete workflow
+          const result = await portalSelectionService.selectPortal()
+
+          // Verify workflow sequence
+          expect(mockStorageService.getToken).toHaveBeenCalledBefore(mockApiService.fetchAllPortals)
+          expect(mockApiService.fetchAllPortals).toHaveBeenCalledBefore(mockShowQuickPick)
+          expect(mockShowQuickPick).toHaveBeenCalledBefore(mockStorageService.storeSelectedPortal as any)
+
+          // Verify final state
+          expect(result).toBeDefined()
+          expect(mockStorageService.storeSelectedPortal).toHaveBeenCalledTimes(1)
+          expect(mockShowInformationMessage).toHaveBeenCalledTimes(1)
+        })
+
+        it('should handle error workflow with proper cleanup and recovery', async () => {
+          // Step 1: Valid token initially
+          mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
+
+          // Step 2: API failure with 401
+          const apiError = new ApiError('Invalid token', 'trace-456', 401)
+          mockApiService.fetchAllPortals.mockRejectedValueOnce(apiError)
+
+          const { showApiError } = await import('../utils/error-handling')
+
+          // Execute workflow (should fail gracefully)
+          const result = await portalSelectionService.selectPortal()
+
+          // Verify error recovery sequence
+          expect(mockStorageService.getToken).toHaveBeenCalledBefore(mockApiService.fetchAllPortals)
+          expect(mockStorageService.clearToken).toHaveBeenCalledAfter(mockApiService.fetchAllPortals)
+
+          // Verify no partial state corruption
+          expect(mockStorageService.storeSelectedPortal).not.toHaveBeenCalled()
+          expect(mockShowInformationMessage).not.toHaveBeenCalled()
+          expect(mockShowQuickPick).not.toHaveBeenCalled()
+
+          // Verify error handling
+          expect(result).toBeUndefined()
+          expect(showApiError).toHaveBeenCalledWith(
+            PORTAL_SELECTION_MESSAGES.LOAD_PORTALS_FAILED,
+            apiError,
+            mockContext,
+          )
+        })
+
+        it('should handle UI cancellation without side effects', async () => {
+          // Setup successful API call
+          mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
+          mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
+
+          // User cancels selection
+          mockShowQuickPick.mockResolvedValueOnce(undefined)
+
+          // Execute workflow
+          const result = await portalSelectionService.selectPortal()
+
+          // Verify no side effects from cancellation
+          expect(mockStorageService.storeSelectedPortal).not.toHaveBeenCalled()
+          expect(mockStorageService.clearToken).not.toHaveBeenCalled()
+          expect(mockShowInformationMessage).not.toHaveBeenCalled()
+
+          // Verify clean cancellation
+          expect(result).toBeUndefined()
+
+          // Verify API was still called (user saw the options before canceling)
+          expect(mockApiService.fetchAllPortals).toHaveBeenCalledWith(testTokens.valid)
+        })
+
+        it('should handle empty portal list with appropriate user feedback', async () => {
+          // Setup valid token but no portals
+          mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
+          mockApiService.fetchAllPortals.mockResolvedValueOnce([])
+
+          // Execute workflow
+          const result = await portalSelectionService.selectPortal()
+
+          // Verify appropriate user feedback
+          expect(mockShowWarningMessage).toHaveBeenCalledWith(
+            PORTAL_SELECTION_MESSAGES.NO_PORTALS_WARNING,
+          )
+
+          // Verify no further UI interactions
+          expect(mockShowQuickPick).not.toHaveBeenCalled()
+          expect(mockStorageService.storeSelectedPortal).not.toHaveBeenCalled()
+          expect(mockShowInformationMessage).not.toHaveBeenCalled()
+
+          // Verify clean termination
+          expect(result).toBeUndefined()
+        })
+
+        it('should handle progress reporting workflow correctly', async () => {
+          // Setup successful workflow
+          mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
+          mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
+          mockShowQuickPick.mockResolvedValueOnce(mockQuickPickItems[0])
+
+          // Execute workflow
+          await portalSelectionService.selectPortal()
+
+          // Verify progress reporting sequence
+          expect(mockWithProgress).toHaveBeenCalledWith(
+            expect.objectContaining({
+              title: PORTAL_SELECTION_MESSAGES.LOADING_PORTALS,
+              cancellable: true,
+            }),
+            expect.any(Function),
+          )
+
+          // The progress callback should have been called with proper reporting
+          const progressCallback = vi.mocked(mockWithProgress).mock.calls[0][1]
+          expect(progressCallback).toBeDefined()
+        })
       })
     })
   })

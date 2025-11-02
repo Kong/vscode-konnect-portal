@@ -134,18 +134,46 @@ describe('konnect/api', () => {
         expect(KonnectApiService.validateTokenFormat(testTokens.empty)).toBe(false)
         expect(KonnectApiService.validateTokenFormat(testTokens.whitespaceOnly)).toBe(false)
       })
+
+      it('should validate token format before making requests', async () => {
+        // Test various token formats
+        const tokenTests = [
+          { token: testTokens.valid, shouldPass: true },
+          { token: testTokens.validLong, shouldPass: true },
+          { token: testTokens.invalidPrefix, shouldPass: false },
+          { token: testTokens.short, shouldPass: false },
+          { token: testTokens.empty, shouldPass: false },
+        ]
+
+        tokenTests.forEach(({ token, shouldPass }) => {
+          const isValid = KonnectApiService.validateTokenFormat(token)
+          expect(isValid).toBe(shouldPass)
+        })
+
+        // Verify that service would work with valid tokens
+        if (KonnectApiService.validateTokenFormat(testTokens.valid)) {
+          mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: vi.fn().mockResolvedValueOnce(mockEmptyResponse),
+          })
+
+          const result = await apiService.fetchAllPortals(testTokens.valid)
+          expect(result).toBeDefined()
+        }
+      })
     })
 
     describe('fetchAllPortals', () => {
-      it('should fetch all portals with single page', async () => {
+      it('should fetch all portals with single page and verify data integrity', async () => {
+        const mockResponse = mockSinglePageResponse
         mockFetch.mockResolvedValueOnce({
           ok: true,
-          json: vi.fn().mockResolvedValueOnce(mockSinglePageResponse),
+          json: vi.fn().mockResolvedValueOnce(mockResponse),
         })
 
         const result = await apiService.fetchAllPortals(testTokens.valid)
 
-        expect(result).toEqual(mockPortals)
+        // Assert: Verify request behavior
         expect(mockFetch).toHaveBeenCalledTimes(1)
         expect(mockFetch).toHaveBeenCalledWith(
           'https://us.api.konghq.com/v3/portals',
@@ -157,37 +185,94 @@ describe('konnect/api', () => {
             }),
           }),
         )
+
+        // Assert: Verify data integrity and structure
+        expect(result).toEqual(mockPortals)
+        expect(Array.isArray(result)).toBe(true)
+        expect(result).toHaveLength(mockPortals.length)
+
+        // Assert: Verify each portal has required properties
+        result.forEach(portal => {
+          expect(portal).toHaveProperty('id')
+          expect(portal).toHaveProperty('name')
+          expect(portal).toHaveProperty('canonical_domain')
+          expect(typeof portal.id).toBe('string')
+          expect(portal.id.length).toBeGreaterThan(0)
+        })
       })
 
-      it('should fetch all portals with pagination', async () => {
+      it('should fetch all portals with pagination and verify data aggregation', async () => {
+        const page1Response = mockPaginatedPage1Response
+        const page2Response = mockPaginatedPage2Response
+
         mockFetch
           .mockResolvedValueOnce({
             ok: true,
-            json: vi.fn().mockResolvedValueOnce(mockPaginatedPage1Response),
+            json: vi.fn().mockResolvedValueOnce(page1Response),
           })
           .mockResolvedValueOnce({
             ok: true,
-            json: vi.fn().mockResolvedValueOnce(mockPaginatedPage2Response),
+            json: vi.fn().mockResolvedValueOnce(page2Response),
           })
 
         const result = await apiService.fetchAllPortals(testTokens.valid)
 
-        expect(result).toEqual(mockPortals)
+        // Assert: Verify request behavior - should make multiple requests
         expect(mockFetch).toHaveBeenCalledTimes(2)
+
+        // Assert: Verify pagination handling - combined results from both pages
+        expect(result).toEqual(mockPortals)
+        expect(result).toHaveLength(page1Response.data.length + page2Response.data.length)
+
+        // Assert: Verify data aggregation integrity
+        const page1Data = page1Response.data
+        const page2Data = page2Response.data
+        page1Data.forEach(portal => {
+          expect(result).toContainEqual(portal)
+        })
+        page2Data.forEach(portal => {
+          expect(result).toContainEqual(portal)
+        })
+
+        // Assert: Verify no duplicate portals in aggregated result
+        const ids = result.map(p => p.id)
+        const uniqueIds = new Set(ids)
+        expect(uniqueIds.size).toBe(ids.length)
       })
 
-      it('should handle 401 authentication error', async () => {
+      it('should handle 401 authentication error with complete error context', async () => {
+        const traceId = 'trace-auth-failure-123'
         mockFetch.mockResolvedValueOnce({
           ok: false,
           status: 401,
           statusText: 'Unauthorized',
           headers: {
-            get: vi.fn((key: string) => mockErrorHeaders.withTraceId.get(key)),
+            get: vi.fn((key: string) =>
+              key === 'x-datadog-trace-id' ? traceId : mockErrorHeaders.withTraceId.get(key),
+            ),
           },
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.INVALID_TOKEN)
+        try {
+          await apiService.fetchAllPortals(testTokens.valid)
+          expect.fail('Expected ApiError to be thrown')
+        } catch (error) {
+          // Assert: Verify error type and message
+          expect(error).toBeInstanceOf(ApiError)
+          expect((error as ApiError).message).toContain(API_ERROR_MESSAGES.INVALID_TOKEN)
+
+          // Assert: Verify error metadata preservation
+          const apiError = error as ApiError
+          expect(apiError.statusCode).toBe(401)
+          expect(apiError.traceId).toBe(traceId)
+
+          // Assert: Verify error info conversion
+          const errorInfo = apiError.toErrorInfo()
+          expect(errorInfo.statusCode).toBe(401)
+          expect(errorInfo.traceId).toBe(traceId)
+          expect(errorInfo.message).toContain(API_ERROR_MESSAGES.INVALID_TOKEN)
+        }
       })
 
       it('should handle 403 forbidden error', async () => {
@@ -320,5 +405,6 @@ describe('konnect/api', () => {
         expect(vi.mocked(clearTimeout)).toHaveBeenCalledWith(123)
       })
     })
+
   })
 })
