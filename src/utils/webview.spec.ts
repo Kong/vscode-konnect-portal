@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Mock debug module only - we'll test file operations differently
+// Mock debug module
 vi.mock('./debug', () => ({
   debug: {
     warn: vi.fn(),
@@ -153,10 +153,4 @@ describe('webview utilities', () => {
       expect(result).toBe('https://user:pass@portal.example.com/?preview=true&preview_id=test-id')
     })
   })
-
-  // Note: For file system operations (generateWebviewHTML, loadWebviewCSS, loadWebviewJS),
-  // we would typically test these with integration tests or by abstracting the file system
-  // operations into a separate service that can be mocked more easily.
-  // The current implementation tightly couples file system operations with business logic,
-  // which makes unit testing challenging without complex mocking.
 })
