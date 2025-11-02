@@ -1,5 +1,6 @@
-import type { KonnectPortalsResponse, KonnectPortal } from '../types/konnect'
+import type { KonnectPortal, KonnectPortalsResponse } from '../types/konnect'
 import type { ApiErrorInfo } from '../types'
+import { API_ERROR_MESSAGES } from '../constants/messages'
 
 /**
  * Custom error class for API errors with trace ID support
@@ -133,14 +134,14 @@ export class KonnectApiService {
       clearTimeout(timeoutId)
 
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout - please check your connection and try again')
+        throw new Error(API_ERROR_MESSAGES.REQUEST_TIMEOUT)
       }
 
       if (error instanceof Error) {
         throw error
       }
 
-      throw new Error('Unknown error occurred while fetching portals')
+      throw new Error(API_ERROR_MESSAGES.UNKNOWN_ERROR)
     }
   }
 
@@ -168,18 +169,18 @@ export class KonnectApiService {
 
     switch (response.status) {
       case 401:
-        throw new ApiError('Invalid or expired Personal Access Token. Please update your token in settings.', traceId, response.status)
+        throw new ApiError(API_ERROR_MESSAGES.INVALID_TOKEN + '. Please update your token in settings.', traceId, response.status)
       case 403:
-        throw new ApiError('Access denied. Please ensure your Personal Access Token has the required permissions to access portals.', traceId, response.status)
+        throw new ApiError(API_ERROR_MESSAGES.ACCESS_DENIED + '. Please ensure your Personal Access Token has the required permissions to access portals.', traceId, response.status)
       case 404:
-        throw new ApiError('API endpoint not found. Please ensure you are using a valid Konnect account.', traceId, response.status)
+        throw new ApiError(API_ERROR_MESSAGES.API_NOT_FOUND + '. Please ensure you are using a valid Konnect account.', traceId, response.status)
       case 429:
-        throw new ApiError('Rate limit exceeded. Please wait a moment before trying again.', traceId, response.status)
+        throw new ApiError(API_ERROR_MESSAGES.RATE_LIMIT_EXCEEDED + '. Please wait a moment before trying again.', traceId, response.status)
       case 500:
       case 502:
       case 503:
       case 504:
-        throw new ApiError('Server error occurred. Please try again later.', traceId, response.status)
+        throw new ApiError(API_ERROR_MESSAGES.SERVER_ERROR + '. Please try again later.', traceId, response.status)
       default:
         throw new ApiError(errorBody.message || response.statusText, traceId, response.status)
     }

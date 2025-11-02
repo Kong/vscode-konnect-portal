@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { commands } from 'vscode'
 import { updatePreviewContext } from './vscode-context'
 import { debug } from './debug'
+import { VSCODE_MESSAGES } from '../constants/messages'
 
 // Mock VS Code module - only what this test file needs
 vi.mock('vscode', () => ({
@@ -61,7 +62,7 @@ describe('vscode-context', () => {
 
     it('should handle errors gracefully', () => {
       vi.mocked(commands.executeCommand).mockImplementation(() => {
-        throw new Error('Context update failed')
+        throw new Error(VSCODE_MESSAGES.CONTEXT_UPDATE_FAILED)
       })
 
       vi.mocked(debug.log).mockImplementation(() => {
@@ -69,7 +70,7 @@ describe('vscode-context', () => {
       })
 
       // The function doesn't have error handling, so it will throw
-      expect(() => updatePreviewContext(true)).toThrow('Context update failed')
+      expect(() => updatePreviewContext(true)).toThrow(VSCODE_MESSAGES.CONTEXT_UPDATE_FAILED)
     })
 
     it('should handle multiple rapid context updates', () => {

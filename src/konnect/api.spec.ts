@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ApiError, KonnectApiService } from './api'
+import { API_ERROR_MESSAGES } from '../constants/messages'
 import {
   mockPortals,
   mockSinglePageResponse,
@@ -186,7 +187,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Invalid or expired Personal Access Token')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.INVALID_TOKEN)
       })
 
       it('should handle 403 forbidden error', async () => {
@@ -200,7 +201,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Access denied')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.ACCESS_DENIED)
       })
 
       it('should handle 404 not found error', async () => {
@@ -214,7 +215,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('API endpoint not found')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.API_NOT_FOUND)
       })
 
       it('should handle 429 rate limit error', async () => {
@@ -228,7 +229,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Rate limit exceeded')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.RATE_LIMIT_EXCEEDED)
       })
 
       it('should handle 500 server error', async () => {
@@ -242,7 +243,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Server error occurred')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.SERVER_ERROR)
       })
 
       it('should handle generic error with custom message', async () => {
@@ -256,7 +257,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.customMessage),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Custom error message')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.CUSTOM_MESSAGE)
       })
 
       it('should handle error with invalid JSON response', async () => {
@@ -270,7 +271,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockRejectedValueOnce(new Error('Invalid JSON')),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Bad Request')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.BAD_REQUEST)
       })
 
       it('should handle network timeout', async () => {
@@ -279,20 +280,20 @@ describe('konnect/api', () => {
         abortError.name = 'AbortError'
         mockFetch.mockRejectedValueOnce(abortError)
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Request timeout - please check your connection')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.REQUEST_TIMEOUT)
       })
 
       it('should handle unknown network error', async () => {
         mockFetch.mockRejectedValueOnce('Unknown error')
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Unknown error occurred while fetching portals')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.UNKNOWN_ERROR)
       })
 
       it('should handle known Error instance', async () => {
         const knownError = new Error('Network error')
         mockFetch.mockRejectedValueOnce(knownError)
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow('Network error')
+        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.NETWORK_ERROR)
       })
 
       it('should set up timeout and clear it on success', async () => {
