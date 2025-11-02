@@ -118,7 +118,7 @@ export const testTokens = {
   withWhitespace: '  kpat_1234567890abcdefghijk  ',
   empty: '',
   whitespaceOnly: '   ',
-} as const
+}
 
 /**
  * Mock headers for error responses
@@ -126,7 +126,7 @@ export const testTokens = {
 export const mockErrorHeaders = {
   withTraceId: new Map([['x-datadog-trace-id', 'trace-123']]),
   empty: new Map(),
-} as const
+}
 
 /**
  * Error response payloads
@@ -136,4 +136,4 @@ export const mockErrorResponses = {
     message: 'Custom error message',
   },
   empty: {},
-} as const
+}

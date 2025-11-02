@@ -34,7 +34,7 @@ export const storageTestTokens = {
   withWhitespace: '  kpat_token_with_spaces  ',
   empty: '',
   whitespace: '   ',
-} as const
+}
 
 /**
  * Mock JSON strings for testing serialization

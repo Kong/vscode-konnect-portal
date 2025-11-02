@@ -7,7 +7,7 @@ import type { StoredPortalConfig } from '../types/konnect'
 const SECRET_KEYS = {
   KONNECT_TOKEN: 'konnectaccesstoken',
   SELECTED_PORTAL: 'selectedPortalConfig',
-} as const
+}
 
 /**
  * Service for managing secure storage of Konnect credentials and portal configuration

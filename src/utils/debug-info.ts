@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
 /** Standard debug information structure for the extension */
-export interface StandardDebugInfo {
+interface StandardDebugInfo {
   /** Error or event message */
   message: string
   /** Extension name from package.json */

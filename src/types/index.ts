@@ -7,18 +7,6 @@ export enum LogLevel {
   ERROR = 'error',
 }
 
-/** Portal preview actions sent TO the portal */
-export enum PortalPreviewAction {
-  UPDATE = 'portal:preview:update',
-  NAVIGATE = 'portal:preview:navigate',
-  EXIT = 'portal:preview:exit',
-}
-
-/** Portal preview actions received FROM the portal */
-export enum PortalPreviewIncomingAction {
-  READY = 'portal:preview:ready',
-}
-
 /** Structured error information for API errors with trace ID support */
 export interface ApiErrorInfo {
   /** The main error message */
@@ -52,35 +40,6 @@ export interface PortalPreviewConfig {
   showMDCRecommendation: boolean
   pagesDirectory: string
   snippetsDirectory: string
-}
-
-/**
- * !Important: This interface is strictly bound to https://github.com/Kong/portal/layers/core/types/preview.d.ts
- */
-export interface PostPortalStudioMessageData {
-  /** The unique preview ID. */
-  preview_id: string
-  /** The Portal Page relative path. */
-  path?: string
-  /** The Portal Snippet name. */
-  snippet_name?: string
-  /** The Portal Page markdown content. */
-  content?: string
-  /** Portal Global CSS */
-  css?: string
-  /** Portal appearance */
-  theme?: {
-    name?: string
-    /** The theme color mode */
-    mode?: 'light' | 'dark' | 'system'
-    /** The theme colors */
-    colors?: {
-      /** The theme primary color */
-      primary?: string
-    }
-  }
-  /** The action to target when received. */
-  action: PortalPreviewAction
 }
 
 /**

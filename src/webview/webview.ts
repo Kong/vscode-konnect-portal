@@ -17,12 +17,12 @@ const PortalPreviewAction = {
   UPDATE: 'portal:preview:update',
   NAVIGATE: 'portal:preview:navigate',
   EXIT: 'portal:preview:exit',
-} as const
+}
 
 /** Portal preview actions received FROM the portal */
 const PortalPreviewIncomingAction = {
   READY: 'portal:preview:ready',
-} as const
+}
 
 
 /** VS Code API for webview messaging (injected by VS Code at runtime) */
