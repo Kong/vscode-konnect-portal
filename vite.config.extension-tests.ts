@@ -14,7 +14,7 @@ export default defineConfig({
     outDir: 'out/test/suite',
     emptyOutDir: true,
     rollupOptions: {
-      external: ['vscode', 'mocha', 'assert', 'path', '@vscode/test-electron', 'glob'],
+      external: ['vscode', 'mocha', 'assert', 'path', 'glob', 'fs'],
       output: {
         format: 'cjs',
       },

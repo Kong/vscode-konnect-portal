@@ -95,13 +95,16 @@ if (result === MyDialogActions.ACTION_1) {  // Type safe, refactor safe
 
 ## Testing Guidelines
 
-### Unit testing with Vitest
+### Unit testing with `vitest`
 - Use Vitest as the testing framework, and run pnpm test:unit to execute unit tests when necessary
 - Follow Vitest best practices
 - Whenever updating existing functionality or adding new features, ensure that unit tests are created or updated accordingly to maintain code coverage and reliability.
 - Do not create brittle or overly complex tests; tests should be easy to read and maintain.
 - Unit tests should not test that constants equal themselves, or other trivial assertions.
 - Always use async operations for Vitest unit tests "it" blocks even if the code is synchronous.
+
+### Extension testing with `vscode-test`
+- To run the extension tests in files contained in `src/test/suite`, you must use `pnpm build && pnpm test:extension` command to first build then run the extension tests.
 
 ## Project description
 

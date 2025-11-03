@@ -322,12 +322,17 @@ suite('Storage Service Tests', () => {
       // Test that the service correctly implements the VS Code SecretStorage interface
       const secrets = extensionContext.secrets
 
-      // Verify the secret storage has all required methods
-      assert.ok(typeof secrets.store === 'function', 'Secret storage should have store method')
-      assert.ok(typeof secrets.get === 'function', 'Secret storage should have get method')
-      assert.ok(typeof secrets.delete === 'function', 'Secret storage should have delete method')
-      assert.ok(typeof secrets.keys === 'function', 'Secret storage should have keys method')
-      assert.ok(typeof secrets.onDidChange === 'function', 'Secret storage should have onDidChange method')
+      // Test that secret storage methods actually work by calling them
+      await secrets.store('test-method-key', 'test-method-value')
+      const retrievedValue = await secrets.get('test-method-key')
+      assert.strictEqual(retrievedValue, 'test-method-value', 'Secret storage store and get methods should work')
+
+      await secrets.delete('test-method-key')
+      const deletedValue = await secrets.get('test-method-key')
+      assert.strictEqual(deletedValue, undefined, 'Secret storage delete method should work')
+
+      const allKeys = await secrets.keys()
+      assert.ok(Array.isArray(allKeys), 'Secret storage keys method should return array')
 
       // Test that our service works with these real methods
       await storageService.storeToken(sampleToken)
