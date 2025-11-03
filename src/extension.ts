@@ -42,7 +42,7 @@ function updatePreviewContextFromProvider(): void {
  * Checks if the MDC extension is installed and shows helpful message if not
  * @returns true if MDC extension is available, false otherwise
  */
-function checkMDCExtension(): boolean {
+async function checkMDCExtension(): Promise<boolean> {
   const mdcExtension = extensions.getExtension('Nuxt.mdc')
 
   if (!mdcExtension) {
@@ -52,7 +52,12 @@ function checkMDCExtension(): boolean {
 
   if (!mdcExtension.isActive) {
     debug.log('MDC extension found but not active, attempting to activate')
-    // Extension will be activated automatically when needed by VS Code
+    try {
+      await mdcExtension.activate()
+      debug.log('MDC extension activated successfully')
+    } catch (error) {
+      debug.error('Failed to activate MDC extension:', error)
+    }
   }
 
   return true
@@ -328,8 +333,6 @@ export function activate(context: ExtensionContext) {
  * Note: Use "Portal Preview: Clear Credentials" command to manually clear stored data
  */
 export function deactivate() {
-  debug.log('Portal Preview extension is now deactivated.')
-
   // Dispose of preview provider and clean up resources
   previewProvider?.dispose()
 
@@ -339,7 +342,7 @@ export function deactivate() {
   portalSelectionService = undefined
   extensionContext = undefined
 
-  debug.log('Portal Preview extension deactivation complete.')
+  debug.log('Portal Preview extension is now deactivated.')
 }
 
 /**
@@ -362,15 +365,17 @@ function isMarkdownOrMDC(document: TextDocument): boolean {
 
   // For supported file types, check if we should recommend the MDC extension
   if (isMDCFile || isMarkdownFile) {
-    const hasMDCExtension = checkMDCExtension()
-    if (!hasMDCExtension) {
-      // Show recommendation for both MDC and Markdown files to enhance syntax highlighting
-      const config = workspace.getConfiguration('portalPreview')
-      const showRecommendation = config.get<boolean>('showMDCRecommendation', true)
-      if (showRecommendation) {
-        showMDCExtensionRecommendation()
+    // Check for MDC extension asynchronously but don't block file type determination
+    void checkMDCExtension().then((hasMDCExtension) => {
+      if (!hasMDCExtension) {
+        // Show recommendation for both MDC and Markdown files to enhance syntax highlighting
+        const config = workspace.getConfiguration('portalPreview')
+        const showRecommendation = config.get<boolean>('showMDCRecommendation', true)
+        if (showRecommendation) {
+          showMDCExtensionRecommendation()
+        }
       }
-    }
+    })
     return true // Allow preview for both file types regardless of MDC extension
   }
 
