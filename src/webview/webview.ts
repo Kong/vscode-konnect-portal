@@ -433,3 +433,8 @@ if (iframe && loadingOverlay) {
     startReadyTimeout()
   }
 }
+
+
+/** Dummy export to make this file a module for testing purposes */
+export {}
+
