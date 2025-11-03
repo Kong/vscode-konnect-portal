@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.1.1...v1.1.2) (2025-11-03)
+
+
+### Bug Fixes
+
+* trigger release ([940dd59](https://github.com/Kong/vscode-konnect-portal/commit/940dd594f245e13fc696fead822709feec11a519))
+
 ## [1.1.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.1.0...v1.1.1) (2025-11-02)
 
 
