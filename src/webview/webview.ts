@@ -434,7 +434,3 @@ if (iframe && loadingOverlay) {
   }
 }
 
-
-/** Dummy export to make this file a module for testing purposes */
-export {}
-

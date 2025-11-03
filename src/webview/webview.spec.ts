@@ -88,26 +88,27 @@ beforeAll(async () => {
   // Use fake timers for all tests
   vi.useFakeTimers()
 
-  // Now import the module - this will execute all initialization code
-  await import('./webview')
+  // Load and execute the compiled webview JavaScript
+  // The webview.ts file is compiled to webview.js which runs in a browser context
+  const fs = await import('fs')
+  const path = await import('path')
+  const webviewJsPath = path.resolve(__dirname, 'webview.js')
+
+  // Check if the compiled file exists, if not build it first
+  if (!fs.existsSync(webviewJsPath)) {
+    throw new Error('webview.js not found - run `pnpm run build:webview` first')
+  }
+
+  const webviewCode = fs.readFileSync(webviewJsPath, 'utf8')
+  // Execute the webview code in the current context
+  // This will initialize all the event listeners and state
+  eval(webviewCode)
 })
 
 describe('webview', () => {
   afterEach(() => {
     // Clear mock call history but keep the mocks
     vi.clearAllMocks()
-  })
-
-  describe('Constants and Enums', () => {
-    it('should define PortalPreviewAction constants', async () => {
-      // Verify the constants exist by checking if they're used in the compiled output
-      // Since constants are inlined, we verify their usage through function behavior
-      expect(true).toBe(true)
-    })
-
-    it('should define PortalPreviewIncomingAction constants', async () => {
-      expect(true).toBe(true)
-    })
   })
 
   describe('Debug logging utility', () => {
