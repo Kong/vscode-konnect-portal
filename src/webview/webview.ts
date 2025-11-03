@@ -434,3 +434,20 @@ if (iframe && loadingOverlay) {
   }
 }
 
+// Export functions for testing only (these exports are removed during compilation)
+// The TypeScript compiler with the webview config removes these when building webview.js
+export {
+  showLoading,
+  hideLoading,
+  showError,
+  startReadyTimeout,
+  clearReadyTimeout,
+  handleContentUpdate,
+  handleConfigUpdate,
+  handleRefreshPreview,
+  handleNavigate,
+  handleLoadingState,
+  handlePortalMessage,
+  sendMessageToIframe,
+}
+

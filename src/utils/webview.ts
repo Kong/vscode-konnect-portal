@@ -186,6 +186,9 @@ export function loadWebviewJS(
     jsContent = jsContent.replace(/\{%%TEMPLATE_PREVIEW_ID%%\}/g, previewId)
     jsContent = jsContent.replace(/\{%%READY_TIMEOUT_MS%%\}/g, config.readyTimeout.toString())
 
+    // Remove export statement (added for testing) as it's not valid in a non-module script context
+    jsContent = jsContent.replace(/export\s*\{[^}]*\}\s*;?\s*$/m, '')
+
     return jsContent
   } catch (error) {
     debug.error('Failed to load webview JavaScript:', error)
