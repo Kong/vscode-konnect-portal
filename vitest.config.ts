@@ -7,7 +7,7 @@ export default mergeConfig(viteConfig, defineConfig({
     alias: {
       // 'vscode' module is not available in Node.js, only in VS Code extension runtime
       // Each test file mocks only the VS Code APIs it needs using vi.mock()
-      vscode: resolve(__dirname, 'tests/mocks/vscode.ts'),
+      vscode: resolve(__dirname, 'src/test/mocks/vscode.ts'),
     },
   },
   test: {
@@ -31,7 +31,6 @@ export default mergeConfig(viteConfig, defineConfig({
       },
     },
     coverage: {
-      enabled: true,
       provider: 'v8',
       include: ['src/**/*.ts'],
       exclude: [

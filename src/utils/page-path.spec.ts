@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { workspace, window } from 'vscode'
 import { getDocumentPathInfo } from './page-path'
-import { createMockTextDocument, createMockWorkspaceFolder } from '../../tests/test-utils'
+import { createMockTextDocument, createMockWorkspaceFolder } from '../test/utils/test-utils'
 
 // Mock VS Code module - only what this test file needs
 vi.mock('vscode', () => ({

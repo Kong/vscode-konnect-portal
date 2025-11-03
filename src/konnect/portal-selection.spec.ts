@@ -7,13 +7,13 @@ import { PORTAL_SELECTION_MESSAGES } from '../constants/messages'
 import {
   mockPortals,
   testTokens,
-} from '../../tests/fixtures/konnect-api'
+} from '../test/fixtures/konnect-api'
 import {
   createMockContext,
   createMockProgress,
   createMockCancellationToken,
   mockQuickPickItems,
-} from '../../tests/fixtures/konnect-storage'
+} from '../test/fixtures/konnect-storage'
 
 // Mock vscode module
 vi.mock('vscode', () => ({

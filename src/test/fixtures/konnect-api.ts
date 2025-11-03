@@ -2,7 +2,7 @@
  * Test fixtures for Konnect API tests
  */
 
-import type { KonnectPortal, KonnectPortalsResponse } from '../../src/types/konnect'
+import type { KonnectPortal, KonnectPortalsResponse } from '../../types/konnect'
 
 /**
  * Mock portal data for testing

@@ -3,7 +3,7 @@
  */
 
 import { vi } from 'vitest'
-import type { StoredPortalConfig } from '../../src/types/konnect'
+import type { StoredPortalConfig } from '../../types/konnect'
 
 /**
  * Mock stored portal configurations for testing

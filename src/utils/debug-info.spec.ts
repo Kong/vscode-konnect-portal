@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { env, window } from 'vscode'
 import { createDebugInfo, createDebugInfoText, copyDebugInfoToClipboard } from './debug-info'
-import { createMockExtensionContext } from '../../tests/test-utils'
+import { createMockExtensionContext } from '../test/utils/test-utils'
 
 // Mock VS Code module - only what this test file needs
 vi.mock('vscode', () => ({

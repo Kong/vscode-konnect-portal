@@ -24,7 +24,7 @@ node_modules/**
 **/*.test.ts
 **/*.spec.ts
 test/**
-tests/**
+src/test/**
 
 # Documentation (keep README.md)
 CONTRIBUTING.md

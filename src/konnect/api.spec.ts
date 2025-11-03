@@ -10,7 +10,7 @@ import {
   testTokens,
   mockErrorHeaders,
   mockErrorResponses,
-} from '../../tests/fixtures/konnect-api'
+} from '../test/fixtures/konnect-api'
 
 // Mock fetch globally for this test file
 const mockFetch = vi.fn()

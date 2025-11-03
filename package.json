@@ -33,7 +33,7 @@
     "test": "vscode-test",
     "watch": "vite build --watch",
     "build:webview": "rimraf src/webview/webview.js && tsc --project tsconfig.webview.json",
-    "build": "pnpm run build:webview && vite build --mode production",
+    "build": "pnpm run build:webview && vite build --mode production && tsc --project tsconfig.build.json",
     "test:unit": "vitest run",
     "test:unit:ui": "vitest --ui",
     "test:unit:coverage": "vitest run --coverage",
