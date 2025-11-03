@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/Kong/vscode-konnect-portal/compare/v1.1.2...v1.1.3) (2025-11-03)
+
+
+### Bug Fixes
+
+* clean up debugging ([#19](https://github.com/Kong/vscode-konnect-portal/issues/19)) ([563506a](https://github.com/Kong/vscode-konnect-portal/commit/563506a39824ed4012825e952e5fbd63888f4a54))
+
 ## [1.1.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.1.1...v1.1.2) (2025-11-03)
 
 
