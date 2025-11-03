@@ -132,7 +132,6 @@ function startReadyTimeout(): void {
 /** Clears the portal ready timeout */
 function clearReadyTimeout(): void {
   if (readyTimeout) {
-    debug.log('Clearing ready timeout')
     clearTimeout(readyTimeout)
     readyTimeout = null
   }
@@ -169,7 +168,6 @@ function handleContentUpdate(message: any): void {
     content: message.content || '',
     action: PortalPreviewAction.UPDATE,
   }
-  debug.log('Created portal message:', portalMessage)
   if (iframeReady) {
     debug.log('Iframe is ready, sending message immediately')
     sendMessageToIframe(portalMessage)
@@ -196,7 +194,6 @@ function sendMessageToIframe(portalMessage: any): void {
     if (iframe && iframe.contentWindow) {
       debug.log('Sending postMessage to iframe with:', portalMessage)
       iframe.contentWindow.postMessage(portalMessage, '*')
-      debug.log('postMessage sent successfully!')
     } else {
       console.error('Cannot send message - iframe or contentWindow not available')
     }
@@ -223,7 +220,6 @@ function handleConfigUpdate(message: any): void {
     debugEnabled = message.config.debug
     console.log(`${DEBUG_LOG_PREFIX}  Debug logging updated:`, { debugEnabled })
   }
-  debug.log('Config update processed')
 }
 
 /**
@@ -345,8 +341,6 @@ function handleNavigate(message: any): void {
     // No content for navigation messages
     action: PortalPreviewAction.NAVIGATE,
   }
-
-  debug.log('Created portal navigate message:', portalMessage)
 
   if (iframeReady) {
     debug.log('Iframe is ready, sending navigate message immediately')
