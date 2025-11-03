@@ -1,22 +1,9 @@
 {
   "name": "vscode-konnect-portal",
+  "version": "1.1.2",
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
   "icon": "images/icon.png",
-  "version": "1.1.2",
-  "publisher": "kong",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Kong/vscode-konnect-portal.git"
-  },
-  "homepage": "https://github.com/Kong/vscode-konnect-portal",
-  "bugs": {
-    "url": "https://github.com/Kong/vscode-konnect-portal/issues"
-  },
-  "author": {
-    "name": "Kong Inc.",
-    "url": "https://konghq.com/"
-  },
   "license": "Apache-2.0",
   "type": "module",
   "packageManager": "pnpm@10.18.3",
@@ -32,7 +19,8 @@
     "typecheck": "tsc --noEmit",
     "watch": "vite build --watch",
     "build:webview": "rimraf src/webview/webview.js && tsc --project tsconfig.webview.json",
-    "build": "pnpm run build:webview && vite build --mode production && tsc --project tsconfig.build.json",
+    "build:extension-tests": "vite build --config vite.config.test.ts",
+    "build": "pnpm run build:webview && vite build --mode production && tsc --project tsconfig.build.json && pnpm build:extension-tests",
     "test:unit": "vitest run",
     "test:unit:ui": "vitest --ui",
     "test:unit:coverage": "vitest run --coverage",
@@ -77,6 +65,19 @@
     "typescript": "^5.9.3",
     "vite": "^7.1.10",
     "vitest": "^4.0.6"
+  },
+  "publisher": "kong",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/vscode-konnect-portal.git"
+  },
+  "homepage": "https://github.com/Kong/vscode-konnect-portal",
+  "bugs": {
+    "url": "https://github.com/Kong/vscode-konnect-portal/issues"
+  },
+  "author": {
+    "name": "Kong Inc.",
+    "url": "https://konghq.com/"
   },
   "categories": [
     "Programming Languages",
