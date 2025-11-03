@@ -522,7 +522,6 @@ describe('webview', () => {
     it('should handle missing config gracefully', async () => {
       const errorSpy = vi.spyOn(console, 'error')
 
-
       // Send config update without config
       const invalidMessage = {
         type: 'webview:update:config',
@@ -862,7 +861,6 @@ describe('webview', () => {
 
       const errorSpy = vi.spyOn(console, 'error')
 
-
       // Make iframe "ready"
       window.dispatchEvent(new MessageEvent('message', {
         data: { action: 'portal:preview:ready' },
@@ -952,7 +950,6 @@ describe('webview', () => {
 
     it('should not start timeout if iframe src is about:blank', async () => {
       mockIframe.src = 'about:blank'
-
 
       // Should not start timeout for blank iframe
       // Note: This might not be easily testable as the code runs on import
