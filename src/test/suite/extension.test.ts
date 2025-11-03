@@ -1,17 +1,5 @@
-import * as assert from 'assert'
+// Import all test suites
+import './configuration.test'
+import './storage.test'
+import './page-path.test'
 
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
-import * as vscode from 'vscode'
-// import * as myExtension from '../extension';
-
-suite('Extension Test Suite', () => {
-  suiteTeardown(() => {
-    vscode.window.showInformationMessage('All tests done!')
-  })
-
-  test('Sample test', () => {
-    assert.strictEqual(-1, [1, 2, 3].indexOf(5))
-    assert.strictEqual(-1, [1, 2, 3].indexOf(0))
-  })
-})
