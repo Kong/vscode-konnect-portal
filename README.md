@@ -261,7 +261,7 @@ pnpm test:unit:coverage
 pnpm test:unit:ui
 
 # Run integration tests
-pnpm test
+pnpm test:extension
 
 # Package extension
 pnpm package

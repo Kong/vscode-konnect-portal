@@ -111,7 +111,7 @@ Integration tests verify the extension works correctly in a VS Code environment:
 
 ```bash
 # Run VS Code extension integration tests
-pnpm test
+pnpm test:extension
 ```
 
 These tests:
