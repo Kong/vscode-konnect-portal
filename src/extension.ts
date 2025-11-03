@@ -56,7 +56,7 @@ async function checkMDCExtension(): Promise<boolean> {
       await mdcExtension.activate()
       debug.log('MDC extension activated successfully')
     } catch (error) {
-      debug.log('Failed to activate MDC extension:', error)
+      debug.error('Failed to activate MDC extension:', error)
     }
   }
 
@@ -333,8 +333,6 @@ export function activate(context: ExtensionContext) {
  * Note: Use "Portal Preview: Clear Credentials" command to manually clear stored data
  */
 export function deactivate() {
-  debug.log('Portal Preview extension is now deactivated.')
-
   // Dispose of preview provider and clean up resources
   previewProvider?.dispose()
 
@@ -344,7 +342,7 @@ export function deactivate() {
   portalSelectionService = undefined
   extensionContext = undefined
 
-  debug.log('Portal Preview extension deactivation complete.')
+  debug.log('Portal Preview extension is now deactivated.')
 }
 
 /**

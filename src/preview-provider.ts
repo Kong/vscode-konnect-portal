@@ -146,7 +146,6 @@ export class PreviewProvider implements Disposable {
     if (!this.panelState.panel || !this.panelState.isVisible) {
       const activeEditor = window.activeTextEditor
       if (activeEditor) {
-        debug.log('No active preview panel, opening preview for current document')
         this.openPreview(activeEditor.document)
         return
       } else {
@@ -191,14 +190,12 @@ export class PreviewProvider implements Disposable {
       return
     }
 
-    debug.log('Sending current content to webview (forced update for portal ready signal)')
     const config = getConfiguration()
 
     // Force update by clearing lastContent so sendContentUpdate doesn't skip
     this.panelState.lastContent = undefined
 
     this.sendContentUpdate(this.panelState.currentDocument, config)
-
     // Content will be updated by sendContentUpdate, so no need to manually restore lastContent
   }
 
@@ -349,7 +346,6 @@ export class PreviewProvider implements Disposable {
 
     // Only update if content has changed
     if (content === this.panelState.lastContent) {
-      debug.log('Content unchanged, skipping update')
       return
     }
 
