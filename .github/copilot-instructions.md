@@ -10,6 +10,7 @@
 - Consult official VS Code extension documentation and linked pages for best practices: https://code.visualstudio.com/api
 - Understand that this project will be iterated on and improved over time, so write code that is maintainable and extensible.
 - Do not use emojis in code or comments unless explicitly instructed to do so. Do not use em-dash, invisible, other non-standard characters in the codebase.
+- Always use conventional commits
 
 ## Dependency management
 - Always use pnpm as the package manager for this project, and run scripts with pnpm
