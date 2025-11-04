@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.1.3...v1.2.0) (2025-11-04)
+
+
+### Features
+
+* add pat link and open preview ([#20](https://github.com/Kong/vscode-konnect-portal/issues/20)) ([028457c](https://github.com/Kong/vscode-konnect-portal/commit/028457c8a99af4ea39c6a315c1c3a1719cf1bd00))
+
 ## [1.1.3](https://github.com/Kong/vscode-konnect-portal/compare/v1.1.2...v1.1.3) (2025-11-03)
 
 
