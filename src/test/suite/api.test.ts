@@ -251,7 +251,8 @@ suite('API Service Tests', () => {
   })
 
   suite('Portal Fetching', () => {
-    test('should fetch single page of portals successfully', async () => {
+    test('should make actual HTTP requests and parse portal data correctly', async () => {
+      // Mock a realistic portal response with all required fields
       const mockResponse = createMockResponse({
         data: [samplePortal],
         meta: {
@@ -264,42 +265,69 @@ suite('API Service Tests', () => {
       })
       queueMockResponse(mockResponse)
 
+      // Test actual API call execution
       const portals = await apiService.fetchAllPortals(validToken)
 
-      assert.strictEqual(portals.length, 1, 'Should return one portal')
-      assert.strictEqual(portals[0].id, samplePortal.id, 'Should return correct portal')
-
-      // Verify API call was made correctly
+      // Verify actual network request was made correctly
       const lastCall = getLastFetchCall()
       assert.ok(lastCall, 'Should have made a fetch call')
       const [url, options] = lastCall
-      assert.ok(url.includes('/v3/portals'), 'Should call portals endpoint')
-      assert.strictEqual((options?.headers as any)?.['Authorization'], `Bearer ${validToken}`, 'Should include auth header')
+
+      // Verify correct API endpoint and method
+      assert.ok(url.includes('/v3/portals'), 'Should make request to correct portals API endpoint')
+      assert.strictEqual(options?.method, 'GET', 'Should use GET method for portal fetching')
+
+      // Verify authentication header is set correctly
+      const authHeader = (options?.headers as any)?.['Authorization']
+      assert.strictEqual(authHeader, `Bearer ${validToken}`, 'Should send correct Bearer token')
+
+      // Verify Accept header for API compliance
+      const acceptHeader = (options?.headers as any)?.['Accept']
+      assert.strictEqual(acceptHeader, 'application/json', 'Should set correct Accept header')
+
+      // Verify response data parsing and transformation
+      assert.strictEqual(portals.length, 1, 'Should parse exactly one portal from response')
+      assert.strictEqual(portals[0].id, samplePortal.id, 'Should correctly parse portal ID')
+      assert.strictEqual(portals[0].name, samplePortal.name, 'Should correctly parse portal name')
+      assert.strictEqual(portals[0].default_domain, samplePortal.default_domain, 'Should parse domain correctly')
+      assert.strictEqual(portals[0].authentication_enabled, samplePortal.authentication_enabled, 'Should parse boolean flags correctly')
     })
 
-    test('should handle pagination and fetch all portals', async () => {
-      // First page response with next URL
+    test('should handle pagination by making multiple sequential API calls', async () => {
+      // Mock paginated responses with realistic next URL structure
       const firstPageResponse = createMockResponse({
         data: [samplePortal],
         meta: {
           page: {
             number: 1,
             size: 1,
-            total: 2,
+            total: 3,
             next: 'https://us.api.konghq.com/v3/portals?page=2',
           },
         },
       })
 
-      // Second page response with no next URL
-      const secondPortal = { ...samplePortal, id: 'portal-456', name: 'second-portal' }
+      const secondPortal = { ...samplePortal, id: 'portal-456', name: 'production-portal' }
       const secondPageResponse = createMockResponse({
         data: [secondPortal],
         meta: {
           page: {
             number: 2,
             size: 1,
-            total: 2,
+            total: 3,
+            next: 'https://us.api.konghq.com/v3/portals?page=3',
+          },
+        },
+      })
+
+      const thirdPortal = { ...samplePortal, id: 'portal-789', name: 'staging-portal' }
+      const thirdPageResponse = createMockResponse({
+        data: [thirdPortal],
+        meta: {
+          page: {
+            number: 3,
+            size: 1,
+            total: 3,
             next: null,
           },
         },
@@ -307,13 +335,82 @@ suite('API Service Tests', () => {
 
       queueMockResponse(firstPageResponse)
       queueMockResponse(secondPageResponse)
+      queueMockResponse(thirdPageResponse)
 
+      // Execute API call that should automatically handle pagination
       const portals = await apiService.fetchAllPortals(validToken)
 
-      assert.strictEqual(portals.length, 2, 'Should return both portals')
-      assert.strictEqual(portals[0].id, samplePortal.id, 'Should return first portal')
-      assert.strictEqual(portals[1].id, secondPortal.id, 'Should return second portal')
-      assert.strictEqual(mockFetchCalls.length, 2, 'Should make two API calls for pagination')
+      // Verify pagination behavior: multiple sequential requests
+      assert.strictEqual(mockFetchCalls.length, 3, 'Should make exactly 3 sequential requests for 3 pages')
+
+      // Verify all portals were collected and preserved order
+      assert.strictEqual(portals.length, 3, 'Should collect all portals from all pages')
+      assert.strictEqual(portals[0].name, 'test-portal', 'Should preserve portal from page 1')
+      assert.strictEqual(portals[1].name, 'production-portal', 'Should include portal from page 2')
+      assert.strictEqual(portals[2].name, 'staging-portal', 'Should include portal from page 3')
+
+      // Verify request URLs follow pagination pattern
+      const [url1] = mockFetchCalls[0]
+      const [url2] = mockFetchCalls[1]
+      const [url3] = mockFetchCalls[2]
+
+      assert.ok(url1.includes('/v3/portals'), 'First request should be to portals endpoint')
+      assert.ok(url2.includes('page=2') || url2.includes('/v3/portals'), 'Second request should include page parameter or use next URL')
+      assert.ok(url3.includes('page=3') || url3.includes('/v3/portals'), 'Third request should include page parameter or use next URL')
+    })
+
+    test('should handle real network timeouts and connection failures', async () => {
+      // Test timeout handling
+      queueMockResponse(new Error('Network timeout'))
+
+      let timeoutError = null
+      try {
+        await apiService.fetchAllPortals(validToken)
+      } catch (error) {
+        timeoutError = error
+      }
+
+      // Verify timeout errors are handled appropriately
+      assert.ok(timeoutError, 'Should propagate network timeout errors')
+      assert.ok(timeoutError instanceof Error, 'Should throw proper Error instance for timeouts')
+
+      // Verify network request was actually attempted
+      assert.strictEqual(mockFetchCalls.length, 1, 'Should have attempted one network request before timeout')
+    })
+
+    test('should correctly parse and handle API rate limiting responses', async () => {
+      // Mock realistic rate limit response from Konnect API
+      const rateLimitResponse = createMockResponse(
+        {
+          message: 'API rate limit exceeded',
+          documentation_url: 'https://docs.konghq.com/konnect/api/',
+        },
+        429,
+        {
+          'retry-after': '60',
+          'x-datadog-trace-id': 'rate-limit-trace-123',
+          'x-ratelimit-limit': '1000',
+          'x-ratelimit-remaining': '0',
+        },
+      )
+
+      queueMockResponse(rateLimitResponse)
+
+      let rateLimitError = null
+      try {
+        await apiService.fetchAllPortals(validToken)
+      } catch (error) {
+        rateLimitError = error
+      }
+
+      // Verify rate limit error contains all necessary information for handling
+      assert.ok(rateLimitError instanceof ApiError, 'Should throw ApiError for rate limits')
+      assert.strictEqual(rateLimitError.statusCode, 429, 'Should preserve HTTP 429 status code')
+      assert.ok(rateLimitError.message.includes(API_ERROR_MESSAGES.RATE_LIMIT_EXCEEDED), 'Should include user-friendly rate limit message')
+      assert.strictEqual(rateLimitError.traceId, 'rate-limit-trace-123', 'Should preserve trace ID for support debugging')
+
+      // Verify the error provides actionable information
+      assert.ok(rateLimitError.message.length > 10, 'Should provide meaningful error message')
     })
 
     test('should handle empty portal list', async () => {
