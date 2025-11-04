@@ -340,108 +340,106 @@ describe('konnect/storage', () => {
       })
     })
 
-    describe('State Integration Tests', () => {
-      describe('complete workflow scenarios', () => {
-        it('should handle complete token lifecycle with state verification', async () => {
-          // Step 1: Initially no token
-          mockSecretStorage.get.mockResolvedValueOnce(undefined)
-          expect(await storageService.hasValidToken()).toBe(false)
+    describe('State Tests', () => {
+      it('should handle complete token lifecycle with state verification', async () => {
+        // Step 1: Initially no token
+        mockSecretStorage.get.mockResolvedValueOnce(undefined)
+        expect(await storageService.hasValidToken()).toBe(false)
 
-          // Step 2: Store token
-          await storageService.storeToken(storageTestTokens.valid)
-          expect(mockSecretStorage.store).toHaveBeenCalledWith('konnectaccesstoken', storageTestTokens.valid)
+        // Step 2: Store token
+        await storageService.storeToken(storageTestTokens.valid)
+        expect(mockSecretStorage.store).toHaveBeenCalledWith('konnectaccesstoken', storageTestTokens.valid)
 
-          // Step 3: Verify token exists (need two separate mock calls)
-          mockSecretStorage.get.mockResolvedValueOnce(storageTestTokens.valid) // for hasValidToken
-          expect(await storageService.hasValidToken()).toBe(true)
+        // Step 3: Verify token exists (need two separate mock calls)
+        mockSecretStorage.get.mockResolvedValueOnce(storageTestTokens.valid) // for hasValidToken
+        expect(await storageService.hasValidToken()).toBe(true)
 
-          mockSecretStorage.get.mockResolvedValueOnce(storageTestTokens.valid) // for getToken
-          expect(await storageService.getToken()).toBe(storageTestTokens.valid)
+        mockSecretStorage.get.mockResolvedValueOnce(storageTestTokens.valid) // for getToken
+        expect(await storageService.getToken()).toBe(storageTestTokens.valid)
 
-          // Step 4: Clear token
-          await storageService.clearToken()
-          expect(mockSecretStorage.delete).toHaveBeenCalledWith('konnectaccesstoken')
+        // Step 4: Clear token
+        await storageService.clearToken()
+        expect(mockSecretStorage.delete).toHaveBeenCalledWith('konnectaccesstoken')
 
-          // Step 5: Verify token removed (need two separate mock calls)
-          mockSecretStorage.get.mockResolvedValueOnce(undefined) // for hasValidToken
-          expect(await storageService.hasValidToken()).toBe(false)
+        // Step 5: Verify token removed (need two separate mock calls)
+        mockSecretStorage.get.mockResolvedValueOnce(undefined) // for hasValidToken
+        expect(await storageService.hasValidToken()).toBe(false)
 
-          mockSecretStorage.get.mockResolvedValueOnce(undefined) // for getToken
-          expect(await storageService.getToken()).toBeUndefined()
-        })
+        mockSecretStorage.get.mockResolvedValueOnce(undefined) // for getToken
+        expect(await storageService.getToken()).toBeUndefined()
+      })
 
-        it('should handle complete portal configuration lifecycle', async () => {
-          // Step 1: Initially no portal
-          mockSecretStorage.get.mockResolvedValueOnce(undefined)
-          expect(await storageService.getSelectedPortal()).toBeUndefined()
+      it('should handle complete portal configuration lifecycle', async () => {
+        // Step 1: Initially no portal
+        mockSecretStorage.get.mockResolvedValueOnce(undefined)
+        expect(await storageService.getSelectedPortal()).toBeUndefined()
 
-          // Step 2: Store portal config
-          await storageService.storeSelectedPortal(mockStoredPortalConfig)
-          expect(mockSecretStorage.store).toHaveBeenCalledWith('selectedPortalConfig', mockSerializedPortalConfig)
+        // Step 2: Store portal config
+        await storageService.storeSelectedPortal(mockStoredPortalConfig)
+        expect(mockSecretStorage.store).toHaveBeenCalledWith('selectedPortalConfig', mockSerializedPortalConfig)
 
-          // Step 3: Verify portal stored and retrievable
-          mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
-          const retrieved = await storageService.getSelectedPortal()
-          expect(retrieved).toEqual(mockStoredPortalConfig)
+        // Step 3: Verify portal stored and retrievable
+        mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
+        const retrieved = await storageService.getSelectedPortal()
+        expect(retrieved).toEqual(mockStoredPortalConfig)
 
-          // Step 4: Update to different portal
-          await storageService.storeSelectedPortal(mockStoredPortalConfig2)
-          expect(mockSecretStorage.store).toHaveBeenCalledWith('selectedPortalConfig', JSON.stringify(mockStoredPortalConfig2))
+        // Step 4: Update to different portal
+        await storageService.storeSelectedPortal(mockStoredPortalConfig2)
+        expect(mockSecretStorage.store).toHaveBeenCalledWith('selectedPortalConfig', JSON.stringify(mockStoredPortalConfig2))
 
-          // Step 5: Verify update worked
-          mockSecretStorage.get.mockResolvedValueOnce(JSON.stringify(mockStoredPortalConfig2))
-          const updated = await storageService.getSelectedPortal()
-          expect(updated).toEqual(mockStoredPortalConfig2)
-          expect(updated).not.toEqual(mockStoredPortalConfig)
+        // Step 5: Verify update worked
+        mockSecretStorage.get.mockResolvedValueOnce(JSON.stringify(mockStoredPortalConfig2))
+        const updated = await storageService.getSelectedPortal()
+        expect(updated).toEqual(mockStoredPortalConfig2)
+        expect(updated).not.toEqual(mockStoredPortalConfig)
 
-          // Step 6: Clear portal
-          await storageService.clearSelectedPortal()
-          expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig')
+        // Step 6: Clear portal
+        await storageService.clearSelectedPortal()
+        expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig')
 
-          // Step 7: Verify portal removed
-          mockSecretStorage.get.mockResolvedValueOnce(undefined)
-          expect(await storageService.getSelectedPortal()).toBeUndefined()
-        })
+        // Step 7: Verify portal removed
+        mockSecretStorage.get.mockResolvedValueOnce(undefined)
+        expect(await storageService.getSelectedPortal()).toBeUndefined()
+      })
 
-        it('should handle data corruption recovery gracefully', async () => {
-          // Step 1: Corrupt data exists
-          mockSecretStorage.get.mockResolvedValueOnce(mockInvalidJsonString)
+      it('should handle data corruption recovery gracefully', async () => {
+        // Step 1: Corrupt data exists
+        mockSecretStorage.get.mockResolvedValueOnce(mockInvalidJsonString)
 
-          // Step 2: Attempt retrieval triggers cleanup
-          const result = await storageService.getSelectedPortal()
-          expect(result).toBeUndefined()
-          expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig')
+        // Step 2: Attempt retrieval triggers cleanup
+        const result = await storageService.getSelectedPortal()
+        expect(result).toBeUndefined()
+        expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig')
 
-          // Step 3: System should be ready for fresh data
-          await storageService.storeSelectedPortal(mockStoredPortalConfig)
-          expect(mockSecretStorage.store).toHaveBeenCalledWith('selectedPortalConfig', mockSerializedPortalConfig)
+        // Step 3: System should be ready for fresh data
+        await storageService.storeSelectedPortal(mockStoredPortalConfig)
+        expect(mockSecretStorage.store).toHaveBeenCalledWith('selectedPortalConfig', mockSerializedPortalConfig)
 
-          // Step 4: Fresh data should work normally
-          mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
-          const fresh = await storageService.getSelectedPortal()
-          expect(fresh).toEqual(mockStoredPortalConfig)
-        })
+        // Step 4: Fresh data should work normally
+        mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
+        const fresh = await storageService.getSelectedPortal()
+        expect(fresh).toEqual(mockStoredPortalConfig)
+      })
 
-        it('should maintain data independence between token and portal', async () => {
-          // Store both token and portal
-          await storageService.storeToken(storageTestTokens.valid)
-          await storageService.storeSelectedPortal(mockStoredPortalConfig)
+      it('should maintain data independence between token and portal', async () => {
+        // Store both token and portal
+        await storageService.storeToken(storageTestTokens.valid)
+        await storageService.storeSelectedPortal(mockStoredPortalConfig)
 
-          // Clear only token
-          await storageService.clearToken()
+        // Clear only token
+        await storageService.clearToken()
 
-          // Portal should remain intact
-          mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
-          const portalAfterTokenClear = await storageService.getSelectedPortal()
-          expect(portalAfterTokenClear).toEqual(mockStoredPortalConfig)
+        // Portal should remain intact
+        mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
+        const portalAfterTokenClear = await storageService.getSelectedPortal()
+        expect(portalAfterTokenClear).toEqual(mockStoredPortalConfig)
 
-          // Clear only portal
-          await storageService.clearSelectedPortal()
+        // Clear only portal
+        await storageService.clearSelectedPortal()
 
-          // Token state should be independent (though we cleared it above, test the independence)
-          mockSecretStorage.get.mockResolvedValueOnce(undefined) // token was cleared
-          expect(await storageService.getToken()).toBeUndefined()
-        })
+        // Token state should be independent (though we cleared it above, test the independence)
+        mockSecretStorage.get.mockResolvedValueOnce(undefined) // token was cleared
+        expect(await storageService.getToken()).toBeUndefined()
       })
     })
   })
