@@ -3,6 +3,8 @@ import {
   window,
   workspace,
   extensions,
+  env,
+  Uri,
 } from 'vscode'
 import type { ExtensionContext, TextDocument } from 'vscode'
 import { PreviewProvider } from './preview-provider'
@@ -36,6 +38,21 @@ let extensionContext: ExtensionContext | undefined
 function updatePreviewContextFromProvider(): void {
   const hasActivePreview = previewProvider?.hasActivePreview() ?? false
   updatePreviewContext(hasActivePreview)
+}
+
+/**
+ * Checks if there's an active document that can be previewed
+ * @returns true if there's an active markdown or MDC document, false otherwise
+ */
+function hasActivePreviewableDocument(): boolean {
+  const activeEditor = window.activeTextEditor
+  return activeEditor && (
+    activeEditor.document.languageId === 'markdown' ||
+    activeEditor.document.languageId === 'md' ||
+    activeEditor.document.languageId === 'mdc' ||
+    activeEditor.document.fileName.endsWith('.mdc') ||
+    activeEditor.document.fileName.endsWith('.md')
+  ) || false
 }
 
 /**
@@ -157,7 +174,15 @@ export function activate(context: ExtensionContext) {
         await storageService?.storeToken(token)
         window.showInformationMessage('Konnect token configured successfully!')
 
-        // Prompt user to select portal after successful token configuration
+        // Check if there's an active document that can be previewed
+        if (hasActivePreviewableDocument()) {
+          // Automatically open preview for the active document
+          debug.log('Auto-opening preview for active document after token configuration')
+          await commands.executeCommand('portalPreview.openPreview')
+          return
+        }
+
+        // No active document to preview, prompt user to select portal
         const selectPortal = await window.showInformationMessage(
           'Token configured! Would you like to select a portal now?',
           PortalSelectionActions.SELECT_PORTAL,
@@ -165,30 +190,8 @@ export function activate(context: ExtensionContext) {
         )
 
         if (selectPortal === PortalSelectionActions.SELECT_PORTAL) {
-          // Get the currently selected portal before selection
-          const previousPortal = await storageService?.getSelectedPortal()
-
-          // Perform portal selection
-          const selectedPortal = await portalSelectionService?.selectPortal()
-
-          // If a portal was successfully selected and it's different from the previous one,
-          // reload the webview to use the new portal
-          if (selectedPortal && previewProvider?.hasActivePreview()) {
-            const isDifferentPortal = !previousPortal ||
-              previousPortal.id !== selectedPortal.id ||
-              previousPortal.origin !== selectedPortal.origin
-
-            if (isDifferentPortal) {
-              debug.log('Portal selection changed, reloading webview with new portal:', {
-                previousPortal: previousPortal?.displayName || 'none',
-                newPortal: selectedPortal.displayName,
-              })
-
-              // Update the webview configuration to use the new portal
-              const config = getConfiguration()
-              await previewProvider.updateConfiguration(config)
-            }
-          }
+          // Use the dedicated selectPortal command for consistency
+          await commands.executeCommand('portalPreview.selectPortal')
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
@@ -202,12 +205,15 @@ export function activate(context: ExtensionContext) {
     async () => {
       try {
         if (!await storageService?.hasValidToken()) {
-          const configureToken = await window.showWarningMessage(
+          const action = await window.showWarningMessage(
             'No Konnect token configured. Please configure your Personal Access Token to continue.',
             TokenConfigurationActions.CONFIGURE_TOKEN,
+            TokenConfigurationActions.LEARN_MORE,
           )
-          if (configureToken === TokenConfigurationActions.CONFIGURE_TOKEN) {
+          if (action === TokenConfigurationActions.CONFIGURE_TOKEN) {
             await commands.executeCommand('portalPreview.configureToken')
+          } else if (action === TokenConfigurationActions.LEARN_MORE) {
+            await env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
           }
           return
         }
@@ -218,22 +224,31 @@ export function activate(context: ExtensionContext) {
         // Perform portal selection
         const selectedPortal = await portalSelectionService?.selectPortal()
 
-        // If a portal was successfully selected and it's different from the previous one,
-        // reload the webview to use the new portal
-        if (selectedPortal && previewProvider?.hasActivePreview()) {
+        // If a portal was successfully selected, handle the update
+        if (selectedPortal) {
           const isDifferentPortal = !previousPortal ||
             previousPortal.id !== selectedPortal.id ||
             previousPortal.origin !== selectedPortal.origin
 
-          if (isDifferentPortal) {
-            debug.log('Portal selection changed, reloading webview with new portal:', {
-              previousPortal: previousPortal?.displayName || 'none',
-              newPortal: selectedPortal.displayName,
-            })
+          if (previewProvider?.hasActivePreview()) {
+            // If there's already an active preview, update it with the new portal
+            if (isDifferentPortal) {
+              debug.log('Portal selection changed, reloading webview with new portal:', {
+                previousPortal: previousPortal?.displayName || 'none',
+                newPortal: selectedPortal.displayName,
+              })
 
-            // Update the webview configuration to use the new portal
-            const config = getConfiguration()
-            await previewProvider.updateConfiguration(config)
+              // Update the webview configuration to use the new portal
+              const config = getConfiguration()
+              await previewProvider.updateConfiguration(config)
+            }
+          } else {
+            // No active preview, check if there's an active document that can be previewed
+            if (hasActivePreviewableDocument()) {
+              // Automatically open preview for the active document
+              debug.log('Auto-opening preview for active document after portal selection')
+              await commands.executeCommand('portalPreview.openPreview')
+            }
           }
         }
       } catch (error) {
