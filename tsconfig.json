@@ -11,9 +11,6 @@
     "strict": true,
     "moduleResolution": "bundler",
     "baseUrl": "./",
-    "paths": {
-      "@/*": ["src/*"]
-    },
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
@@ -22,7 +19,7 @@
     "declaration": true,
     "declarationMap": true,
     "verbatimModuleSyntax": true,
-    "types": ["node", "vscode"]
+    "types": ["node", "vscode", "mocha"]
   },
   "include": [
     "src/**/*",

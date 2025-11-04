@@ -245,6 +245,14 @@ pnpm build
 pnpm watch
 ```
 
+#### Build Commands Explained
+
+The extension uses multiple build processes due to different runtime requirements:
+
+- **`pnpm build`** - Complete production build (runs all build steps automatically)
+- **`pnpm build:webview`** - Compiles `src/webview/webview.ts` → `src/webview/webview.js` (embedded in webview HTML)
+- **`pnpm build:extension-tests`** - Compiles extension test files to CommonJS format for VS Code test runner
+
 ### Testing
 
 ```bash
@@ -261,7 +269,7 @@ pnpm test:unit:coverage
 pnpm test:unit:ui
 
 # Run integration tests
-pnpm test
+pnpm test:extension
 
 # Package extension
 pnpm package

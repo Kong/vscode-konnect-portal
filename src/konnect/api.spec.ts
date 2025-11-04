@@ -176,7 +176,7 @@ describe('konnect/api', () => {
         // Verify request behavior
         expect(mockFetch).toHaveBeenCalledTimes(1)
         expect(mockFetch).toHaveBeenCalledWith(
-          'https://us.api.konghq.com/v3/portals',
+          'https://us.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1',
           expect.objectContaining({
             method: 'GET',
             headers: expect.objectContaining({

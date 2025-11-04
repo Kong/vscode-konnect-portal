@@ -39,6 +39,9 @@ importers:
       '@stylistic/stylelint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(stylelint@16.25.0(typescript@5.9.3))
+      '@types/mocha':
+        specifier: ^10.0.10
+        version: 10.0.10
       '@types/node':
         specifier: ~24.8.1
         version: 24.8.1
@@ -72,9 +75,15 @@ importers:
       eslint:
         specifier: ^9.38.0
         version: 9.38.0(jiti@2.6.1)
+      glob:
+        specifier: ^11.0.3
+        version: 11.0.3
       jsdom:
         specifier: ^27.1.0
         version: 27.1.0
+      mocha:
+        specifier: ^11.7.4
+        version: 11.7.4
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1

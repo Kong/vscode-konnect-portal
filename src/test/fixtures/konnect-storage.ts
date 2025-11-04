@@ -83,25 +83,25 @@ export const createMockCancellationToken = (isCancelled = false) => ({
  */
 export const mockQuickPickItems = [
   {
-    label: 'Portal 1 Display',
+    label: 'Portal 1 Name',
     description: 'Test Portal 1',
     detail: 'portal1.example.com',
     portal: {
       id: '1',
       name: 'Portal 1',
-      display_name: 'Portal 1 Display',
+      display_name: 'Portal 1 Name',
       description: 'Test Portal 1',
       canonical_domain: 'portal1.example.com',
     },
   },
   {
-    label: 'Portal 2 Display',
+    label: 'Portal 2 Name',
     description: 'Test Portal 2',
     detail: 'portal2.example.com',
     portal: {
       id: '2',
       name: 'Portal 2',
-      display_name: 'Portal 2 Display',
+      display_name: 'Portal 2 Name',
       description: 'Test Portal 2',
       canonical_domain: 'portal2.example.com',
     },

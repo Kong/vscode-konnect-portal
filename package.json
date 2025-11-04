@@ -1,22 +1,9 @@
 {
   "name": "vscode-konnect-portal",
+  "version": "1.1.3",
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
   "icon": "images/icon.png",
-  "version": "1.1.3",
-  "publisher": "kong",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Kong/vscode-konnect-portal.git"
-  },
-  "homepage": "https://github.com/Kong/vscode-konnect-portal",
-  "bugs": {
-    "url": "https://github.com/Kong/vscode-konnect-portal/issues"
-  },
-  "author": {
-    "name": "Kong Inc.",
-    "url": "https://konghq.com/"
-  },
   "license": "Apache-2.0",
   "type": "module",
   "packageManager": "pnpm@10.18.3",
@@ -30,13 +17,15 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "test": "vscode-test",
     "watch": "vite build --watch",
-    "build:webview": "rimraf src/webview/webview.js && tsc --project tsconfig.webview.json",
-    "build": "pnpm run build:webview && vite build --mode production && tsc --project tsconfig.build.json",
     "test:unit": "vitest run",
     "test:unit:ui": "vitest --ui",
     "test:unit:coverage": "vitest run --coverage",
+    "test:extension": "FORCE_COLOR=1 vscode-test",
+    "build": "pnpm run build:webview && vite build --mode production && tsc --project tsconfig.build.json && pnpm build:extension-tests",
+    "build:webview": "rimraf src/webview/webview.js && tsc --project tsconfig.webview.json",
+    "build:extension-tests": "vite build --config vite.config.extension-tests.ts",
+    "build-and-test-extension": "pnpm build && pnpm test:extension",
     "package": "vsce package",
     "publish": "vsce publish",
     "vscode:prepublish": "pnpm run build",
@@ -56,6 +45,7 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@stylistic/stylelint-plugin": "^4.0.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "~24.8.1",
     "@types/vscode": "^1.105.0",
     "@typescript-eslint/eslint-plugin": "^8.46.1",
@@ -67,12 +57,27 @@
     "@vscode/vsce": "^3.6.2",
     "commitizen": "^4.3.1",
     "eslint": "^9.38.0",
+    "glob": "^11.0.3",
     "jsdom": "^27.1.0",
+    "mocha": "^11.7.4",
     "rimraf": "^6.0.1",
     "semantic-release": "^25.0.1",
     "typescript": "^5.9.3",
     "vite": "^7.1.10",
     "vitest": "^4.0.6"
+  },
+  "publisher": "kong",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/vscode-konnect-portal.git"
+  },
+  "homepage": "https://github.com/Kong/vscode-konnect-portal",
+  "bugs": {
+    "url": "https://github.com/Kong/vscode-konnect-portal/issues"
+  },
+  "author": {
+    "name": "Kong Inc.",
+    "url": "https://konghq.com/"
   },
   "categories": [
     "Programming Languages",

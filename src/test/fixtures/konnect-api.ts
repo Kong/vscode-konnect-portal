@@ -10,7 +10,7 @@ import type { KonnectPortal, KonnectPortalsResponse } from '../../types/konnect'
 export const mockPortal1: KonnectPortal = {
   id: '1',
   name: 'Portal 1',
-  display_name: 'Portal 1 Display',
+  display_name: 'Portal 1 Name',
   description: 'Test Portal 1',
   default_domain: 'portal1.example.com',
   canonical_domain: 'portal1.example.com',
@@ -29,7 +29,7 @@ export const mockPortal1: KonnectPortal = {
 export const mockPortal2: KonnectPortal = {
   id: '2',
   name: 'Portal 2',
-  display_name: 'Portal 2 Display',
+  display_name: 'Portal 2 Name',
   description: 'Test Portal 2',
   default_domain: 'portal2.example.com',
   canonical_domain: 'portal2.example.com',
@@ -74,7 +74,6 @@ export const mockPaginatedPage1Response: KonnectPortalsResponse = {
       total: 2,
       size: 1,
       number: 1,
-      next: 'https://us.api.konghq.com/v3/portals?page=2',
     },
   },
 }
