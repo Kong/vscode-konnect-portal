@@ -35,6 +35,7 @@ export default mergeConfig(viteConfig, defineConfig({
       include: ['src/**/*.ts'],
       exclude: [
         'src/**/*.spec.ts',
+        'src/test/**/*',
         'src/webview/webview.js',
       ],
       reporter: ['text', 'html', 'json'],
