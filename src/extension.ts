@@ -3,6 +3,8 @@ import {
   window,
   workspace,
   extensions,
+  env,
+  Uri,
 } from 'vscode'
 import type { ExtensionContext, TextDocument } from 'vscode'
 import { PreviewProvider } from './preview-provider'
@@ -202,12 +204,15 @@ export function activate(context: ExtensionContext) {
     async () => {
       try {
         if (!await storageService?.hasValidToken()) {
-          const configureToken = await window.showWarningMessage(
+          const action = await window.showWarningMessage(
             'No Konnect token configured. Please configure your Personal Access Token to continue.',
             TokenConfigurationActions.CONFIGURE_TOKEN,
+            TokenConfigurationActions.LEARN_MORE,
           )
-          if (configureToken === TokenConfigurationActions.CONFIGURE_TOKEN) {
+          if (action === TokenConfigurationActions.CONFIGURE_TOKEN) {
             await commands.executeCommand('portalPreview.configureToken')
+          } else if (action === TokenConfigurationActions.LEARN_MORE) {
+            await env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
           }
           return
         }

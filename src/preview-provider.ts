@@ -2,6 +2,8 @@ import {
   ViewColumn,
   window,
   commands,
+  env,
+  Uri,
 } from 'vscode'
 import type { ExtensionContext, TextDocument, Disposable } from 'vscode'
 import { basename } from 'path'
@@ -20,7 +22,7 @@ import type { StoredPortalConfig } from './types/konnect'
 import { getConfiguration } from './extension'
 import { debug } from './utils/debug'
 import { updatePreviewContext } from './utils/vscode-context'
-import { PortalSetupActions, WebviewTimeoutActions } from './types/ui-actions'
+import { WebviewTimeoutActions, TokenConfigurationActions } from './types/ui-actions'
 import {
   generateWebviewHTML,
   loadWebviewCSS,
@@ -71,11 +73,14 @@ export class PreviewProvider implements Disposable {
       void window
         .showWarningMessage(
           'No Konnect token configured. Please configure your Personal Access Token to continue.',
-          PortalSetupActions.CONFIGURE_TOKEN,
+          TokenConfigurationActions.CONFIGURE_TOKEN,
+          TokenConfigurationActions.LEARN_MORE,
         )
         .then((selection) => {
-          if (selection === PortalSetupActions.CONFIGURE_TOKEN) {
+          if (selection === TokenConfigurationActions.CONFIGURE_TOKEN) {
             commands.executeCommand('portalPreview.configureToken')
+          } else if (selection === TokenConfigurationActions.LEARN_MORE) {
+            env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
           }
         })
       return

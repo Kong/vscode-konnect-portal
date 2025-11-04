@@ -23,6 +23,7 @@ export enum PortalSelectionActions {
  */
 export enum TokenConfigurationActions {
   CONFIGURE_TOKEN = 'Configure Konnect Token',
+  LEARN_MORE = 'Learn more',
   CANCEL = 'Cancel',
 }
 

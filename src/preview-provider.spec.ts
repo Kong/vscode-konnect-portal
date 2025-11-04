@@ -14,6 +14,12 @@ vi.mock('vscode', () => ({
   commands: {
     executeCommand: vi.fn(),
   },
+  env: {
+    openExternal: vi.fn(),
+  },
+  Uri: {
+    parse: vi.fn().mockImplementation((url: string) => ({ toString: () => url })),
+  },
 }))
 
 // Mock other dependencies
@@ -48,7 +54,7 @@ vi.mock('uncrypto', () => ({
 }))
 
 // Import after mocks
-import { window, commands, ViewColumn } from 'vscode'
+import { window, commands, ViewColumn, env, Uri } from 'vscode'
 import { PreviewProvider } from './preview-provider'
 import { debug } from './utils/debug'
 import { updatePreviewContext } from './utils/vscode-context'
@@ -58,7 +64,7 @@ import { randomUUID } from 'uncrypto'
 import type { PortalStorageService } from './konnect/storage'
 import type { PortalPreviewConfig } from './types'
 import type { StoredPortalConfig } from './types/konnect'
-import { PortalSetupActions } from './types/ui-actions'
+import { TokenConfigurationActions } from './types/ui-actions'
 
 describe('PreviewProvider', () => {
   let previewProvider: PreviewProvider
@@ -165,7 +171,7 @@ describe('PreviewProvider', () => {
     it('should show warning and configure token when no token is configured', async () => {
       // No valid token available
       vi.mocked(mockStorageService.hasValidToken).mockResolvedValue(false)
-      vi.mocked(window.showWarningMessage).mockResolvedValue(PortalSetupActions.CONFIGURE_TOKEN as any)
+      vi.mocked(window.showWarningMessage).mockResolvedValue(TokenConfigurationActions.CONFIGURE_TOKEN as any)
 
       // Attempt to open preview
       await previewProvider.openPreview(mockDocument)
@@ -173,11 +179,39 @@ describe('PreviewProvider', () => {
       // User is prompted for token configuration
       expect(window.showWarningMessage).toHaveBeenCalledWith(
         'No Konnect token configured. Please configure your Personal Access Token to continue.',
-        PortalSetupActions.CONFIGURE_TOKEN,
+        TokenConfigurationActions.CONFIGURE_TOKEN,
+        TokenConfigurationActions.LEARN_MORE,
       )
 
       // Token configuration workflow is triggered
       expect(commands.executeCommand).toHaveBeenCalledWith('portalPreview.configureToken')
+
+      // No preview panel should be created without valid setup
+      expect(window.createWebviewPanel).not.toHaveBeenCalled()
+    })
+
+    it('should open PAT documentation when user selects "Learn more"', async () => {
+      // No valid token, user selects "Learn more"
+      vi.mocked(mockStorageService.hasValidToken).mockResolvedValue(false)
+      vi.mocked(window.showWarningMessage).mockResolvedValue(TokenConfigurationActions.LEARN_MORE as any)
+
+      // Attempt to open preview
+      await previewProvider.openPreview(mockDocument)
+
+      // User is prompted for token configuration with both options
+      expect(window.showWarningMessage).toHaveBeenCalledWith(
+        'No Konnect token configured. Please configure your Personal Access Token to continue.',
+        TokenConfigurationActions.CONFIGURE_TOKEN,
+        TokenConfigurationActions.LEARN_MORE,
+      )
+
+      // PAT documentation URL is opened
+      expect(env.openExternal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          toString: expect.any(Function),
+        }),
+      )
+      expect(Uri.parse).toHaveBeenCalledWith('https://developer.konghq.com/konnect-api/#personal-access-tokens')
 
       // No preview panel should be created without valid setup
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
