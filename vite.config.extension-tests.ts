@@ -7,7 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/test/suite/extension.test.ts'),
+      entry: resolve(__dirname, 'src/test/suite/index.test.ts'),
       formats: ['cjs'],
       fileName: (format, entryName) => `${entryName}.cjs`,
     },

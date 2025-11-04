@@ -188,6 +188,22 @@ suite('Page Path Resolution Tests', () => {
       }
     })
 
+    test('should handle normal snippet names', async () => {
+      const document = createMockDocument('/test/workspace/snippets/my-snippet-with-dashes.md')
+
+      const originalGetWorkspaceFolder = vscode.workspace.getWorkspaceFolder
+      vscode.workspace.getWorkspaceFolder = () => mockWorkspaceFolder
+
+      try {
+        const result = getDocumentPathInfo(document, pagesDirectory, snippetsDirectory)
+
+        assert.strictEqual(result.type, 'snippet', 'Should detect as snippet type')
+        assert.strictEqual(result.snippetName, 'my-snippet-with-dashes', 'Should handle a normal snippet name with dashes')
+      } finally {
+        vscode.workspace.getWorkspaceFolder = originalGetWorkspaceFolder
+      }
+    })
+
     test('should sanitize snippet names', async () => {
       const document = createMockDocument('/test/workspace/snippets/my@snippet$with%chars.md')
 
