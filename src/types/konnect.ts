@@ -27,13 +27,14 @@ export interface KonnectPortal {
 /**
  * Pagination metadata from Konnect API
  */
-export interface KonnectPaginationMeta {
-  page: {
-    total: number
-    size: number
-    number: number
-    next?: string
-  }
+/** Konnect API pagination metadata */
+interface KonnectPaginationMeta {
+  /** Current page number (1-based) */
+  number: number
+  /** Number of items per page */
+  size: number
+  /** Total number of items across all pages */
+  total: number
 }
 
 /**
@@ -41,7 +42,9 @@ export interface KonnectPaginationMeta {
  */
 export interface KonnectPortalsResponse {
   data: KonnectPortal[]
-  meta: KonnectPaginationMeta
+  meta: {
+    page: KonnectPaginationMeta
+  }
 }
 
 /**

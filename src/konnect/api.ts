@@ -69,17 +69,52 @@ export class KonnectApiService {
    * @returns Promise resolving to array of all portals
    * @throws ApiError on API errors
    */
+  /**
+   * Fetches all portals for the authenticated user, handling pagination automatically
+   * @param token Konnect PAT token
+   * @returns Promise resolving to array of all portals
+   */
   async fetchAllPortals(token: string): Promise<KonnectPortal[]> {
     const allPortals: KonnectPortal[] = []
-    let nextUrl: string | null = `${this.baseUrl}/portals`
+    let currentPage = 1
+    const pageSize = 100
 
-    while (nextUrl) {
-      const response: KonnectPortalsResponse = await this.fetchRequest<KonnectPortalsResponse>(nextUrl, token)
+    // Continue fetching pages until we have all portals
+    while (true) {
+      const url = `${this.baseUrl}/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
 
-      allPortals.push(...response.data)
+      const response = await this.fetchRequest<KonnectPortalsResponse>(url, token, {
+        method: 'GET',
+      })
 
-      // Check for pagination
-      nextUrl = response.meta?.page?.next || null
+      // Add portals from this page to the collection (handle empty or missing data)
+      if (response.data && Array.isArray(response.data)) {
+        allPortals.push(...response.data)
+      }
+
+      // Check if there are more pages to fetch
+      if (!response.meta?.page) {
+        // No pagination metadata, assume single page
+        break
+      }
+
+      const { number, size, total } = response.meta.page
+
+      // Handle edge cases that could cause infinite loops
+      if (total === 0 || size === 0) {
+        // No more data to fetch
+        break
+      }
+
+      const totalPages = Math.ceil(total / size)
+
+      if (number >= totalPages) {
+        // We've fetched all pages
+        break
+      }
+
+      // Move to next page
+      currentPage = number + 1
     }
 
     return allPortals

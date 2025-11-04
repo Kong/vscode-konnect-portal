@@ -74,7 +74,6 @@ export const mockPaginatedPage1Response: KonnectPortalsResponse = {
       total: 2,
       size: 1,
       number: 1,
-      next: 'https://us.api.konghq.com/v3/portals?page=2',
     },
   },
 }

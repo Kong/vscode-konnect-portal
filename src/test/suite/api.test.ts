@@ -294,7 +294,7 @@ suite('API Service Tests', () => {
     })
 
     test('should handle pagination by making multiple sequential API calls', async () => {
-      // Mock paginated responses with realistic next URL structure
+      // Mock paginated responses with pagination structure
       const firstPageResponse = createMockResponse({
         data: [samplePortal],
         meta: {
@@ -302,7 +302,6 @@ suite('API Service Tests', () => {
             number: 1,
             size: 1,
             total: 3,
-            next: 'https://us.api.konghq.com/v3/portals?page=2',
           },
         },
       })
@@ -315,7 +314,6 @@ suite('API Service Tests', () => {
             number: 2,
             size: 1,
             total: 3,
-            next: 'https://us.api.konghq.com/v3/portals?page=3',
           },
         },
       })
@@ -328,7 +326,6 @@ suite('API Service Tests', () => {
             number: 3,
             size: 1,
             total: 3,
-            next: null,
           },
         },
       })
@@ -355,8 +352,12 @@ suite('API Service Tests', () => {
       const [url3] = mockFetchCalls[2]
 
       assert.ok(url1.includes('/v3/portals'), 'First request should be to portals endpoint')
-      assert.ok(url2.includes('page=2') || url2.includes('/v3/portals'), 'Second request should include page parameter or use next URL')
-      assert.ok(url3.includes('page=3') || url3.includes('/v3/portals'), 'Third request should include page parameter or use next URL')
+      assert.ok(url1.includes('page%5Bnumber%5D=1'), 'First request should include page number 1')
+      assert.ok(url2.includes('page%5Bnumber%5D=2'), 'Second request should include page number 2')
+      assert.ok(url3.includes('page%5Bnumber%5D=3'), 'Third request should include page number 3')
+      assert.ok(url1.includes('page%5Bsize%5D=100'), 'All requests should include page size 100')
+      assert.ok(url2.includes('page%5Bsize%5D=100'), 'All requests should include page size 100')
+      assert.ok(url3.includes('page%5Bsize%5D=100'), 'All requests should include page size 100')
     })
 
     test('should handle real network timeouts and connection failures', async () => {
