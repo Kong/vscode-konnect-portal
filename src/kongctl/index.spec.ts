@@ -37,8 +37,8 @@ describe('kongctl', () => {
     it('should return custom configuration', () => {
       vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
         get: vi.fn((key: string) => {
-          if (key === 'kong.konnect.kongctl.path') return '/custom/kongctl'
-          if (key === 'kong.konnect.kongctl.timeout') return 60000
+          if (key === 'path') return '/custom/kongctl'
+          if (key === 'timeout') return 60000
           return 'default'
         }),
       } as any)
