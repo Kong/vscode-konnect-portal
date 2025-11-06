@@ -22,7 +22,7 @@ export enum PortalSelectionActions {
  * Actions for token configuration prompts
  */
 export enum TokenConfigurationActions {
-  CONFIGURE_TOKEN = 'Configure Konnect Token',
+  CONFIGURE_TOKEN = 'Configure Konnect Personal Acces Token (PAT)',
   LEARN_MORE = 'Learn more',
   CANCEL = 'Cancel',
 }
@@ -67,7 +67,7 @@ export enum ConfirmationActions {
  * Actions for portal setup prompts in preview provider
  */
 export enum PortalSetupActions {
-  CONFIGURE_TOKEN = 'Configure Konnect Token',
+  CONFIGURE_TOKEN = 'Configure Konnect Personal Acces Token (PAT)',
   SELECT_PORTAL = 'Select Portal',
   CANCEL = 'Cancel',
 }

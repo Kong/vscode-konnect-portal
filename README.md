@@ -68,7 +68,7 @@ The extension provides several configuration options in VS Code settings. You ca
 
 ## Setup and Usage
 
-### 1. Configure Konnect Token
+### 1. Configure Konnect Personal Acces Token (PAT)
 
 Before using the extension, you need to configure your Konnect Personal Access Token:
 
@@ -80,7 +80,7 @@ Before using the extension, you need to configure your Konnect Personal Access T
 
 2. **Configure the token in VS Code**:
     - Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-    - Run "Portal Preview: Configure Konnect Token"
+    - Run "Portal Preview: Configure Konnect Personal Acces Token (PAT)"
     - Paste your Personal Access Token
     - Click OK
 
@@ -119,7 +119,7 @@ The extension provides the following commands (accessible via Command Palette):
 |---------|-------------|
 | `Portal Preview: Open Portal Preview` | Opens the preview panel for the current MDC/Markdown file |
 | `Portal Preview: Refresh Portal Preview` | Refreshes the preview panel content |
-| `Portal Preview: Configure Konnect Token` | Set up your Konnect Personal Access Token |
+| `Portal Preview: Configure Konnect Personal Acces Token (PAT)` | Set up your Konnect Personal Access Token |
 | `Portal Preview: Select Portal` | Choose a portal from your Konnect account |
 | `Portal Preview: Clear Konnect Credentials` | Remove stored token and portal selection |
 
@@ -151,9 +151,9 @@ For optimal portal preview experience:
 
 If you see configuration warnings:
 
-1. **Configure Konnect Token**: Run "Portal Preview: Configure Konnect Token"
+1. **Configure Konnect Personal Acces Token (PAT)**: Run "Portal Preview: Configure Konnect Personal Acces Token (PAT)"
 2. **Select Portal**: Run "Portal Preview: Select Portal"
-3. **Update Token**: If your token expired, run "Portal Preview: Configure Konnect Token" again
+3. **Update Token**: If your token expired, run "Portal Preview: Configure Konnect Personal Acces Token (PAT)" again
 
 ### Token Format Errors
 
