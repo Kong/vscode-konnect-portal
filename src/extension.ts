@@ -119,7 +119,7 @@ export function activate(context: ExtensionContext) {
 
   // Register preview commands
   const openPreviewCommand = commands.registerCommand(
-    'portalPreview.openPreview',
+    'kong.konnect.portal.openPreview',
     async () => {
       const activeEditor = window.activeTextEditor
       if (!activeEditor) {
@@ -140,7 +140,7 @@ export function activate(context: ExtensionContext) {
   )
 
   const refreshPreviewCommand = commands.registerCommand(
-    'portalPreview.refreshPreview',
+    'kong.konnect.portal.refreshPreview',
     () => {
       previewProvider?.refreshPreview()
       updatePreviewContextFromProvider()
@@ -149,7 +149,7 @@ export function activate(context: ExtensionContext) {
 
   // Register Konnect token commands
   const configureTokenCommand = commands.registerCommand(
-    'portalPreview.configureToken',
+    'kong.konnect.portal.configureToken',
     async () => {
       try {
         const token = await window.showInputBox({
@@ -178,7 +178,7 @@ export function activate(context: ExtensionContext) {
         if (hasActivePreviewableDocument()) {
           // Automatically open preview for the active document
           debug.log('Auto-opening preview for active document after token configuration')
-          await commands.executeCommand('portalPreview.openPreview')
+          await commands.executeCommand('kong.konnect.portal.openPreview')
           return
         }
 
@@ -191,7 +191,7 @@ export function activate(context: ExtensionContext) {
 
         if (selectPortal === PortalSelectionActions.SELECT_PORTAL) {
           // Use the dedicated selectPortal command for consistency
-          await commands.executeCommand('portalPreview.selectPortal')
+          await commands.executeCommand('kong.konnect.portal.selectPortal')
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
@@ -201,7 +201,7 @@ export function activate(context: ExtensionContext) {
   )
 
   const selectPortalCommand = commands.registerCommand(
-    'portalPreview.selectPortal',
+    'kong.konnect.portal.selectPortal',
     async () => {
       try {
         if (!await storageService?.hasValidToken()) {
@@ -211,7 +211,7 @@ export function activate(context: ExtensionContext) {
             TokenConfigurationActions.LEARN_MORE,
           )
           if (action === TokenConfigurationActions.CONFIGURE_TOKEN) {
-            await commands.executeCommand('portalPreview.configureToken')
+            await commands.executeCommand('kong.konnect.portal.configureToken')
           } else if (action === TokenConfigurationActions.LEARN_MORE) {
             await env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
           }
@@ -247,7 +247,7 @@ export function activate(context: ExtensionContext) {
             if (hasActivePreviewableDocument()) {
               // Automatically open preview for the active document
               debug.log('Auto-opening preview for active document after portal selection')
-              await commands.executeCommand('portalPreview.openPreview')
+              await commands.executeCommand('kong.konnect.portal.openPreview')
             }
           }
         }
@@ -258,7 +258,7 @@ export function activate(context: ExtensionContext) {
   )
 
   const clearCredentialsCommand = commands.registerCommand(
-    'portalPreview.clearCredentials',
+    'kong.konnect.portal.clearCredentials',
     async () => {
       try {
         const confirm = await window.showWarningMessage(

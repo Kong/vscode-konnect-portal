@@ -41,7 +41,7 @@ export async function showApiError(prefix: string, error: unknown, context?: vsc
 
     if (selection === 'Update Token') {
       // Trigger the configure token command
-      await vscode.commands.executeCommand('portalPreview.configureToken')
+      await vscode.commands.executeCommand('kong.konnect.portal.configureToken')
     } else if (selection === 'Copy Debug Info') {
       await copyDebugInfoToClipboard(
         errorInfo.message,
