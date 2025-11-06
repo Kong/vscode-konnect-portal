@@ -80,3 +80,11 @@ export enum WebviewTimeoutActions {
   REFRESH_PREVIEW = 'Refresh Preview',
   CANCEL = 'Cancel',
 }
+
+/**
+ * Actions for kongctl installation prompts
+ */
+export enum KongctlInstallActions {
+  LEARN_MORE = 'Learn More',
+  CONFIGURE_PATH = 'Configure Path',
+}

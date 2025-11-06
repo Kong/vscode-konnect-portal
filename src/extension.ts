@@ -21,6 +21,8 @@ import {
   CredentialActions,
   MDCExtensionActions,
 } from './types/ui-actions'
+import { CONFIG_SECTION } from './constants/config'
+import { checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/feedback'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
@@ -93,7 +95,7 @@ function showMDCExtensionRecommendation(): void {
         commands.executeCommand('workbench.extensions.search', 'Nuxt.mdc')
       } else if (selection === MDCExtensionActions.DONT_SHOW_AGAIN) {
         // Store preference to not show again
-        const config = workspace.getConfiguration('kong.konnect.devPortal')
+        const config = workspace.getConfiguration(CONFIG_SECTION)
         config.update('showMDCRecommendation', false, true)
       }
     })
@@ -278,10 +280,39 @@ export function activate(context: ExtensionContext) {
     },
   )
 
+  // Register kongctl status check command
+  const checkKongctlStatusCommand = commands.registerCommand(
+    'kong.konnect.kongctl.checkStatus',
+    async () => {
+      try {
+        const isAvailable = await checkAndNotifyKongctlAvailability()
+        if (isAvailable) {
+          await showKongctlAvailableMessage()
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+        window.showErrorMessage(`Failed to check kongctl status: ${errorMessage}`)
+      }
+    },
+  )
+
+  // Register kongctl diagnostics command
+  const showKongctlDiagnosticsCommand = commands.registerCommand(
+    'kong.konnect.kongctl.showDiagnostics',
+    async () => {
+      try {
+        await showKongctlDiagnostics()
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+        window.showErrorMessage(`Failed to show kongctl diagnostics: ${errorMessage}`)
+      }
+    },
+  )
+
   // Listen for configuration changes
   const configChangeListener = workspace.onDidChangeConfiguration(
     async (event) => {
-      if (event.affectsConfiguration('kong.konnect.devPortal')) {
+      if (event.affectsConfiguration(CONFIG_SECTION)) {
         const config = getConfiguration()
         debug.log('Portal Preview configuration changed:', config)
         await previewProvider?.updateConfiguration(config)
@@ -327,6 +358,8 @@ export function activate(context: ExtensionContext) {
     configureTokenCommand,
     selectPortalCommand,
     clearCredentialsCommand,
+    checkKongctlStatusCommand,
+    showKongctlDiagnosticsCommand,
     configChangeListener,
     documentChangeListener,
     editorChangeListener,
@@ -384,7 +417,7 @@ function isMarkdownOrMDC(document: TextDocument): boolean {
     void checkMDCExtension().then((hasMDCExtension) => {
       if (!hasMDCExtension) {
         // Show recommendation for both MDC and Markdown files to enhance syntax highlighting
-        const config = workspace.getConfiguration('kong.konnect.devPortal')
+        const config = workspace.getConfiguration(CONFIG_SECTION)
         const showRecommendation = config.get<boolean>('showMDCRecommendation', true)
         if (showRecommendation) {
           showMDCExtensionRecommendation()
@@ -402,7 +435,7 @@ function isMarkdownOrMDC(document: TextDocument): boolean {
  * @returns The current portal preview configuration
  */
 export function getConfiguration(): PortalPreviewConfig {
-  const config = workspace.getConfiguration('kong.konnect.devPortal')
+  const config = workspace.getConfiguration(CONFIG_SECTION)
 
   return {
     autoOpenPreview: config.get<boolean>('autoOpenPreview', false),
