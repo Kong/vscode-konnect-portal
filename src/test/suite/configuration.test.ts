@@ -7,14 +7,14 @@ suite('Configuration Tests', () => {
   let originalConfig: Record<string, unknown>
 
   /** Configuration section name */
-  const configSection = 'portalPreview'
+  const configSection = 'kong.konnect.devPortal'
 
   setup(async () => {
     // Store original configuration to restore later
     const config = vscode.workspace.getConfiguration(configSection)
     originalConfig = {
-      autoOpen: config.get('autoOpen'),
-      updateDelay: config.get('updateDelay'),
+      autoOpenPreview: config.get('autoOpenPreview'),
+      previewUpdateDelay: config.get('previewUpdateDelay'),
       readyTimeout: config.get('readyTimeout'),
       debug: config.get('debug'),
       showMDCRecommendation: config.get('showMDCRecommendation'),
@@ -35,8 +35,8 @@ suite('Configuration Tests', () => {
     const config = vscode.workspace.getConfiguration(configSection)
 
     // Test default values match expected defaults
-    assert.strictEqual(config.get('autoOpen'), false, 'autoOpen should default to false')
-    assert.strictEqual(config.get('updateDelay'), 500, 'updateDelay should default to 500')
+    assert.strictEqual(config.get('autoOpenPreview'), false, 'autoOpenPreview should default to false')
+    assert.strictEqual(config.get('previewUpdateDelay'), 500, 'previewUpdateDelay should default to 500')
     assert.strictEqual(config.get('readyTimeout'), 5000, 'readyTimeout should default to 5000')
     assert.strictEqual(config.get('debug'), false, 'debug should default to false')
     assert.strictEqual(config.get('showMDCRecommendation'), true, 'showMDCRecommendation should default to true')
@@ -47,11 +47,11 @@ suite('Configuration Tests', () => {
   test('should allow updating boolean configuration values', async () => {
     const config = vscode.workspace.getConfiguration(configSection)
 
-    // Test autoOpen: verify default, change, verify new value
-    assert.strictEqual(config.get('autoOpen'), false, 'autoOpen should start with default value false')
-    await config.update('autoOpen', true, vscode.ConfigurationTarget.Global)
+    // Test autoOpenPreview: verify default, change, verify new value
+    assert.strictEqual(config.get('autoOpenPreview'), false, 'autoOpenPreview should start with default value false')
+    await config.update('autoOpenPreview', true, vscode.ConfigurationTarget.Global)
     const updatedConfig1 = vscode.workspace.getConfiguration(configSection)
-    assert.strictEqual(updatedConfig1.get('autoOpen'), true, 'autoOpen should be updated to true')
+    assert.strictEqual(updatedConfig1.get('autoOpenPreview'), true, 'autoOpenPreview should be updated to true')
 
     // Test debug: verify default, change, verify new value
     assert.strictEqual(updatedConfig1.get('debug'), false, 'debug should start with default value false')
@@ -69,11 +69,11 @@ suite('Configuration Tests', () => {
   test('should allow updating numeric configuration values', async () => {
     const config = vscode.workspace.getConfiguration(configSection)
 
-    // Test updateDelay: verify default, change, verify new value
-    assert.strictEqual(config.get('updateDelay'), 500, 'updateDelay should start with default value 500')
-    await config.update('updateDelay', 1000, vscode.ConfigurationTarget.Global)
+    // Test previewUpdateDelay: verify default, change, verify new value
+    assert.strictEqual(config.get('previewUpdateDelay'), 500, 'previewUpdateDelay should start with default value 500')
+    await config.update('previewUpdateDelay', 1000, vscode.ConfigurationTarget.Global)
     const updatedConfig1 = vscode.workspace.getConfiguration(configSection)
-    assert.strictEqual(updatedConfig1.get('updateDelay'), 1000, 'updateDelay should be updated to 1000')
+    assert.strictEqual(updatedConfig1.get('previewUpdateDelay'), 1000, 'previewUpdateDelay should be updated to 1000')
 
     // Test readyTimeout: verify default, change, verify new value
     assert.strictEqual(updatedConfig1.get('readyTimeout'), 5000, 'readyTimeout should start with default value 5000')
@@ -98,20 +98,20 @@ suite('Configuration Tests', () => {
     assert.strictEqual(updatedConfig2.get('snippetsDirectory'), 'includes', 'snippetsDirectory should be updated to "includes"')
   })
 
-  test('should validate numeric ranges for updateDelay', async () => {
+  test('should validate numeric ranges for previewUpdateDelay', async () => {
     const config = vscode.workspace.getConfiguration(configSection)
 
     // Test minimum value: verify default, change, verify new value
-    assert.strictEqual(config.get('updateDelay'), 500, 'updateDelay should start with default value 500')
-    await config.update('updateDelay', 100, vscode.ConfigurationTarget.Global)
+    assert.strictEqual(config.get('previewUpdateDelay'), 500, 'previewUpdateDelay should start with default value 500')
+    await config.update('previewUpdateDelay', 100, vscode.ConfigurationTarget.Global)
     const updatedConfig1 = vscode.workspace.getConfiguration(configSection)
-    assert.strictEqual(updatedConfig1.get('updateDelay'), 100, 'updateDelay should accept minimum value of 100')
+    assert.strictEqual(updatedConfig1.get('previewUpdateDelay'), 100, 'previewUpdateDelay should accept minimum value of 100')
 
     // Test maximum value: verify current, change, verify new value
-    assert.strictEqual(updatedConfig1.get('updateDelay'), 100, 'updateDelay should currently be 100')
-    await config.update('updateDelay', 5000, vscode.ConfigurationTarget.Global)
+    assert.strictEqual(updatedConfig1.get('previewUpdateDelay'), 100, 'previewUpdateDelay should currently be 100')
+    await config.update('previewUpdateDelay', 5000, vscode.ConfigurationTarget.Global)
     const updatedConfig2 = vscode.workspace.getConfiguration(configSection)
-    assert.strictEqual(updatedConfig2.get('updateDelay'), 5000, 'updateDelay should accept maximum value of 5000')
+    assert.strictEqual(updatedConfig2.get('previewUpdateDelay'), 5000, 'previewUpdateDelay should accept maximum value of 5000')
   })
 
   test('should validate numeric ranges for readyTimeout', async () => {
@@ -166,21 +166,21 @@ suite('Configuration Tests', () => {
     const config = vscode.workspace.getConfiguration(configSection)
 
     // Verify starting values
-    assert.strictEqual(config.get('autoOpen'), false, 'autoOpen should start with default value false')
-    assert.strictEqual(config.get('updateDelay'), 500, 'updateDelay should start with default value 500')
+    assert.strictEqual(config.get('autoOpenPreview'), false, 'autoOpenPreview should start with default value false')
+    assert.strictEqual(config.get('previewUpdateDelay'), 500, 'previewUpdateDelay should start with default value 500')
     assert.strictEqual(config.get('pagesDirectory'), 'pages', 'pagesDirectory should start with default value "pages"')
 
     // Set custom values
-    await config.update('autoOpen', true, vscode.ConfigurationTarget.Global)
-    await config.update('updateDelay', 750, vscode.ConfigurationTarget.Global)
+    await config.update('autoOpenPreview', true, vscode.ConfigurationTarget.Global)
+    await config.update('previewUpdateDelay', 750, vscode.ConfigurationTarget.Global)
     await config.update('pagesDirectory', 'my-pages', vscode.ConfigurationTarget.Global)
 
     // Simulate reload by getting fresh configuration
     const reloadedConfig = vscode.workspace.getConfiguration(configSection)
 
     // Verify values persist
-    assert.strictEqual(reloadedConfig.get('autoOpen'), true, 'autoOpen should persist across reloads')
-    assert.strictEqual(reloadedConfig.get('updateDelay'), 750, 'updateDelay should persist across reloads')
+    assert.strictEqual(reloadedConfig.get('autoOpenPreview'), true, 'autoOpenPreview should persist across reloads')
+    assert.strictEqual(reloadedConfig.get('previewUpdateDelay'), 750, 'previewUpdateDelay should persist across reloads')
     assert.strictEqual(reloadedConfig.get('pagesDirectory'), 'my-pages', 'pagesDirectory should persist across reloads')
   })
 })

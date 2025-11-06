@@ -227,7 +227,7 @@ export class PreviewProvider implements Disposable {
     // Debounce content updates
     this.updateTimeout = setTimeout(async () => {
       await this.sendContentUpdate(document, config)
-    }, config.updateDelay)
+    }, config.previewUpdateDelay)
   }
 
   /** Updates the configuration in the webview */
@@ -467,7 +467,7 @@ export class PreviewProvider implements Disposable {
               )
               .then((selection) => {
                 if (selection === WebviewTimeoutActions.OPEN_SETTINGS) {
-                  commands.executeCommand('workbench.action.openSettings', 'portalPreview')
+                  commands.executeCommand('workbench.action.openSettings', 'kong.konnect.devPortal')
                 } else if (selection === WebviewTimeoutActions.REFRESH_PREVIEW) {
                   commands.executeCommand('kong.konnect.devPortal.refreshPreview')
                 }

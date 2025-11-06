@@ -58,8 +58,8 @@ The extension provides several configuration options in VS Code settings. You ca
 
 | Setting | Type | Default | Description | Example |
 |---------|------|---------|-------------|---------|
-| `kong.konnect.devPortal.autoOpen` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
-| `kong.konnect.devPortal.updateDelay` | `number` | `500` | Delay in milliseconds before updating preview after content changes (500-3000) | Use `1000` for slower updates |
+| `kong.konnect.devPortal.autoOpenPreview` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
+| `kong.konnect.devPortal.previewUpdateDelay` | `number` | `500` | Delay in milliseconds before updating preview after content changes (500-3000) | Use `1000` for slower updates |
 | `kong.konnect.devPortal.readyTimeout` | `number` | `5000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
 | `kong.konnect.devPortal.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
 | `kong.konnect.devPortal.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |

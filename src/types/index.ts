@@ -33,8 +33,8 @@ export interface LogParams {
  * Configuration interface for the Portal Preview extension
  */
 export interface PortalPreviewConfig {
-  autoOpen: boolean
-  updateDelay: number
+  autoOpenPreview: boolean
+  previewUpdateDelay: number
   readyTimeout: number
   debug: boolean
   showMDCRecommendation: boolean

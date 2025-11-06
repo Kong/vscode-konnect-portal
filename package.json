@@ -180,14 +180,14 @@
       ]
     },
     "configuration": {
-      "title": "Portal Preview",
+      "title": "Konnect Dev Portal Toolkit",
       "properties": {
-        "kong.konnect.devPortal.autoOpen": {
+        "kong.konnect.devPortal.autoOpenPreview": {
           "type": "boolean",
           "default": false,
           "description": "Automatically open preview when opening MDC/Markdown files"
         },
-        "kong.konnect.devPortal.updateDelay": {
+        "kong.konnect.devPortal.previewUpdateDelay": {
           "type": "number",
           "default": 500,
           "minimum": 500,
