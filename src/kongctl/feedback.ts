@@ -48,10 +48,7 @@ kongctl Diagnostics:
 • File Stats: ${diagnostics.fileStats ? `Exists: ${diagnostics.fileStats.exists}, Size: ${diagnostics.fileStats.size} bytes` : 'N/A'}
 • Version: ${versionInfo}
 • Execution Error: ${executionError}
-• PATH Environment: ${diagnostics.pathEnv.substring(0, 200)}${diagnostics.pathEnv.length > 200 ? '...' : ''}
-• PATH Directories (${diagnostics.pathDirectories.length} total):
-${diagnostics.pathDirectories.slice(0, 10).map(dir => `  - ${dir}`).join('\n')}${diagnostics.pathDirectories.length > 10 ? '\n  ...' : ''}
-    `.trim()
+`.trim()
 
     await vscode.window.showInformationMessage(
       'kongctl Diagnostics',
@@ -121,7 +118,7 @@ export async function showKongctlAvailableMessage(): Promise<void> {
     const versionInfo = versionResult.success ? formatKongctlVersion(versionResult.stdout) : 'Version unknown'
 
     vscode.window.showInformationMessage(
-      'Kong Konnect CLI features are available.',
+      'kongctl Konnect CLI features are available.',
       { modal: true, detail: versionInfo },
       'OK',
     )
