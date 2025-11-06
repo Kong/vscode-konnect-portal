@@ -6,6 +6,10 @@ export default [
     ignores: [
       'dist/**/*',
       'out/**/*',
+      '.vscode/**/*',
+      '.vscode-test/**/*',
+      'coverage/**/*',
+      'node_modules/**/*',
       // Ignore generated `src/webview/webview.js`
       'src/webview/webview.js',
     ],
