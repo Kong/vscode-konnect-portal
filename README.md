@@ -50,7 +50,7 @@ You can install it by:
 3. Configure your Konnect Personal Access Token
 4. Select a Dev Portal from your Konnect account
 5. Open an MDC (`.mdc`) or Markdown (`.md`) file
-6. Use the "Open Preview" command or click the preview icon
+6. Use the "Open Portal Preview" command or click the preview icon
 
 ## Configuration
 
@@ -95,12 +95,12 @@ Once your token is configured:
 
 > **Note**: You may select a new Dev Portal at any time by running the "Select Portal" command again.
 
-### 3. Open Preview
+### 3. Open Portal Preview
 
 There are several ways to open the live preview:
 
-1. **Command Palette**: Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) and type "Open Preview"
-2. **Editor Menu**: Right-click in a MDC/Markdown file and select "Open Preview"
+1. **Command Palette**: Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) and type "Open Portal Preview"
+2. **Editor Menu**: Right-click in a MDC/Markdown file and select "Open Portal Preview"
 3. **Toolbar Button**: Click the preview icon in the editor toolbar when viewing MDC/Markdown files
 
 ### 4. Live Preview
@@ -117,8 +117,8 @@ The extension provides the following commands (accessible via Command Palette):
 
 | Command | Description |
 |---------|-------------|
-| `Konnect Portal: Open Preview` | Opens the preview panel for the current MDC/Markdown file |
-| `Konnect Portal: Refresh Preview` | Refreshes the preview panel content |
+| `Konnect Portal: Open Portal Preview` | Opens the preview panel for the current MDC/Markdown file |
+| `Konnect Portal: Refresh Portal Preview` | Refreshes the preview panel content |
 | `Konnect Portal: Configure Konnect Personal Access Token (PAT)` | Set up your Konnect Personal Access Token |
 | `Konnect Portal: Select Portal` | Choose a portal from your Konnect account |
 | `Konnect Portal: Delete Access Token` | Remove stored token and portal selection |

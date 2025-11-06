@@ -77,7 +77,7 @@ export enum PortalSetupActions {
  */
 export enum WebviewTimeoutActions {
   OPEN_SETTINGS = 'Open Settings',
-  REFRESH_PREVIEW = 'Refresh Preview',
+  REFRESH_PREVIEW = 'Refresh Portal Preview',
   CANCEL = 'Cancel',
 }
 

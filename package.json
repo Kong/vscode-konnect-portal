@@ -107,13 +107,13 @@
     "commands": [
       {
         "command": "kong.konnect.devPortal.openPreview",
-        "title": "Open Preview",
+        "title": "Open Portal Preview",
         "icon": "$(device-desktop)",
         "category": "Konnect Portal"
       },
       {
         "command": "kong.konnect.devPortal.refreshPreview",
-        "title": "Refresh Preview",
+        "title": "Refresh Portal Preview",
         "icon": "$(refresh)",
         "category": "Konnect Portal"
       },
@@ -171,12 +171,12 @@
         {
           "command": "kong.konnect.devPortal.openPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && !portalPreview.hasActivePreview",
-          "group": "portal_preview@1"
+          "group": "kong_konnect_devPortal@1"
         },
         {
           "command": "kong.konnect.devPortal.refreshPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && portalPreview.hasActivePreview",
-          "group": "portal_preview@1"
+          "group": "kong_konnect_devPortal@1"
         }
       ],
       "commandPalette": [

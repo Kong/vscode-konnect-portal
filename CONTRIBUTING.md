@@ -71,8 +71,8 @@ The extension includes pre-configured debug setups in `.vscode/launch.json`:
    ```
 
 2. **Test Commands**
-   - Right-click → "Open Preview"
-   - Command Palette (`Ctrl+Shift+P`) → "Konnect Portal: Open Preview"
+   - Right-click → "Open Portal Preview"
+   - Command Palette (`Ctrl+Shift+P`) → "Konnect Portal: Open Portal Preview"
    - Use editor toolbar buttons
 
 3. **Configure Extension** (if needed)
