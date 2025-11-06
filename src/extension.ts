@@ -93,7 +93,7 @@ function showMDCExtensionRecommendation(): void {
         commands.executeCommand('workbench.extensions.search', 'Nuxt.mdc')
       } else if (selection === MDCExtensionActions.DONT_SHOW_AGAIN) {
         // Store preference to not show again
-        const config = workspace.getConfiguration('portalPreview')
+        const config = workspace.getConfiguration('kong.konnect.devPortal')
         config.update('showMDCRecommendation', false, true)
       }
     })
@@ -119,7 +119,7 @@ export function activate(context: ExtensionContext) {
 
   // Register preview commands
   const openPreviewCommand = commands.registerCommand(
-    'portalPreview.openPreview',
+    'kong.konnect.devPortal.openPreview',
     async () => {
       const activeEditor = window.activeTextEditor
       if (!activeEditor) {
@@ -140,7 +140,7 @@ export function activate(context: ExtensionContext) {
   )
 
   const refreshPreviewCommand = commands.registerCommand(
-    'portalPreview.refreshPreview',
+    'kong.konnect.devPortal.refreshPreview',
     () => {
       previewProvider?.refreshPreview()
       updatePreviewContextFromProvider()
@@ -149,7 +149,7 @@ export function activate(context: ExtensionContext) {
 
   // Register Konnect token commands
   const configureTokenCommand = commands.registerCommand(
-    'portalPreview.configureToken',
+    'kong.konnect.devPortal.configureToken',
     async () => {
       try {
         const token = await window.showInputBox({
@@ -178,7 +178,7 @@ export function activate(context: ExtensionContext) {
         if (hasActivePreviewableDocument()) {
           // Automatically open preview for the active document
           debug.log('Auto-opening preview for active document after token configuration')
-          await commands.executeCommand('portalPreview.openPreview')
+          await commands.executeCommand('kong.konnect.devPortal.openPreview')
           return
         }
 
@@ -191,7 +191,7 @@ export function activate(context: ExtensionContext) {
 
         if (selectPortal === PortalSelectionActions.SELECT_PORTAL) {
           // Use the dedicated selectPortal command for consistency
-          await commands.executeCommand('portalPreview.selectPortal')
+          await commands.executeCommand('kong.konnect.devPortal.selectPortal')
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
@@ -201,7 +201,7 @@ export function activate(context: ExtensionContext) {
   )
 
   const selectPortalCommand = commands.registerCommand(
-    'portalPreview.selectPortal',
+    'kong.konnect.devPortal.selectPortal',
     async () => {
       try {
         if (!await storageService?.hasValidToken()) {
@@ -211,7 +211,7 @@ export function activate(context: ExtensionContext) {
             TokenConfigurationActions.LEARN_MORE,
           )
           if (action === TokenConfigurationActions.CONFIGURE_TOKEN) {
-            await commands.executeCommand('portalPreview.configureToken')
+            await commands.executeCommand('kong.konnect.devPortal.configureToken')
           } else if (action === TokenConfigurationActions.LEARN_MORE) {
             await env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
           }
@@ -247,7 +247,7 @@ export function activate(context: ExtensionContext) {
             if (hasActivePreviewableDocument()) {
               // Automatically open preview for the active document
               debug.log('Auto-opening preview for active document after portal selection')
-              await commands.executeCommand('portalPreview.openPreview')
+              await commands.executeCommand('kong.konnect.devPortal.openPreview')
             }
           }
         }
@@ -258,7 +258,7 @@ export function activate(context: ExtensionContext) {
   )
 
   const clearCredentialsCommand = commands.registerCommand(
-    'portalPreview.clearCredentials',
+    'kong.konnect.devPortal.clearCredentials',
     async () => {
       try {
         const confirm = await window.showWarningMessage(
@@ -281,7 +281,7 @@ export function activate(context: ExtensionContext) {
   // Listen for configuration changes
   const configChangeListener = workspace.onDidChangeConfiguration(
     async (event) => {
-      if (event.affectsConfiguration('portalPreview')) {
+      if (event.affectsConfiguration('kong.konnect.devPortal')) {
         const config = getConfiguration()
         debug.log('Portal Preview configuration changed:', config)
         await previewProvider?.updateConfiguration(config)
@@ -310,7 +310,7 @@ export function activate(context: ExtensionContext) {
         } else {
           // No active preview, check if we should auto-open for this new document
           const config = getConfiguration()
-          if (config.autoOpen) {
+          if (config.autoOpenPreview) {
             await previewProvider?.openPreview(editor.document)
           }
         }
@@ -332,11 +332,11 @@ export function activate(context: ExtensionContext) {
     editorChangeListener,
   )
 
-  // Auto-open for active editor if autoOpen is enabled
+  // Auto-open for active editor if autoOpenPreview is enabled
   const activeEditor = window.activeTextEditor
   if (activeEditor && isMarkdownOrMDC(activeEditor.document)) {
     const config = getConfiguration()
-    if (config.autoOpen) {
+    if (config.autoOpenPreview) {
       void previewProvider.openPreview(activeEditor.document)
     }
   }
@@ -384,7 +384,7 @@ function isMarkdownOrMDC(document: TextDocument): boolean {
     void checkMDCExtension().then((hasMDCExtension) => {
       if (!hasMDCExtension) {
         // Show recommendation for both MDC and Markdown files to enhance syntax highlighting
-        const config = workspace.getConfiguration('portalPreview')
+        const config = workspace.getConfiguration('kong.konnect.devPortal')
         const showRecommendation = config.get<boolean>('showMDCRecommendation', true)
         if (showRecommendation) {
           showMDCExtensionRecommendation()
@@ -402,11 +402,11 @@ function isMarkdownOrMDC(document: TextDocument): boolean {
  * @returns The current portal preview configuration
  */
 export function getConfiguration(): PortalPreviewConfig {
-  const config = workspace.getConfiguration('portalPreview')
+  const config = workspace.getConfiguration('kong.konnect.devPortal')
 
   return {
-    autoOpen: config.get<boolean>('autoOpen', false),
-    updateDelay: config.get<number>('updateDelay', 500),
+    autoOpenPreview: config.get<boolean>('autoOpenPreview', false),
+    previewUpdateDelay: config.get<number>('previewUpdateDelay', 500),
     readyTimeout: config.get<number>('readyTimeout', 5000),
     debug: config.get<boolean>('debug', false),
     showMDCRecommendation: config.get<boolean>('showMDCRecommendation', true),

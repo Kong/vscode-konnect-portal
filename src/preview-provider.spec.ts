@@ -75,8 +75,8 @@ describe('PreviewProvider', () => {
   let mockWebview: Webview
 
   const mockConfig: PortalPreviewConfig = {
-    autoOpen: true,
-    updateDelay: 300,
+    autoOpenPreview: true,
+    previewUpdateDelay: 300,
     readyTimeout: 5000,
     debug: false,
     showMDCRecommendation: true,
@@ -184,7 +184,7 @@ describe('PreviewProvider', () => {
       )
 
       // Token configuration workflow is triggered
-      expect(commands.executeCommand).toHaveBeenCalledWith('portalPreview.configureToken')
+      expect(commands.executeCommand).toHaveBeenCalledWith('kong.konnect.devPortal.configureToken')
 
       // No preview panel should be created without valid setup
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
@@ -229,7 +229,7 @@ describe('PreviewProvider', () => {
       expect(window.showWarningMessage).toHaveBeenCalled()
 
       // No commands executed after cancellation
-      expect(commands.executeCommand).not.toHaveBeenCalledWith('portalPreview.configureToken')
+      expect(commands.executeCommand).not.toHaveBeenCalledWith('kong.konnect.devPortal.configureToken')
 
       // No side effects from cancellation
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
@@ -244,7 +244,7 @@ describe('PreviewProvider', () => {
       await previewProvider.openPreview(mockDocument)
 
       // Portal selection workflow is triggered
-      expect(commands.executeCommand).toHaveBeenCalledWith('portalPreview.selectPortal')
+      expect(commands.executeCommand).toHaveBeenCalledWith('kong.konnect.devPortal.selectPortal')
 
       // No preview created without complete setup
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
@@ -452,7 +452,7 @@ describe('PreviewProvider', () => {
       expect(mockWebview.postMessage).not.toHaveBeenCalled()
 
       // Fast-forward time by the update delay
-      await vi.advanceTimersByTimeAsync(mockConfig.updateDelay)
+      await vi.advanceTimersByTimeAsync(mockConfig.previewUpdateDelay)
 
       // Now should post message
       expect(mockWebview.postMessage).toHaveBeenCalledWith(
@@ -478,7 +478,7 @@ describe('PreviewProvider', () => {
       await previewProvider.updateContent(doc2)
 
       // Fast-forward time
-      await vi.advanceTimersByTimeAsync(mockConfig.updateDelay)
+      await vi.advanceTimersByTimeAsync(mockConfig.previewUpdateDelay)
 
       // Should only post message once (second call cleared first timeout)
       expect(mockWebview.postMessage).toHaveBeenCalledTimes(1)

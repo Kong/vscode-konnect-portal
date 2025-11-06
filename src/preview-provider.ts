@@ -78,7 +78,7 @@ export class PreviewProvider implements Disposable {
         )
         .then((selection) => {
           if (selection === TokenConfigurationActions.CONFIGURE_TOKEN) {
-            commands.executeCommand('portalPreview.configureToken')
+            commands.executeCommand('kong.konnect.devPortal.configureToken')
           } else if (selection === TokenConfigurationActions.LEARN_MORE) {
             env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
           }
@@ -90,7 +90,7 @@ export class PreviewProvider implements Disposable {
     const portalConfig = await this.storageService.getSelectedPortal()
     if (!portalConfig) {
       // Token is configured but no portal selected, auto-trigger portal selection
-      await commands.executeCommand('portalPreview.selectPortal')
+      await commands.executeCommand('kong.konnect.devPortal.selectPortal')
       return
     }
 
@@ -227,7 +227,7 @@ export class PreviewProvider implements Disposable {
     // Debounce content updates
     this.updateTimeout = setTimeout(async () => {
       await this.sendContentUpdate(document, config)
-    }, config.updateDelay)
+    }, config.previewUpdateDelay)
   }
 
   /** Updates the configuration in the webview */
@@ -467,9 +467,9 @@ export class PreviewProvider implements Disposable {
               )
               .then((selection) => {
                 if (selection === WebviewTimeoutActions.OPEN_SETTINGS) {
-                  commands.executeCommand('workbench.action.openSettings', 'portalPreview')
+                  commands.executeCommand('workbench.action.openSettings', 'kong.konnect.devPortal')
                 } else if (selection === WebviewTimeoutActions.REFRESH_PREVIEW) {
-                  commands.executeCommand('portalPreview.refreshPreview')
+                  commands.executeCommand('kong.konnect.devPortal.refreshPreview')
                 }
               })
           } else {

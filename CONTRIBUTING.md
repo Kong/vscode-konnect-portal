@@ -84,7 +84,7 @@ The extension includes pre-configured debug setups in `.vscode/launch.json`:
 - **Extension Code**: Set breakpoints in `.ts` files, use VS Code debugger
 - **Webview Content**: Open Developer Tools in Extension Development Host (`Help > Toggle Developer Tools`)
 - **Extension Logs**: View → Output → "Log (Extension Host)"
-- **Debug Mode**: Enable `portalPreview.debug` setting for verbose logging
+- **Debug Mode**: Enable `kong.konnect.devPortal.debug` setting for verbose logging
 
 ## Testing
 
