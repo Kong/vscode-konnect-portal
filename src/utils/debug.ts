@@ -16,7 +16,7 @@ export function debugLog(params: LogParams): void {
   const { type = 'log' as LogLevel, force = false, message, data } = params
 
   // Check if debug mode is enabled or if this is a forced log
-  const config = workspace.getConfiguration('portalPreview')
+  const config = workspace.getConfiguration('kong.konnect.portal')
   const debugEnabled = config.get<boolean>('debug', false)
 
   if (!debugEnabled && !force) {

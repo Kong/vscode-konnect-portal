@@ -33,7 +33,7 @@ import { getDocumentPathInfo } from './utils/page-path'
 /** Manages the preview webview panel and handles content updates */
 export class PreviewProvider implements Disposable {
   /** The webview panel type identifier */
-  private static readonly viewType = 'portalPreview'
+  private static readonly viewType = 'kong.konnect.portal.preview'
 
   /** Current state of the preview panel including visibility and active document */
   private panelState: PreviewPanelState = { isVisible: false }
@@ -69,20 +69,17 @@ export class PreviewProvider implements Disposable {
     // First check if token is configured
     const hasToken = await this.storageService.hasValidToken()
     if (!hasToken) {
-      // No token configured, show token configuration message
-      void window
-        .showWarningMessage(
-          'No Konnect token configured. Please configure your Personal Access Token to continue.',
-          TokenConfigurationActions.CONFIGURE_TOKEN,
-          TokenConfigurationActions.LEARN_MORE,
-        )
-        .then((selection) => {
-          if (selection === TokenConfigurationActions.CONFIGURE_TOKEN) {
-            commands.executeCommand('portalPreview.configureToken')
-          } else if (selection === TokenConfigurationActions.LEARN_MORE) {
-            env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
-          }
-        })
+      // No token configured - show config flow message
+      const selection = await window.showInformationMessage(
+        'Configure your Kong Konnect Personal Access Token to use the preview feature.',
+        TokenConfigurationActions.CONFIGURE_TOKEN,
+        TokenConfigurationActions.LEARN_MORE,
+      )
+      if (selection === TokenConfigurationActions.CONFIGURE_TOKEN) {
+        await commands.executeCommand('kong.konnect.portal.configureToken')
+      } else if (selection === TokenConfigurationActions.LEARN_MORE) {
+        await env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
+      }
       return
     }
 
@@ -90,7 +87,7 @@ export class PreviewProvider implements Disposable {
     const portalConfig = await this.storageService.getSelectedPortal()
     if (!portalConfig) {
       // Token is configured but no portal selected, auto-trigger portal selection
-      await commands.executeCommand('portalPreview.selectPortal')
+      await commands.executeCommand('kong.konnect.portal.selectPortal')
       return
     }
 
@@ -467,9 +464,9 @@ export class PreviewProvider implements Disposable {
               )
               .then((selection) => {
                 if (selection === WebviewTimeoutActions.OPEN_SETTINGS) {
-                  commands.executeCommand('workbench.action.openSettings', 'portalPreview')
+                  commands.executeCommand('workbench.action.openSettings', 'kong.konnect.portal')
                 } else if (selection === WebviewTimeoutActions.REFRESH_PREVIEW) {
-                  commands.executeCommand('portalPreview.refreshPreview')
+                  commands.executeCommand('kong.konnect.portal.refreshPreview')
                 }
               })
           } else {

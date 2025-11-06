@@ -34,7 +34,7 @@ describe('vscode-context', () => {
 
       expect(vi.mocked(commands.executeCommand)).toHaveBeenCalledWith(
         'setContext',
-        'portalPreview.hasActivePreview',
+        'kong.konnect.portal.hasActivePreview',
         true,
       )
       expect(vi.mocked(debug.log)).toHaveBeenCalledWith(
@@ -50,7 +50,7 @@ describe('vscode-context', () => {
 
       expect(vi.mocked(commands.executeCommand)).toHaveBeenCalledWith(
         'setContext',
-        'portalPreview.hasActivePreview',
+        'kong.konnect.portal.hasActivePreview',
         false,
       )
       expect(vi.mocked(debug.log)).toHaveBeenCalledWith(
@@ -70,12 +70,12 @@ describe('vscode-context', () => {
       // Each call sets the correct context value
       expect(vi.mocked(commands.executeCommand)).toHaveBeenCalledWith(
         'setContext',
-        'portalPreview.hasActivePreview',
+        'kong.konnect.portal.hasActivePreview',
         true,
       )
       expect(vi.mocked(commands.executeCommand)).toHaveBeenCalledWith(
         'setContext',
-        'portalPreview.hasActivePreview',
+        'kong.konnect.portal.hasActivePreview',
         false,
       )
 
@@ -97,7 +97,7 @@ describe('vscode-context', () => {
 
       const [command, contextKey] = vi.mocked(commands.executeCommand).mock.calls[0]
       expect(command).toBe('setContext')
-      expect(contextKey).toBe('portalPreview.hasActivePreview')
+      expect(contextKey).toBe('kong.konnect.portal.hasActivePreview')
     })
 
     it('should handle boolean conversion correctly', () => {

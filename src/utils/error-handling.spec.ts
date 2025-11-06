@@ -65,7 +65,7 @@ describe('error-handling', () => {
 
           await showApiError(prefix, apiError, mockContext)
 
-          expect(vi.mocked(commands.executeCommand)).toHaveBeenCalledWith('portalPreview.configureToken')
+          expect(vi.mocked(commands.executeCommand)).toHaveBeenCalledWith('kong.konnect.portal.configureToken')
         })
 
         it('should copy debug info when Copy Debug Info is selected', async () => {

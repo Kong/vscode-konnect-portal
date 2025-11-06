@@ -119,7 +119,7 @@ describe('debug', () => {
       it('should call workspace.getConfiguration with correct parameter', async () => {
         debugLog({ message: 'Test message' })
 
-        expect(vi.mocked(workspace.getConfiguration)).toHaveBeenCalledWith('portalPreview')
+        expect(vi.mocked(workspace.getConfiguration)).toHaveBeenCalledWith('kong.konnect.portal')
       })
     })
 

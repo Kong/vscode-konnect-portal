@@ -7,7 +7,7 @@ suite('Configuration Tests', () => {
   let originalConfig: Record<string, unknown>
 
   /** Configuration section name */
-  const configSection = 'portalPreview'
+  const configSection = 'kong.konnect.portal'
 
   setup(async () => {
     // Store original configuration to restore later

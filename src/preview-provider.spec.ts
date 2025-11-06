@@ -9,6 +9,7 @@ vi.mock('vscode', () => ({
   window: {
     createWebviewPanel: vi.fn(),
     showWarningMessage: vi.fn(),
+    showInformationMessage: vi.fn(),
     activeTextEditor: null,
   },
   commands: {
@@ -114,7 +115,7 @@ describe('PreviewProvider', () => {
       dispose: vi.fn(),
       onDidDispose: vi.fn(),
       onDidChangeViewState: vi.fn(),
-      viewType: 'portalPreview',
+      viewType: 'kong.konnect.portal.preview',
       active: true,
       visible: true,
     } as unknown as WebviewPanel
@@ -171,20 +172,20 @@ describe('PreviewProvider', () => {
     it('should show warning and configure token when no token is configured', async () => {
       // No valid token available
       vi.mocked(mockStorageService.hasValidToken).mockResolvedValue(false)
-      vi.mocked(window.showWarningMessage).mockResolvedValue(TokenConfigurationActions.CONFIGURE_TOKEN as any)
+      vi.mocked(window.showInformationMessage).mockResolvedValue(TokenConfigurationActions.CONFIGURE_TOKEN as any)
 
       // Attempt to open preview
       await previewProvider.openPreview(mockDocument)
 
       // User is prompted for token configuration
-      expect(window.showWarningMessage).toHaveBeenCalledWith(
-        'No Konnect token configured. Please configure your Personal Access Token to continue.',
+      expect(window.showInformationMessage).toHaveBeenCalledWith(
+        'Configure your Kong Konnect Personal Access Token to use the preview feature.',
         TokenConfigurationActions.CONFIGURE_TOKEN,
         TokenConfigurationActions.LEARN_MORE,
       )
 
       // Token configuration workflow is triggered
-      expect(commands.executeCommand).toHaveBeenCalledWith('portalPreview.configureToken')
+      expect(commands.executeCommand).toHaveBeenCalledWith('kong.konnect.portal.configureToken')
 
       // No preview panel should be created without valid setup
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
@@ -193,14 +194,14 @@ describe('PreviewProvider', () => {
     it('should open PAT documentation when user selects "Learn more"', async () => {
       // No valid token, user selects "Learn more"
       vi.mocked(mockStorageService.hasValidToken).mockResolvedValue(false)
-      vi.mocked(window.showWarningMessage).mockResolvedValue(TokenConfigurationActions.LEARN_MORE as any)
+      vi.mocked(window.showInformationMessage).mockResolvedValue(TokenConfigurationActions.LEARN_MORE as any)
 
       // Attempt to open preview
       await previewProvider.openPreview(mockDocument)
 
       // User is prompted for token configuration with both options
-      expect(window.showWarningMessage).toHaveBeenCalledWith(
-        'No Konnect token configured. Please configure your Personal Access Token to continue.',
+      expect(window.showInformationMessage).toHaveBeenCalledWith(
+        'Configure your Kong Konnect Personal Access Token to use the preview feature.',
         TokenConfigurationActions.CONFIGURE_TOKEN,
         TokenConfigurationActions.LEARN_MORE,
       )
@@ -220,16 +221,16 @@ describe('PreviewProvider', () => {
     it('should handle user cancellation gracefully without side effects', async () => {
       // No valid token, user cancels warning
       vi.mocked(mockStorageService.hasValidToken).mockResolvedValue(false)
-      vi.mocked(window.showWarningMessage).mockResolvedValue(undefined)
+      vi.mocked(window.showInformationMessage).mockResolvedValue(undefined)
 
       // Attempt to open preview
       await previewProvider.openPreview(mockDocument)
 
       // User was prompted for action
-      expect(window.showWarningMessage).toHaveBeenCalled()
+      expect(window.showInformationMessage).toHaveBeenCalled()
 
       // No commands executed after cancellation
-      expect(commands.executeCommand).not.toHaveBeenCalledWith('portalPreview.configureToken')
+      expect(commands.executeCommand).not.toHaveBeenCalledWith('kong.konnect.portal.configureToken')
 
       // No side effects from cancellation
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
@@ -244,7 +245,7 @@ describe('PreviewProvider', () => {
       await previewProvider.openPreview(mockDocument)
 
       // Portal selection workflow is triggered
-      expect(commands.executeCommand).toHaveBeenCalledWith('portalPreview.selectPortal')
+      expect(commands.executeCommand).toHaveBeenCalledWith('kong.konnect.portal.selectPortal')
 
       // No preview created without complete setup
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
@@ -265,7 +266,7 @@ describe('PreviewProvider', () => {
       await previewProvider.openPreview(mockDocument)
 
       expect(window.createWebviewPanel).toHaveBeenCalledWith(
-        'portalPreview',
+        'kong.konnect.portal.preview',
         'Portal Preview - test.md',
         ViewColumn.Beside,
         expect.objectContaining({
