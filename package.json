@@ -106,31 +106,31 @@
   "contributes": {
     "commands": [
       {
-        "command": "kong.konnect.portal.openPreview",
+        "command": "kong.konnect.devPortal.openPreview",
         "title": "Open Portal Preview",
         "icon": "$(device-desktop)",
         "category": "Portal Preview"
       },
       {
-        "command": "kong.konnect.portal.refreshPreview",
+        "command": "kong.konnect.devPortal.refreshPreview",
         "title": "Refresh Portal Preview",
         "icon": "$(refresh)",
         "category": "Portal Preview"
       },
       {
-        "command": "kong.konnect.portal.configureToken",
+        "command": "kong.konnect.devPortal.configureToken",
         "title": "Configure Konnect Token",
         "icon": "$(key)",
         "category": "Portal Preview"
       },
       {
-        "command": "kong.konnect.portal.selectPortal",
+        "command": "kong.konnect.devPortal.selectPortal",
         "title": "Select Portal",
         "icon": "$(globe)",
         "category": "Portal Preview"
       },
       {
-        "command": "kong.konnect.portal.clearCredentials",
+        "command": "kong.konnect.devPortal.clearCredentials",
         "title": "Clear Konnect Credentials",
         "icon": "$(trash)",
         "category": "Portal Preview"
@@ -139,79 +139,79 @@
     "menus": {
       "editor/title": [
         {
-          "command": "kong.konnect.portal.openPreview",
+          "command": "kong.konnect.devPortal.openPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && !portalPreview.hasActivePreview",
           "group": "navigation"
         },
         {
-          "command": "kong.konnect.portal.refreshPreview",
+          "command": "kong.konnect.devPortal.refreshPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && portalPreview.hasActivePreview",
           "group": "navigation"
         }
       ],
       "editor/context": [
         {
-          "command": "kong.konnect.portal.openPreview",
+          "command": "kong.konnect.devPortal.openPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && !portalPreview.hasActivePreview",
           "group": "portal_preview@1"
         },
         {
-          "command": "kong.konnect.portal.refreshPreview",
+          "command": "kong.konnect.devPortal.refreshPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && portalPreview.hasActivePreview",
           "group": "portal_preview@1"
         }
       ],
       "commandPalette": [
         {
-          "command": "kong.konnect.portal.openPreview"
+          "command": "kong.konnect.devPortal.openPreview"
         },
         {
-          "command": "kong.konnect.portal.refreshPreview"
+          "command": "kong.konnect.devPortal.refreshPreview"
         },
         {
-          "command": "kong.konnect.portal.configureToken"
+          "command": "kong.konnect.devPortal.configureToken"
         },
         {
-          "command": "kong.konnect.portal.selectPortal"
+          "command": "kong.konnect.devPortal.selectPortal"
         },
         {
-          "command": "kong.konnect.portal.clearCredentials"
+          "command": "kong.konnect.devPortal.clearCredentials"
         }
       ]
     },
     "configuration": {
       "title": "Portal Preview",
       "properties": {
-        "kong.konnect.portal.autoOpen": {
+        "kong.konnect.devPortal.autoOpen": {
           "type": "boolean",
           "default": false,
           "description": "Automatically open preview when opening MDC/Markdown files"
         },
-        "kong.konnect.portal.updateDelay": {
+        "kong.konnect.devPortal.updateDelay": {
           "type": "number",
           "default": 500,
           "minimum": 500,
           "maximum": 3000,
           "description": "Delay in milliseconds before updating preview after content changes"
         },
-        "kong.konnect.portal.readyTimeout": {
+        "kong.konnect.devPortal.readyTimeout": {
           "type": "number",
           "default": 5000,
           "minimum": 3000,
           "maximum": 10000,
           "description": "Timeout in milliseconds to wait for the Dev Portal to signal that the preview is ready"
         },
-        "kong.konnect.portal.debug": {
+        "kong.konnect.devPortal.debug": {
           "type": "boolean",
           "default": false,
           "description": "Enable debug logging for the Portal Preview extension (useful for development and troubleshooting)"
         },
-        "kong.konnect.portal.showMDCRecommendation": {
+        "kong.konnect.devPortal.showMDCRecommendation": {
           "type": "boolean",
           "default": true,
           "description": "Show recommendation to install MDC extension when opening .mdc files"
         },
-        "kong.konnect.portal.pagesDirectory": {
+        "kong.konnect.devPortal.pagesDirectory": {
           "type": "string",
           "default": "pages",
           "description": "Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Example: 'pages', 'docs/pages', or 'src/content/documentation'. Leave empty to disable path calculation.",
@@ -221,7 +221,7 @@
             "src/content/documentation"
           ]
         },
-        "kong.konnect.portal.snippetsDirectory": {
+        "kong.konnect.devPortal.snippetsDirectory": {
           "type": "string",
           "default": "snippets",
           "description": "Directory relative to workspace root containing your snippets (.md/.mdc files). When set, snippets will be sent with snippet_name instead of path. Example: 'snippets', 'content/snippets', or 'src/snippets'. Subdirectories are not supported. Leave empty to disable snippet detection.",

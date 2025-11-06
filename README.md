@@ -58,13 +58,13 @@ The extension provides several configuration options in VS Code settings. You ca
 
 | Setting | Type | Default | Description | Example |
 |---------|------|---------|-------------|---------|
-| `kong.konnect.portal.autoOpen` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
-| `kong.konnect.portal.updateDelay` | `number` | `500` | Delay in milliseconds before updating preview after content changes (500-3000) | Use `1000` for slower updates |
-| `kong.konnect.portal.readyTimeout` | `number` | `5000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
-| `kong.konnect.portal.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
-| `kong.konnect.portal.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
-| `kong.konnect.portal.pagesDirectory` | `string` | `"pages"` | Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Leave empty to disable path calculation. | `"pages"`, `"docs/pages"`, `"src/content/documentation"` |
-| `kong.konnect.portal.snippetsDirectory` | `string` | `"snippets"` | Directory relative to workspace root containing your snippets (.md/.mdc files). When set, snippet names will be extracted from filenames. Subdirectories are not supported. Leave empty to disable snippet detection. | `"snippets"`, `"docs/snippets"`, `"src/content/snippets"` |
+| `kong.konnect.devPortal.autoOpen` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
+| `kong.konnect.devPortal.updateDelay` | `number` | `500` | Delay in milliseconds before updating preview after content changes (500-3000) | Use `1000` for slower updates |
+| `kong.konnect.devPortal.readyTimeout` | `number` | `5000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
+| `kong.konnect.devPortal.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
+| `kong.konnect.devPortal.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
+| `kong.konnect.devPortal.pagesDirectory` | `string` | `"pages"` | Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Leave empty to disable path calculation. | `"pages"`, `"docs/pages"`, `"src/content/documentation"` |
+| `kong.konnect.devPortal.snippetsDirectory` | `string` | `"snippets"` | Directory relative to workspace root containing your snippets (.md/.mdc files). When set, snippet names will be extracted from filenames. Subdirectories are not supported. Leave empty to disable snippet detection. | `"snippets"`, `"docs/snippets"`, `"src/content/snippets"` |
 
 ## Setup and Usage
 
@@ -136,12 +136,12 @@ For optimal portal preview experience:
 
 **Pages:**
 - **Organize files** in a dedicated pages directory (e.g., `pages/`)
-- **Configure** the `kong.konnect.portal.pagesDirectory` setting to match your structure
+- **Configure** the `kong.konnect.devPortal.pagesDirectory` setting to match your structure
 - **Use subdirectories** to organize content hierarchically (e.g., `pages/getting-started/overview.md` → `/getting-started/overview`)
 
 **Snippets:**
 - **Organize files** in a dedicated snippets directory (e.g., `snippets/`)
-- **Configure** the `kong.konnect.portal.snippetsDirectory` setting to match your structure
+- **Configure** the `kong.konnect.devPortal.snippetsDirectory` setting to match your structure
 - **Use flat structure** - subdirectories are not supported (files must be in the root of the snippets directory)
 - **File names become snippet names** (e.g., `snippets/api-example.md` → snippet name: `api-example`)
 
@@ -187,7 +187,7 @@ This extension supports two distinct types of content for your Kong Dev Portal:
 Pages are full portal documents that represent routes in your portal navigation.
 
 **Configuration:**
-- Set `kong.konnect.portal.pagesDirectory` to your pages folder (e.g., `"pages"`, `"docs/pages"`)
+- Set `kong.konnect.devPortal.pagesDirectory` to your pages folder (e.g., `"pages"`, `"docs/pages"`)
 - Supports nested subdirectories for hierarchical organization
 
 **Path Calculation:**
@@ -198,7 +198,7 @@ Pages are full portal documents that represent routes in your portal navigation.
 Snippets are reusable content blocks that can be embedded in pages or other snippets.
 
 **Configuration:**
-- Set `kong.konnect.portal.snippetsDirectory` to your snippets folder (e.g., `"snippets"`, `"docs/snippets"`)
+- Set `kong.konnect.devPortal.snippetsDirectory` to your snippets folder (e.g., `"snippets"`, `"docs/snippets"`)
 - **Flat structure only** - subdirectories are not supported and will show an error
 
 **Important:** Files in snippet subdirectories (e.g., `snippets/category/example.md`) will trigger an error and prevent preview functionality. Move such files to the root of your snippets directory.
@@ -207,13 +207,13 @@ Snippets are reusable content blocks that can be embedded in pages or other snip
 
 ```
 dev-portal-project/
-├── pages/                          # Configure: kong.konnect.portal.pagesDirectory = "pages"
+├── pages/                          # Configure: kong.konnect.devPortal.pagesDirectory = "pages"
 │   ├── home.md                     # → Portal Path: "/"
 │   ├── getting-started.md          # → Portal Path: "/getting-started"
 │   └── getting-started/
 │       ├── overview.md             # → Portal Path: "/getting-started/overview"
 │       └── installation.md         # → Portal Path: "/getting-started/installation"
-└── snippets/                       # Configure: kong.konnect.portal.snippetsDirectory = "snippets"
+└── snippets/                       # Configure: kong.konnect.devPortal.snippetsDirectory = "snippets"
     ├── api-example.md              # → Snippet Name: "api-example"
     ├── code-samples.md             # → Snippet Name: "code-samples"
     └── troubleshooting.md          # → Snippet Name: "troubleshooting"

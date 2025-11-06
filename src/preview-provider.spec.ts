@@ -184,7 +184,7 @@ describe('PreviewProvider', () => {
       )
 
       // Token configuration workflow is triggered
-      expect(commands.executeCommand).toHaveBeenCalledWith('kong.konnect.portal.configureToken')
+      expect(commands.executeCommand).toHaveBeenCalledWith('kong.konnect.devPortal.configureToken')
 
       // No preview panel should be created without valid setup
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
@@ -229,7 +229,7 @@ describe('PreviewProvider', () => {
       expect(window.showWarningMessage).toHaveBeenCalled()
 
       // No commands executed after cancellation
-      expect(commands.executeCommand).not.toHaveBeenCalledWith('kong.konnect.portal.configureToken')
+      expect(commands.executeCommand).not.toHaveBeenCalledWith('kong.konnect.devPortal.configureToken')
 
       // No side effects from cancellation
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
@@ -244,7 +244,7 @@ describe('PreviewProvider', () => {
       await previewProvider.openPreview(mockDocument)
 
       // Portal selection workflow is triggered
-      expect(commands.executeCommand).toHaveBeenCalledWith('kong.konnect.portal.selectPortal')
+      expect(commands.executeCommand).toHaveBeenCalledWith('kong.konnect.devPortal.selectPortal')
 
       // No preview created without complete setup
       expect(window.createWebviewPanel).not.toHaveBeenCalled()
