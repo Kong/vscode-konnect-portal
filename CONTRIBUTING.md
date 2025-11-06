@@ -71,13 +71,13 @@ The extension includes pre-configured debug setups in `.vscode/launch.json`:
    ```
 
 2. **Test Commands**
-   - Right-click → "Open Portal Preview"
-   - Command Palette (`Ctrl+Shift+P`) → "Portal Preview: Open Preview"
+   - Right-click → "Open Preview"
+   - Command Palette (`Ctrl+Shift+P`) → "Konnect Portal: Open Preview"
    - Use editor toolbar buttons
 
 3. **Configure Extension** (if needed)
-   - Command Palette → "Portal Preview: Configure Konnect Personal Acces Token (PAT)"
-   - Command Palette → "Portal Preview: Select Portal"
+   - Command Palette → "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
+   - Command Palette → "Konnect Portal: Select Portal"
 
 ### Debugging Tips
 

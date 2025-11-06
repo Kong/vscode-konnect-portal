@@ -33,7 +33,7 @@ export async function showKongctlDiagnostics(): Promise<void> {
     let executionError = 'None'
 
     // Always try to execute to get detailed error info
-    const versionResult = await executeKongctl(['version', '--full', '--output', 'json'])
+    const versionResult = await executeKongctl(['version', '--full', '--output', 'json'], {})
     if (versionResult.success) {
       versionInfo = formatKongctlVersion(versionResult.stdout)
     } else {
@@ -41,16 +41,11 @@ export async function showKongctlDiagnostics(): Promise<void> {
     }
 
     const diagnosticMessage = `
-kongctl Diagnostics:
-• Status: ${isAvailable ? '✅ Available' : '❌ Not Available'}
-• Configured Path: ${diagnostics.configuredPath}
+• Status: ${isAvailable ? 'Available' : 'Not Available'}
+• Configured Path: ${diagnostics.configuredPath || 'kongctl'}
 • Found in PATH: ${diagnostics.foundInPath || 'Not found'}
-• File Stats: ${diagnostics.fileStats ? `Exists: ${diagnostics.fileStats.exists}, Size: ${diagnostics.fileStats.size} bytes` : 'N/A'}
-• Version: ${versionInfo}
+• ${versionInfo}
 • Execution Error: ${executionError}
-• PATH Environment: ${diagnostics.pathEnv.substring(0, 200)}${diagnostics.pathEnv.length > 200 ? '...' : ''}
-• PATH Directories (${diagnostics.pathDirectories.length} total):
-${diagnostics.pathDirectories.slice(0, 10).map(dir => `  - ${dir}`).join('\n')}${diagnostics.pathDirectories.length > 10 ? '\n  ...' : ''}
 `.trim()
 
     await vscode.window.showInformationMessage(
@@ -113,22 +108,19 @@ export async function checkAndNotifyKongctlAvailability(): Promise<boolean> {
  * Show success message when kongctl is detected, including version information
  */
 export async function showKongctlAvailableMessage(): Promise<void> {
-  const config = getKongctlConfig()
-  const pathInfo = config.path === 'kongctl' ? 'from PATH' : `at ${config.path}`
-
   try {
-    const versionResult = await executeKongctl(['version', '--full', '--output', 'json'])
+    const versionResult = await executeKongctl(['version', '--full', '--output', 'json'], {})
     const versionInfo = versionResult.success ? formatKongctlVersion(versionResult.stdout) : 'Version unknown'
 
     vscode.window.showInformationMessage(
-      `kongctl CLI detected ${pathInfo}. Kong Konnect CLI features are now available.`,
-      { modal: true, detail: `Version Information:\n${versionInfo}` },
+      'kongctl features are available.',
+      { modal: true, detail: versionInfo },
       'OK',
     )
   } catch {
     // Fallback to simple message if version check fails
     vscode.window.showInformationMessage(
-      `kongctl CLI detected ${pathInfo}. Kong Konnect CLI features are now available.`,
+      'kongctl features are available.',
     )
   }
 }

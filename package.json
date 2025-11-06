@@ -107,45 +107,51 @@
     "commands": [
       {
         "command": "kong.konnect.devPortal.openPreview",
-        "title": "Open Portal Preview",
+        "title": "Open Preview",
         "icon": "$(device-desktop)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
         "command": "kong.konnect.devPortal.refreshPreview",
-        "title": "Refresh Portal Preview",
+        "title": "Refresh Preview",
         "icon": "$(refresh)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
         "command": "kong.konnect.devPortal.configureToken",
-        "title": "Configure Konnect Personal Acces Token (PAT)",
+        "title": "Configure Konnect Personal Access Token (PAT)",
         "icon": "$(key)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
         "command": "kong.konnect.devPortal.selectPortal",
         "title": "Select Portal",
         "icon": "$(globe)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
-        "command": "kong.konnect.devPortal.clearCredentials",
-        "title": "Clear Konnect Credentials",
+        "command": "kong.konnect.devPortal.deleteToken",
+        "title": "Delete Access Token",
         "icon": "$(trash)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
         "command": "kong.konnect.kongctl.checkStatus",
-        "title": "Check kongctl Status",
+        "title": "Check Status",
         "icon": "$(pulse)",
-        "category": "Kong CLI"
+        "category": "kongctl"
       },
       {
         "command": "kong.konnect.kongctl.showDiagnostics",
-        "title": "Show kongctl Diagnostics",
+        "title": "Show Diagnostics",
         "icon": "$(info)",
-        "category": "Kong CLI"
+        "category": "kongctl"
+      },
+      {
+        "command": "kong.konnect.kongctl.run",
+        "title": "Run Command",
+        "icon": "$(terminal)",
+        "category": "kongctl"
       }
     ],
     "menus": {
@@ -187,7 +193,7 @@
           "command": "kong.konnect.devPortal.selectPortal"
         },
         {
-          "command": "kong.konnect.devPortal.clearCredentials"
+          "command": "kong.konnect.devPortal.deleteToken"
         }
       ]
     },

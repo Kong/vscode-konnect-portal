@@ -156,7 +156,7 @@ export function activate(context: ExtensionContext) {
       try {
         const token = await window.showInputBox({
           placeHolder: 'Enter your Konnect Personal Access Token',
-          prompt: 'Please enter your Konnect Personal Access Token to connect to your portals',
+          prompt: 'Please enter your Konnect Personal Access Token (PAT)',
           password: true,
           validateInput: (value) => {
             if (!value?.trim()) {
@@ -259,17 +259,17 @@ export function activate(context: ExtensionContext) {
     },
   )
 
-  const clearCredentialsCommand = commands.registerCommand(
-    'kong.konnect.devPortal.clearCredentials',
+  const deleteTokenCommand = commands.registerCommand(
+    'kong.konnect.devPortal.deleteToken',
     async () => {
       try {
         const confirm = await window.showWarningMessage(
           'This will remove your stored Konnect token and portal selection. Are you sure?',
           { modal: true },
-          CredentialActions.CLEAR_CREDENTIALS,
+          CredentialActions.DELETE_TOKEN,
         )
 
-        if (confirm === CredentialActions.CLEAR_CREDENTIALS) {
+        if (confirm === CredentialActions.DELETE_TOKEN) {
           await storageService?.clearAll()
           window.showInformationMessage('All credentials cleared successfully.')
         }
@@ -306,6 +306,53 @@ export function activate(context: ExtensionContext) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
         window.showErrorMessage(`Failed to show kongctl diagnostics: ${errorMessage}`)
       }
+    },
+  )
+
+  // Register kongctl run command
+  const runKongctlCommand = commands.registerCommand(
+    'kong.konnect.kongctl.run',
+    async () => {
+      const commandPattern = new RegExp(/^kongctl\s*/i)
+
+      // Prompt user for kongctl arguments
+      const userInput = await window.showInputBox({
+        prompt: 'Enter command arguments',
+        placeHolder: 'api get /v3/portals --output json',
+        validateInput: (value) => {
+          if (value.trim().startsWith('kongctl')) {
+            return 'Please enter only the command arguments, "kongctl" will be prefixed automatically'
+          }
+
+          return value.trim().replace(commandPattern, '') ? undefined : 'Command arguments cannot be empty'
+        },
+      })
+      if (!userInput) return
+
+      // Build the full command with kongctl prefix
+      const fullCommand = `kongctl ${userInput.trim().replace(commandPattern, '')}`
+
+      // Get stored token if available and include in environment
+      const env = { ...process.env }
+      try {
+        if (storageService && await storageService.hasValidToken()) {
+          const token = await storageService.getToken()
+          if (token) {
+            env.KONGCTL_DEFAULT_KONNECT_PAT = token
+          }
+        }
+      } catch {
+        // Silently continue without token if there's an error
+      }
+
+      // Open a new terminal and run the command
+      const terminal = window.createTerminal({
+        name: 'kongctl',
+        shellPath: process.env.SHELL || undefined,
+        env,
+      })
+      terminal.show(true)
+      terminal.sendText(fullCommand, true)
     },
   )
 
@@ -357,9 +404,10 @@ export function activate(context: ExtensionContext) {
     refreshPreviewCommand,
     configureTokenCommand,
     selectPortalCommand,
-    clearCredentialsCommand,
+    deleteTokenCommand,
     checkKongctlStatusCommand,
     showKongctlDiagnosticsCommand,
+    runKongctlCommand,
     configChangeListener,
     documentChangeListener,
     editorChangeListener,
@@ -378,7 +426,7 @@ export function activate(context: ExtensionContext) {
 /**
  * Deactivates the Portal Preview extension
  * Cleans up resources but preserves stored credentials and data
- * Note: Use "Portal Preview: Clear Credentials" command to manually clear stored data
+ * Note: Use "Konnect Portal: Clear Credentials" command to manually clear stored data
  */
 export function deactivate() {
   // Dispose of preview provider and clean up resources

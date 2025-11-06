@@ -4,6 +4,7 @@ import * as path from 'path'
 import { promisify } from 'util'
 import { spawn } from 'child_process'
 import type { KongctlConfig, KongctlCommandResult, FileStats, DiagnosticInfo } from '../types/kongctl'
+import type { PortalStorageService } from '../konnect/storage'
 
 const exists = promisify(fs.exists)
 
@@ -68,11 +69,12 @@ export async function getKongctlPath(): Promise<string> {
 
 /**
  * Check if kongctl is available and working
+ * @param storageService - Optional storage service to get Konnect PAT
  * @returns Promise resolving to true if kongctl is available
  */
 export async function checkKongctlAvailable(): Promise<boolean> {
   try {
-    const result = await executeKongctl(['version', '--full', '--output', 'json'])
+    const result = await executeKongctl(['version', '--full', '--output', 'json'], {})
     return result.success
   } catch {
     return false
@@ -83,21 +85,40 @@ export async function checkKongctlAvailable(): Promise<boolean> {
  * Execute a kongctl command with the given arguments
  * @param args - Command arguments to pass to kongctl
  * @param options - Optional execution options
+ * @param storageService - Optional storage service to get Konnect PAT
  * @returns Promise resolving to command result
  */
 export async function executeKongctl(
   args: string[],
   options: { timeout?: number, cwd?: string } = {},
+  storageService?: PortalStorageService,
 ): Promise<KongctlCommandResult> {
   const kongctlPath = await getKongctlPath()
   const config = vscode.workspace.getConfiguration('kong.konnect.kongctl')
   const timeout = options.timeout ?? config.get<number>('timeout', 30000)
+
+  // Prepare environment variables, including PAT if available
+  const env = { ...process.env }
+
+  // Add Konnect PAT to environment if available and valid
+  if (storageService) {
+    try {
+      const token = await storageService.getToken()
+      if (token && token.trim()) {
+        env.KONGCTL_DEFAULT_KONNECT_PAT = token
+      }
+    } catch {
+      // Silently continue without token if retrieval fails
+      // This ensures kongctl commands work even if token access fails
+    }
+  }
 
   return new Promise((resolve) => {
     const child = spawn(kongctlPath, args, {
       cwd: options.cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
       shell: true, // Use shell to resolve PATH and environment issues
+      env, // Pass environment with potential PAT
     })
 
     let stdout = ''

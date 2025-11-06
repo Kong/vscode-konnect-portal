@@ -50,7 +50,7 @@ You can install it by:
 3. Configure your Konnect Personal Access Token
 4. Select a Dev Portal from your Konnect account
 5. Open an MDC (`.mdc`) or Markdown (`.md`) file
-6. Use the "Open Portal Preview" command or click the preview icon
+6. Use the "Open Preview" command or click the preview icon
 
 ## Configuration
 
@@ -68,7 +68,7 @@ The extension provides several configuration options in VS Code settings. You ca
 
 ## Setup and Usage
 
-### 1. Configure Konnect Personal Acces Token (PAT)
+### 1. Configure Konnect Personal Access Token (PAT)
 
 Before using the extension, you need to configure your Konnect Personal Access Token:
 
@@ -80,7 +80,7 @@ Before using the extension, you need to configure your Konnect Personal Access T
 
 2. **Configure the token in VS Code**:
     - Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-    - Run "Portal Preview: Configure Konnect Personal Acces Token (PAT)"
+    - Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
     - Paste your Personal Access Token
     - Click OK
 
@@ -89,7 +89,7 @@ Before using the extension, you need to configure your Konnect Personal Access T
 Once your token is configured:
 
 1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Run "Portal Preview: Select Portal"
+2. Run "Konnect Portal: Select Portal"
 3. Choose from your available Dev Portals in Konnect
 4. The selected portal will be saved for future use
 
@@ -99,8 +99,8 @@ Once your token is configured:
 
 There are several ways to open the live preview:
 
-1. **Command Palette**: Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) and type "Open Portal Preview"
-2. **Editor Menu**: Right-click in a MDC/Markdown file and select "Open Portal Preview"
+1. **Command Palette**: Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) and type "Open Preview"
+2. **Editor Menu**: Right-click in a MDC/Markdown file and select "Open Preview"
 3. **Toolbar Button**: Click the preview icon in the editor toolbar when viewing MDC/Markdown files
 
 ### 4. Live Preview
@@ -117,11 +117,11 @@ The extension provides the following commands (accessible via Command Palette):
 
 | Command | Description |
 |---------|-------------|
-| `Portal Preview: Open Portal Preview` | Opens the preview panel for the current MDC/Markdown file |
-| `Portal Preview: Refresh Portal Preview` | Refreshes the preview panel content |
-| `Portal Preview: Configure Konnect Personal Acces Token (PAT)` | Set up your Konnect Personal Access Token |
-| `Portal Preview: Select Portal` | Choose a portal from your Konnect account |
-| `Portal Preview: Clear Konnect Credentials` | Remove stored token and portal selection |
+| `Konnect Portal: Open Preview` | Opens the preview panel for the current MDC/Markdown file |
+| `Konnect Portal: Refresh Preview` | Refreshes the preview panel content |
+| `Konnect Portal: Configure Konnect Personal Access Token (PAT)` | Set up your Konnect Personal Access Token |
+| `Konnect Portal: Select Portal` | Choose a portal from your Konnect account |
+| `Konnect Portal: Delete Access Token` | Remove stored token and portal selection |
 
 ## File Support
 
@@ -151,9 +151,9 @@ For optimal portal preview experience:
 
 If you see configuration warnings:
 
-1. **Configure Konnect Personal Acces Token (PAT)**: Run "Portal Preview: Configure Konnect Personal Acces Token (PAT)"
-2. **Select Portal**: Run "Portal Preview: Select Portal"
-3. **Update Token**: If your token expired, run "Portal Preview: Configure Konnect Personal Acces Token (PAT)" again
+1. **Configure Konnect Personal Access Token (PAT)**: Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
+2. **Select Portal**: Run "Konnect Portal: Select Portal"
+3. **Update Token**: If your token expired, run "Konnect Portal: Configure Konnect Personal Access Token (PAT)" again
 
 ### Token Format Errors
 
