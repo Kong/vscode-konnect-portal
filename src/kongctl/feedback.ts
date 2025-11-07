@@ -10,7 +10,7 @@ import { KongctlInstallActions } from '../types/ui-actions'
 function formatKongctlVersion(jsonOutput: string): string {
   try {
     const versionData = JSON.parse(jsonOutput)
-    const version = versionData.version || 'Unknown'
+    const version = versionData.version || 'Version: Unknown'
     const commit = versionData.commit ? versionData.commit.substring(0, 8) : 'Unknown'
     const date = versionData.date ? new Date(versionData.date).toLocaleDateString() : 'Unknown'
 
@@ -29,7 +29,7 @@ export async function showKongctlDiagnostics(): Promise<void> {
     const diagnostics = await getKongctlDiagnostics()
     const isAvailable = await checkKongctlAvailable()
 
-    let versionInfo = 'Unknown'
+    let versionInfo = 'Version: Unknown'
     let executionError = 'None'
 
     // Always try to execute to get detailed error info
@@ -37,25 +37,59 @@ export async function showKongctlDiagnostics(): Promise<void> {
     if (versionResult.success) {
       versionInfo = formatKongctlVersion(versionResult.stdout)
     } else {
-      executionError = `Exit code: ${versionResult.exitCode}, Error: ${versionResult.stderr}`
+      executionError = `\nExit code: ${versionResult.exitCode} \nError: ${versionResult.stderr}`
     }
 
     const diagnosticMessage = `
 • Status: ${isAvailable ? 'Available' : 'Not Available'}
-• Configured Path: ${diagnostics.configuredPath || 'kongctl'}
-• Found in PATH: ${diagnostics.foundInPath || 'Not found'}
+• Configured Path: '${diagnostics.configuredPath || 'kongctl'}'
+${diagnostics.foundInPath ? `• Found in PATH: '${diagnostics.foundInPath}'` : '• Could not determine if kongctl is installed'}
 • ${versionInfo}
-• Execution Error: ${executionError}
+${executionError ? `• Execution Error: ${executionError}` : '• No errors'}
 `.trim()
 
     await vscode.window.showInformationMessage(
-      'kongctl Diagnostics',
+      'kongctl',
       { modal: true, detail: diagnosticMessage },
       'OK',
     )
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     vscode.window.showErrorMessage(`Failed to get kongctl diagnostics: ${errorMessage}`)
+  }
+}
+
+/**
+ * Show feedback to user when kongctl is not found at configured path
+ * Provides options to configure path or learn more about installation
+ */
+export async function showKongctlNotFoundAtPathDialog(configuredPath: string): Promise<void> {
+  // Check if user has actually configured a custom path vs using default
+  const config = vscode.workspace.getConfiguration('kong.konnect.kongctl')
+  const userConfiguredPath = config.get<string>('path', '')
+
+  let message: string
+  if (userConfiguredPath && userConfiguredPath.trim() !== '') {
+    // User has explicitly configured a path
+    message = `kongctl not found at configured path: ${configuredPath}. Please check your configuration or install kongctl.`
+  } else {
+    // User is using default PATH lookup
+    message = 'kongctl not found in your PATH. Please check your configuration or install kongctl.'
+  }
+
+  const result = await vscode.window.showErrorMessage(
+    message,
+    KongctlInstallActions.CONFIGURE_PATH,
+    KongctlInstallActions.LEARN_MORE,
+  )
+
+  switch (result) {
+    case KongctlInstallActions.CONFIGURE_PATH:
+      await vscode.commands.executeCommand('workbench.action.openSettings', 'kong.konnect.kongctl.path')
+      break
+    case KongctlInstallActions.LEARN_MORE:
+      await vscode.env.openExternal(vscode.Uri.parse('https://github.com/Kong/kongctl'))
+      break
   }
 }
 
@@ -89,16 +123,8 @@ export async function checkAndNotifyKongctlAvailability(): Promise<boolean> {
 
   if (!isAvailable) {
     const config = getKongctlConfig()
-
-    if (config.path !== 'kongctl') {
-      // User has configured a custom path but it's not working
-      vscode.window.showErrorMessage(
-        `kongctl not found at configured path: ${config.path}. Please check your configuration.`,
-      )
-    } else {
-      // kongctl not found in PATH
-      await showKongctlNotAvailableDialog()
-    }
+    // Show the appropriate dialog based on configuration
+    await showKongctlNotFoundAtPathDialog(config.path)
   }
 
   return isAvailable
@@ -113,14 +139,14 @@ export async function showKongctlAvailableMessage(): Promise<void> {
     const versionInfo = versionResult.success ? formatKongctlVersion(versionResult.stdout) : 'Version unknown'
 
     vscode.window.showInformationMessage(
-      'kongctl features are available.',
+      'kongctl: The Kong Konnect CLI',
       { modal: true, detail: versionInfo },
       'OK',
     )
   } catch {
     // Fallback to simple message if version check fails
     vscode.window.showInformationMessage(
-      'kongctl features are available.',
+      'kongctl: The Kong Konnect CLI',
     )
   }
 }

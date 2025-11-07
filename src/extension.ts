@@ -23,6 +23,7 @@ import {
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
 import { checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/feedback'
+import { checkKongctlAvailable } from './kongctl/index'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
@@ -286,6 +287,8 @@ export function activate(context: ExtensionContext) {
     async () => {
       try {
         const isAvailable = await checkAndNotifyKongctlAvailability()
+        // Update context after checking status
+        await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', isAvailable)
         if (isAvailable) {
           await showKongctlAvailableMessage()
         }
@@ -306,6 +309,14 @@ export function activate(context: ExtensionContext) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
         window.showErrorMessage(`Failed to show kongctl diagnostics: ${errorMessage}`)
       }
+    },
+  )
+
+  // Register kongctl install command
+  const installKongctlCommand = commands.registerCommand(
+    'kong.konnect.kongctl.install',
+    async () => {
+      await env.openExternal(Uri.parse('https://github.com/Kong/kongctl?tab=readme-ov-file#installation'))
     },
   )
 
@@ -364,6 +375,11 @@ export function activate(context: ExtensionContext) {
         debug.log('Portal Preview configuration changed:', config)
         await previewProvider?.updateConfiguration(config)
       }
+
+      // Update kongctl context if kongctl configuration changed
+      if (event.affectsConfiguration('kong.konnect.kongctl')) {
+        void updateKongctlContext()
+      }
     },
   )
 
@@ -407,11 +423,25 @@ export function activate(context: ExtensionContext) {
     deleteTokenCommand,
     checkKongctlStatusCommand,
     showKongctlDiagnosticsCommand,
+    installKongctlCommand,
     runKongctlCommand,
     configChangeListener,
     documentChangeListener,
     editorChangeListener,
   )
+
+  // Function to update kongctl availability context
+  const updateKongctlContext = async () => {
+    try {
+      const isAvailable = await checkKongctlAvailable()
+      await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', isAvailable)
+    } catch {
+      await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', false)
+    }
+  }
+
+  // Set initial kongctl context
+  void updateKongctlContext()
 
   // Auto-open for active editor if autoOpenPreview is enabled
   const activeEditor = window.activeTextEditor

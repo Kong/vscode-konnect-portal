@@ -136,6 +136,12 @@
         "category": "Konnect Portal"
       },
       {
+        "command": "kong.konnect.kongctl.install",
+        "title": "View the kongctl Konnect CLI installation instructions",
+        "icon": "$(cloud-download)",
+        "category": "kongctl"
+      },
+      {
         "command": "kong.konnect.kongctl.checkStatus",
         "title": "Check Status",
         "icon": "$(pulse)",
@@ -194,6 +200,20 @@
         },
         {
           "command": "kong.konnect.devPortal.deleteToken"
+        },
+        {
+          "command": "kong.konnect.kongctl.checkStatus"
+        },
+        {
+          "command": "kong.konnect.kongctl.showDiagnostics"
+        },
+        {
+          "command": "kong.konnect.kongctl.install",
+          "when": "!kong.konnect.kongctl.available"
+        },
+        {
+          "command": "kong.konnect.kongctl.run",
+          "when": "kong.konnect.kongctl.available"
         }
       ]
     },
