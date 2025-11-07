@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.2.0...v1.3.0) (2025-11-07)
+
+
+### Features
+
+* **kongctl:** initial integration ([#23](https://github.com/Kong/vscode-konnect-portal/issues/23)) ([6b611be](https://github.com/Kong/vscode-konnect-portal/commit/6b611be9de0c2a65b170bff2ef742dea79dad2fe))
+
 # [1.2.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.1.3...v1.2.0) (2025-11-04)
 
 
