@@ -461,7 +461,7 @@ export class PreviewProvider implements Disposable {
             // Special handling for timeout warnings with action buttons
             void window
               .showWarningMessage(
-                `Portal Preview: ${message.warning}`,
+                `Konnect Portal: ${message.warning}`,
                 WebviewTimeoutActions.OPEN_SETTINGS,
                 WebviewTimeoutActions.REFRESH_PREVIEW,
               )
@@ -473,7 +473,7 @@ export class PreviewProvider implements Disposable {
                 }
               })
           } else {
-            window.showWarningMessage(`Portal Preview: ${message.warning}`)
+            window.showWarningMessage(`Konnect Portal: ${message.warning}`)
           }
         }
         break

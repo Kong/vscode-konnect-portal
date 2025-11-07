@@ -109,31 +109,55 @@
         "command": "kong.konnect.devPortal.openPreview",
         "title": "Open Portal Preview",
         "icon": "$(device-desktop)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
         "command": "kong.konnect.devPortal.refreshPreview",
         "title": "Refresh Portal Preview",
         "icon": "$(refresh)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
         "command": "kong.konnect.devPortal.configureToken",
-        "title": "Configure Konnect Token",
+        "title": "Configure Konnect Personal Access Token (PAT)",
         "icon": "$(key)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
         "command": "kong.konnect.devPortal.selectPortal",
         "title": "Select Portal",
         "icon": "$(globe)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
       },
       {
-        "command": "kong.konnect.devPortal.clearCredentials",
-        "title": "Clear Konnect Credentials",
+        "command": "kong.konnect.devPortal.deleteToken",
+        "title": "Delete Access Token",
         "icon": "$(trash)",
-        "category": "Portal Preview"
+        "category": "Konnect Portal"
+      },
+      {
+        "command": "kong.konnect.kongctl.install",
+        "title": "View the kongctl CLI installation instructions",
+        "icon": "$(cloud-download)",
+        "category": "kongctl"
+      },
+      {
+        "command": "kong.konnect.kongctl.checkStatus",
+        "title": "Check Status",
+        "icon": "$(pulse)",
+        "category": "kongctl"
+      },
+      {
+        "command": "kong.konnect.kongctl.showDiagnostics",
+        "title": "Show Diagnostics",
+        "icon": "$(info)",
+        "category": "kongctl"
+      },
+      {
+        "command": "kong.konnect.kongctl.run",
+        "title": "Run Command",
+        "icon": "$(terminal)",
+        "category": "kongctl"
       }
     ],
     "menus": {
@@ -153,12 +177,12 @@
         {
           "command": "kong.konnect.devPortal.openPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && !portalPreview.hasActivePreview",
-          "group": "portal_preview@1"
+          "group": "kong_konnect_devPortal@1"
         },
         {
           "command": "kong.konnect.devPortal.refreshPreview",
           "when": "(resourceExtname == .md || resourceExtname == .mdc) && portalPreview.hasActivePreview",
-          "group": "portal_preview@1"
+          "group": "kong_konnect_devPortal@1"
         }
       ],
       "commandPalette": [
@@ -175,7 +199,21 @@
           "command": "kong.konnect.devPortal.selectPortal"
         },
         {
-          "command": "kong.konnect.devPortal.clearCredentials"
+          "command": "kong.konnect.devPortal.deleteToken"
+        },
+        {
+          "command": "kong.konnect.kongctl.checkStatus"
+        },
+        {
+          "command": "kong.konnect.kongctl.showDiagnostics"
+        },
+        {
+          "command": "kong.konnect.kongctl.install",
+          "when": "!kong.konnect.kongctl.available"
+        },
+        {
+          "command": "kong.konnect.kongctl.run",
+          "when": "kong.konnect.kongctl.available"
         }
       ]
     },
@@ -230,6 +268,18 @@
             "content/snippets",
             "src/snippets"
           ]
+        },
+        "kong.konnect.kongctl.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the kongctl executable. Defaults to 'kongctl' (from PATH). Specify full path if kongctl is installed in a custom location."
+        },
+        "kong.konnect.kongctl.timeout": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 5000,
+          "maximum": 120000,
+          "description": "Timeout for kongctl commands in milliseconds"
         }
       }
     }

@@ -21,6 +21,9 @@ import {
   CredentialActions,
   MDCExtensionActions,
 } from './types/ui-actions'
+import { CONFIG_SECTION } from './constants/config'
+import { checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/feedback'
+import { checkKongctlAvailable } from './kongctl/status'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
@@ -93,7 +96,7 @@ function showMDCExtensionRecommendation(): void {
         commands.executeCommand('workbench.extensions.search', 'Nuxt.mdc')
       } else if (selection === MDCExtensionActions.DONT_SHOW_AGAIN) {
         // Store preference to not show again
-        const config = workspace.getConfiguration('kong.konnect.devPortal')
+        const config = workspace.getConfiguration(CONFIG_SECTION)
         config.update('showMDCRecommendation', false, true)
       }
     })
@@ -154,7 +157,7 @@ export function activate(context: ExtensionContext) {
       try {
         const token = await window.showInputBox({
           placeHolder: 'Enter your Konnect Personal Access Token',
-          prompt: 'Please enter your Konnect Personal Access Token to connect to your portals',
+          prompt: 'Please enter your Konnect Personal Access Token (PAT)',
           password: true,
           validateInput: (value) => {
             if (!value?.trim()) {
@@ -257,17 +260,17 @@ export function activate(context: ExtensionContext) {
     },
   )
 
-  const clearCredentialsCommand = commands.registerCommand(
-    'kong.konnect.devPortal.clearCredentials',
+  const deleteTokenCommand = commands.registerCommand(
+    'kong.konnect.devPortal.deleteToken',
     async () => {
       try {
         const confirm = await window.showWarningMessage(
           'This will remove your stored Konnect token and portal selection. Are you sure?',
           { modal: true },
-          CredentialActions.CLEAR_CREDENTIALS,
+          CredentialActions.DELETE_TOKEN,
         )
 
-        if (confirm === CredentialActions.CLEAR_CREDENTIALS) {
+        if (confirm === CredentialActions.DELETE_TOKEN) {
           await storageService?.clearAll()
           window.showInformationMessage('All credentials cleared successfully.')
         }
@@ -278,13 +281,104 @@ export function activate(context: ExtensionContext) {
     },
   )
 
+  // Register kongctl status check command
+  const checkKongctlStatusCommand = commands.registerCommand(
+    'kong.konnect.kongctl.checkStatus',
+    async () => {
+      try {
+        const isAvailable = await checkAndNotifyKongctlAvailability()
+        // Update context after checking status
+        await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', isAvailable)
+        if (isAvailable) {
+          await showKongctlAvailableMessage()
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+        window.showErrorMessage(`Failed to check kongctl status: ${errorMessage}`)
+      }
+    },
+  )
+
+  // Register kongctl diagnostics command
+  const showKongctlDiagnosticsCommand = commands.registerCommand(
+    'kong.konnect.kongctl.showDiagnostics',
+    async () => {
+      try {
+        await showKongctlDiagnostics()
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+        window.showErrorMessage(`Failed to show kongctl diagnostics: ${errorMessage}`)
+      }
+    },
+  )
+
+  // Register kongctl install command
+  const installKongctlCommand = commands.registerCommand(
+    'kong.konnect.kongctl.install',
+    async () => {
+      await env.openExternal(Uri.parse('https://github.com/Kong/kongctl?tab=readme-ov-file#installation'))
+    },
+  )
+
+  // Register kongctl run command
+  const runKongctlCommand = commands.registerCommand(
+    'kong.konnect.kongctl.run',
+    async () => {
+      const commandPattern = new RegExp(/^kongctl\s*/i)
+
+      // Prompt user for kongctl arguments
+      const userInput = await window.showInputBox({
+        prompt: 'Enter command arguments',
+        placeHolder: 'api get /v3/portals --output json',
+        validateInput: (value) => {
+          if (value.trim().startsWith('kongctl')) {
+            return 'Please enter only the command arguments, "kongctl" will be prefixed automatically'
+          }
+
+          return value.trim().replace(commandPattern, '') ? undefined : 'Command arguments cannot be empty'
+        },
+      })
+      if (!userInput) return
+
+      // Build the full command with kongctl prefix
+      const fullCommand = `kongctl ${userInput.trim().replace(commandPattern, '')}`
+
+      // Get stored token if available and include in environment
+      const env = { ...process.env }
+      try {
+        if (storageService && await storageService.hasValidToken()) {
+          const token = await storageService.getToken()
+          if (token) {
+            env.KONGCTL_DEFAULT_KONNECT_PAT = token
+          }
+        }
+      } catch {
+        // Silently continue without token if there's an error
+      }
+
+      // Open a new terminal and run the command
+      const terminal = window.createTerminal({
+        name: 'kongctl',
+        shellPath: process.env.SHELL || undefined,
+        env,
+      })
+      terminal.show(true)
+      terminal.sendText(fullCommand, true)
+    },
+  )
+
   // Listen for configuration changes
   const configChangeListener = workspace.onDidChangeConfiguration(
     async (event) => {
-      if (event.affectsConfiguration('kong.konnect.devPortal')) {
+      if (event.affectsConfiguration(CONFIG_SECTION)) {
         const config = getConfiguration()
         debug.log('Portal Preview configuration changed:', config)
         await previewProvider?.updateConfiguration(config)
+      }
+
+      // Update kongctl context if kongctl configuration changed
+      if (event.affectsConfiguration('kong.konnect.kongctl')) {
+        void updateKongctlContext()
       }
     },
   )
@@ -326,11 +420,28 @@ export function activate(context: ExtensionContext) {
     refreshPreviewCommand,
     configureTokenCommand,
     selectPortalCommand,
-    clearCredentialsCommand,
+    deleteTokenCommand,
+    checkKongctlStatusCommand,
+    showKongctlDiagnosticsCommand,
+    installKongctlCommand,
+    runKongctlCommand,
     configChangeListener,
     documentChangeListener,
     editorChangeListener,
   )
+
+  // Function to update kongctl availability context
+  const updateKongctlContext = async () => {
+    try {
+      const isAvailable = await checkKongctlAvailable()
+      await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', isAvailable)
+    } catch {
+      await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', false)
+    }
+  }
+
+  // Set initial kongctl context
+  void updateKongctlContext()
 
   // Auto-open for active editor if autoOpenPreview is enabled
   const activeEditor = window.activeTextEditor
@@ -345,7 +456,7 @@ export function activate(context: ExtensionContext) {
 /**
  * Deactivates the Portal Preview extension
  * Cleans up resources but preserves stored credentials and data
- * Note: Use "Portal Preview: Clear Credentials" command to manually clear stored data
+ * Note: Use "Konnect Portal: Clear Credentials" command to manually clear stored data
  */
 export function deactivate() {
   // Dispose of preview provider and clean up resources
@@ -384,7 +495,7 @@ function isMarkdownOrMDC(document: TextDocument): boolean {
     void checkMDCExtension().then((hasMDCExtension) => {
       if (!hasMDCExtension) {
         // Show recommendation for both MDC and Markdown files to enhance syntax highlighting
-        const config = workspace.getConfiguration('kong.konnect.devPortal')
+        const config = workspace.getConfiguration(CONFIG_SECTION)
         const showRecommendation = config.get<boolean>('showMDCRecommendation', true)
         if (showRecommendation) {
           showMDCExtensionRecommendation()
@@ -402,7 +513,7 @@ function isMarkdownOrMDC(document: TextDocument): boolean {
  * @returns The current portal preview configuration
  */
 export function getConfiguration(): PortalPreviewConfig {
-  const config = workspace.getConfiguration('kong.konnect.devPortal')
+  const config = workspace.getConfiguration(CONFIG_SECTION)
 
   return {
     autoOpenPreview: config.get<boolean>('autoOpenPreview', false),

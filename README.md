@@ -68,7 +68,7 @@ The extension provides several configuration options in VS Code settings. You ca
 
 ## Setup and Usage
 
-### 1. Configure Konnect Token
+### 1. Configure Konnect Personal Access Token (PAT)
 
 Before using the extension, you need to configure your Konnect Personal Access Token:
 
@@ -80,7 +80,7 @@ Before using the extension, you need to configure your Konnect Personal Access T
 
 2. **Configure the token in VS Code**:
     - Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-    - Run "Portal Preview: Configure Konnect Token"
+    - Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
     - Paste your Personal Access Token
     - Click OK
 
@@ -89,13 +89,13 @@ Before using the extension, you need to configure your Konnect Personal Access T
 Once your token is configured:
 
 1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Run "Portal Preview: Select Portal"
+2. Run "Konnect Portal: Select Portal"
 3. Choose from your available Dev Portals in Konnect
 4. The selected portal will be saved for future use
 
 > **Note**: You may select a new Dev Portal at any time by running the "Select Portal" command again.
 
-### 3. Open Preview
+### 3. Open Portal Preview
 
 There are several ways to open the live preview:
 
@@ -117,11 +117,11 @@ The extension provides the following commands (accessible via Command Palette):
 
 | Command | Description |
 |---------|-------------|
-| `Portal Preview: Open Portal Preview` | Opens the preview panel for the current MDC/Markdown file |
-| `Portal Preview: Refresh Portal Preview` | Refreshes the preview panel content |
-| `Portal Preview: Configure Konnect Token` | Set up your Konnect Personal Access Token |
-| `Portal Preview: Select Portal` | Choose a portal from your Konnect account |
-| `Portal Preview: Clear Konnect Credentials` | Remove stored token and portal selection |
+| `Konnect Portal: Open Portal Preview` | Opens the preview panel for the current MDC/Markdown file |
+| `Konnect Portal: Refresh Portal Preview` | Refreshes the preview panel content |
+| `Konnect Portal: Configure Konnect Personal Access Token (PAT)` | Set up your Konnect Personal Access Token |
+| `Konnect Portal: Select Portal` | Choose a portal from your Konnect account |
+| `Konnect Portal: Delete Access Token` | Remove stored token and portal selection |
 
 ## File Support
 
@@ -151,9 +151,9 @@ For optimal portal preview experience:
 
 If you see configuration warnings:
 
-1. **Configure Konnect Token**: Run "Portal Preview: Configure Konnect Token"
-2. **Select Portal**: Run "Portal Preview: Select Portal"
-3. **Update Token**: If your token expired, run "Portal Preview: Configure Konnect Token" again
+1. **Configure Konnect Personal Access Token (PAT)**: Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
+2. **Select Portal**: Run "Konnect Portal: Select Portal"
+3. **Update Token**: If your token expired, run "Konnect Portal: Configure Konnect Personal Access Token (PAT)" again
 
 ### Token Format Errors
 
