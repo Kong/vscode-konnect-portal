@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { promisify } from 'util'
 import { spawn } from 'child_process'
-import type { KongctlConfig, KongctlCommandResult, FileStats, DiagnosticInfo } from '../types/kongctl'
+import type { KongctlCommandResult } from '../types/kongctl'
 import type { PortalStorageService } from '../konnect/storage'
 
 const exists = promisify(fs.exists)
@@ -13,7 +13,7 @@ const exists = promisify(fs.exists)
  * @param executable - Name of the executable to find
  * @returns Promise resolving to the full path if found, or null if not found
  */
-async function findExecutableInPath(executable: string): Promise<string | null> {
+export async function findExecutableInPath(executable: string): Promise<string | null> {
   const pathEnv = process.env.PATH || ''
   const pathSeparator = process.platform === 'win32' ? ';' : ':'
   const executableSuffix = process.platform === 'win32' ? '.exe' : ''
@@ -65,20 +65,6 @@ export async function getKongctlPath(): Promise<string> {
 
   // Fallback to just 'kongctl' and let the system try to find it
   return 'kongctl'
-}
-
-/**
- * Check if kongctl is available and working
- * @param storageService - Optional storage service to get Konnect PAT
- * @returns Promise resolving to true if kongctl is available
- */
-export async function checkKongctlAvailable(): Promise<boolean> {
-  try {
-    const result = await executeKongctl(['version', '--full', '--output', 'json'], {})
-    return result.success
-  } catch {
-    return false
-  }
 }
 
 /**
@@ -167,55 +153,4 @@ export async function executeKongctl(
       })
     })
   })
-}
-
-/**
- * Get diagnostic information about kongctl availability
- * @returns Promise resolving to diagnostic information
- */
-export async function getKongctlDiagnostics(): Promise<DiagnosticInfo> {
-  const config = vscode.workspace.getConfiguration('kong.konnect.kongctl')
-  const configuredPath = config.get<string>('path', 'kongctl')
-  const pathEnv = process.env.PATH || ''
-  const pathSeparator = process.platform === 'win32' ? ';' : ':'
-  const pathDirectories = pathEnv.split(pathSeparator).filter(dir => dir.trim() !== '')
-  const foundInPath = await findExecutableInPath('kongctl')
-
-  let fileStats: FileStats | undefined
-
-  if (foundInPath) {
-    try {
-      const fs = await import('fs')
-      const stats = await fs.promises.stat(foundInPath)
-      fileStats = {
-        exists: true,
-        size: stats.size,
-        isExecutable: !!(stats.mode & fs.constants.F_OK),
-      }
-    } catch {
-      fileStats = {
-        exists: false,
-      }
-    }
-  }
-
-  return {
-    configuredPath,
-    pathEnv,
-    foundInPath,
-    pathDirectories,
-    fileStats,
-  }
-}
-
-/**
- * Get the current kongctl configuration
- * @returns Current kongctl configuration from VS Code settings
- */
-export function getKongctlConfig(): KongctlConfig {
-  const config = vscode.workspace.getConfiguration('kong.konnect.kongctl')
-  return {
-    path: config.get<string>('path', 'kongctl'),
-    timeout: config.get<number>('timeout', 30000),
-  }
 }

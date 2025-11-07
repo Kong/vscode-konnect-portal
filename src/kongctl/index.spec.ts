@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import * as vscode from 'vscode'
-import { getKongctlConfig } from './index'
+import { getKongctlConfig } from './status'
 
 // Mock VS Code module
 vi.mock('vscode', () => ({

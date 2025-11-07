@@ -23,7 +23,7 @@ import {
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
 import { checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/feedback'
-import { checkKongctlAvailable } from './kongctl/index'
+import { checkKongctlAvailable } from './kongctl/status'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined

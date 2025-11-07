@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
-import { checkKongctlAvailable, getKongctlConfig, getKongctlDiagnostics, executeKongctl } from './index'
+import { executeKongctl } from './index'
+import { checkKongctlAvailable, getKongctlConfig, getKongctlDiagnostics } from './status'
 import { KongctlInstallActions } from '../types/ui-actions'
 
 /**
@@ -141,12 +142,11 @@ export async function showKongctlAvailableMessage(): Promise<void> {
     vscode.window.showInformationMessage(
       'kongctl: The Kong Konnect CLI',
       { modal: true, detail: versionInfo },
-      'OK',
     )
   } catch {
     // Fallback to simple message if version check fails
     vscode.window.showInformationMessage(
-      'kongctl: The Kong Konnect CLI',
+      'kongctl is installed and available.',
     )
   }
 }
