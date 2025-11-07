@@ -137,7 +137,7 @@
       },
       {
         "command": "kong.konnect.kongctl.install",
-        "title": "View the kongctl Konnect CLI installation instructions",
+        "title": "View the kongctl CLI installation instructions",
         "icon": "$(cloud-download)",
         "category": "kongctl"
       },
