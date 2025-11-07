@@ -328,7 +328,7 @@ export function activate(context: ExtensionContext) {
 
       // Prompt user for kongctl arguments
       const userInput = await window.showInputBox({
-        prompt: 'Enter command arguments',
+        prompt: 'Enter kongctl command arguments',
         placeHolder: 'api get /v3/portals --output json',
         validateInput: (value) => {
           if (value.trim().startsWith('kongctl')) {
