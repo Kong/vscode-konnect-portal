@@ -6,6 +6,7 @@ import {
   env,
   Uri,
 } from 'vscode'
+import type { Terminal } from 'vscode'
 import type { ExtensionContext, TextDocument } from 'vscode'
 import { PreviewProvider } from './preview-provider'
 import type { PortalPreviewConfig } from './types'
@@ -34,8 +35,12 @@ let storageService: PortalStorageService | undefined
 /** Global instance of the portal selection service for managing portal selection workflow */
 let portalSelectionService: PortalSelectionService | undefined
 
+
 /** Global reference to the extension context for accessing extension resources */
 let extensionContext: ExtensionContext | undefined
+
+/** Global instance of the kongctl terminal for reuse */
+let kongctlTerminal: Terminal | undefined
 
 /** Updates the VS Code context to reflect preview state */
 function updatePreviewContextFromProvider(): void {
@@ -356,14 +361,38 @@ export function activate(context: ExtensionContext) {
         // Silently continue without token if there's an error
       }
 
-      // Open a new terminal and run the command
-      const terminal = window.createTerminal({
-        name: 'kongctl',
-        shellPath: process.env.SHELL || undefined,
-        env,
-      })
-      terminal.show(true)
-      terminal.sendText(fullCommand, true)
+      // Reuse or create the kongctl terminal
+      // If the env has changed, we must dispose and recreate
+      const terminalName = 'kongctl'
+      let recreate = false
+      if (kongctlTerminal) {
+        // If terminal is disposed, or env has changed, recreate
+        // VS Code does not allow changing env after creation, so we check
+        try {
+          // If terminal is disposed, VS Code throws on .name
+          if (kongctlTerminal.name !== terminalName) {
+            recreate = true
+          }
+        } catch {
+          recreate = true
+        }
+      }
+      if (!kongctlTerminal || recreate) {
+        if (kongctlTerminal) {
+          try {
+            kongctlTerminal.dispose()
+          } catch {
+            // Ignore errors on dispose
+          }
+        }
+        kongctlTerminal = window.createTerminal({
+          name: terminalName,
+          shellPath: process.env.SHELL || undefined,
+          env,
+        })
+      }
+      kongctlTerminal.show(true)
+      kongctlTerminal.sendText(fullCommand, true)
     },
   )
 
