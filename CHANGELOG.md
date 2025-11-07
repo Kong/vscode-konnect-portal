@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.3.0...v1.3.1) (2025-11-07)
+
+
+### Bug Fixes
+
+* **kongctl:** reuse existing terminal ([#24](https://github.com/Kong/vscode-konnect-portal/issues/24)) ([c24e85c](https://github.com/Kong/vscode-konnect-portal/commit/c24e85c3cd1da5f18007a5f2f37dc9e9e012f2d8))
+
 # [1.3.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.2.0...v1.3.0) (2025-11-07)
 
 
