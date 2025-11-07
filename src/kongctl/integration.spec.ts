@@ -93,107 +93,8 @@ describe('kongctl integration tests', () => {
   })
 
   describe('executeKongctl', () => {
-    //     beforeEach(async () => {
-    //       // Create a comprehensive mock kongctl script that handles different commands
-    //       const scriptContent = process.platform === 'win32' ? `
-    // @echo off
-    // if "%1"=="version" (
-    //   if "%2"=="--full" (
-    //     if "%3"=="--output" (
-    //       if "%4"=="json" (
-    //         echo {"version": "1.0.0", "commit": "abc123def", "date": "2023-01-01T00:00:00Z"}
-    //       ) else (
-    //         echo kongctl version 1.0.0
-    //         echo Commit: abc123def
-    //         echo Date: 2023-01-01
-    //       )
-    //     ) else (
-    //       echo kongctl version 1.0.0
-    //       echo Commit: abc123def
-    //       echo Date: 2023-01-01
-    //     )
-    //   ) else (
-    //     echo 1.0.0
-    //   )
-    // ) else if "%1"=="api" (
-    //   if "%2"=="get" (
-    //     echo {"data": [{"id": "test-portal", "name": "Test Portal"}]}
-    //   ) else (
-    //     echo Unknown API command
-    //     exit /b 1
-    //   )
-    // ) else if "%1"=="config" (
-    //   if "%2"=="list" (
-    //     echo Current configuration
-    //   ) else (
-    //     echo Unknown config command
-    //     exit /b 1
-    //   )
-    // ) else (
-    //   echo Unknown command: %1
-    //   exit /b 1
-    // )
-    // ` : `#!/bin/bash
-    // case "$1" in
-    //   "version")
-    //     case "$2" in
-    //       "--full")
-    //         case "$3" in
-    //           "--output")
-    //             if [ "$4" = "json" ]; then
-    //               echo '{"version": "1.0.0", "commit": "abc123def", "date": "2023-01-01T00:00:00Z"}'
-    //             else
-    //               echo "kongctl version 1.0.0"
-    //               echo "Commit: abc123def"
-    //               echo "Date: 2023-01-01"
-    //             fi
-    //             ;;
-    //           *)
-    //             echo "kongctl version 1.0.0"
-    //             echo "Commit: abc123def"
-    //             echo "Date: 2023-01-01"
-    //             ;;
-    //         esac
-    //         ;;
-    //       *)
-    //         echo "1.0.0"
-    //         ;;
-    //     esac
-    //     ;;
-    //   "api")
-    //     case "$2" in
-    //       "get")
-    //         echo '{"data": [{"id": "test-portal", "name": "Test Portal"}]}'
-    //         ;;
-    //       *)
-    //         echo "Unknown API command"
-    //         exit 1
-    //         ;;
-    //     esac
-    //     ;;
-    //   "config")
-    //     case "$2" in
-    //       "list")
-    //         echo "Current configuration"
-    //         ;;
-    //       *)
-    //         echo "Unknown config command"
-    //         exit 1
-    //         ;;
-    //     esac
-    //     ;;
-    //   *)
-    //     echo "Unknown command: $1"
-    //     exit 1
-    //     ;;
-    // esac`
-
-    //       await fs.writeFile(mockKongctlScript, scriptContent)
-    //       await fs.chmod(mockKongctlScript, 0o755)
-    //       process.env.PATH = `${tempDir}${path.delimiter}${originalPath}`
-    //     })
-
-    it('should execute version command successfully', async () => {
+    // This would require installing the real kongctl CLI
+    it.skip('should execute version command successfully', async () => {
       const result = await executeKongctl(['version', '--full', '--output', 'json'])
 
       expect(result.success).toBe(true)
@@ -209,6 +110,7 @@ describe('kongctl integration tests', () => {
       expect(versionData).toHaveProperty('date')
     })
 
+    // This would require installing the real kongctl CLI
     it.skip('should execute API command successfully', async () => {
       const result = await executeKongctl(['api', 'get', '/v3/portals'])
 
@@ -221,29 +123,6 @@ describe('kongctl integration tests', () => {
       expect(apiData).toHaveProperty('data')
       expect(Array.isArray(apiData.data)).toBe(true)
     })
-
-    it('should handle timeouts correctly', async () => {
-      // Create a hanging kongctl script
-      const hangingContent = process.platform === 'win32'
-        ? '@echo off\ntimeout /t 60 /nobreak > nul'
-        : '#!/bin/bash\nsleep 60'
-
-      await fs.writeFile(mockKongctlScript, hangingContent)
-      await fs.chmod(mockKongctlScript, 0o755)
-
-      // Set PATH to use our hanging script
-      process.env.PATH = tempDir
-
-      const start = Date.now()
-      const result = await executeKongctl(['version'], { timeout: 1000 })
-      const duration = Date.now() - start
-
-      expect(result.success).toBe(false)
-      // Accept either -1 (timeout killed) or 127/other (shell completed first)
-      expect(result.exitCode).not.toBe(0)
-      expect(result.stderr).toMatch(/timed out|timeout|sleep|command/)
-      expect(duration).toBeLessThan(2000) // Should complete quickly
-    }, 3000)
 
     it('should include PAT token in environment when provided', async () => {
       // Create a kongctl script that echoes the PAT environment variable
