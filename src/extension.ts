@@ -24,6 +24,7 @@ import {
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
 import { checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/feedback'
+import { installKongctlWithFeedback } from './kongctl/install'
 import { checkKongctlAvailable } from './kongctl/status'
 
 /** Global instance of the preview provider for managing webview panels */
@@ -41,6 +42,9 @@ let extensionContext: ExtensionContext | undefined
 
 /** Global instance of the kongctl terminal for reuse */
 let kongctlTerminal: Terminal | undefined
+
+/** Global function to update kongctl context - set during activation */
+let updateKongctlContextGlobal: (() => Promise<void>) | undefined
 
 /** Updates the VS Code context to reflect preview state */
 function updatePreviewContextFromProvider(): void {
@@ -321,7 +325,7 @@ export function activate(context: ExtensionContext) {
   const installKongctlCommand = commands.registerCommand(
     'kong.konnect.kongctl.install',
     async () => {
-      await env.openExternal(Uri.parse('https://github.com/Kong/kongctl?tab=readme-ov-file#installation'))
+      await installKongctlWithFeedback(extensionContext)
     },
   )
 
@@ -407,7 +411,7 @@ export function activate(context: ExtensionContext) {
 
       // Update kongctl context if kongctl configuration changed
       if (event.affectsConfiguration('kong.konnect.kongctl')) {
-        void updateKongctlContext()
+        void updateKongctlContextGlobal?.()
       }
     },
   )
@@ -460,7 +464,7 @@ export function activate(context: ExtensionContext) {
   )
 
   // Function to update kongctl availability context
-  const updateKongctlContext = async () => {
+  updateKongctlContextGlobal = async () => {
     try {
       const isAvailable = await checkKongctlAvailable()
       await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', isAvailable)
@@ -470,7 +474,7 @@ export function activate(context: ExtensionContext) {
   }
 
   // Set initial kongctl context
-  void updateKongctlContext()
+  void updateKongctlContextGlobal()
 
   // Auto-open for active editor if autoOpenPreview is enabled
   const activeEditor = window.activeTextEditor
@@ -479,6 +483,15 @@ export function activate(context: ExtensionContext) {
     if (config.autoOpenPreview) {
       void previewProvider.openPreview(activeEditor.document)
     }
+  }
+}
+
+/**
+ * Updates the kongctl context to show/hide commands based on CLI availability
+ */
+export async function updateKongctlContext(): Promise<void> {
+  if (updateKongctlContextGlobal) {
+    await updateKongctlContextGlobal()
   }
 }
 
