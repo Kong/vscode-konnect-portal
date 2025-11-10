@@ -23,6 +23,7 @@ import {
   MDCExtensionActions,
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
+import { KONGCTL_TERMINAL_NAME } from './constants/kongctl'
 import { checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/feedback'
 import { installKongctlWithFeedback } from './kongctl/install'
 import { checkKongctlAvailable } from './kongctl/status'
@@ -42,6 +43,43 @@ let extensionContext: ExtensionContext | undefined
 
 /** Global instance of the kongctl terminal for reuse */
 let kongctlTerminal: Terminal | undefined
+
+/**
+ * Gets or creates the shared kongctl terminal instance
+ * @param env Optional environment variables to set for the terminal
+ * @returns The kongctl terminal instance
+ */
+export function getOrCreateKongctlTerminal(env?: Record<string, string | undefined>): Terminal {
+  let recreate = false
+  if (kongctlTerminal) {
+    // If terminal is disposed, recreate
+    try {
+      // If terminal is disposed, VS Code throws on .name
+      if (kongctlTerminal.name !== KONGCTL_TERMINAL_NAME) {
+        recreate = true
+      }
+    } catch {
+      recreate = true
+    }
+  }
+
+  if (!kongctlTerminal || recreate) {
+    if (kongctlTerminal) {
+      try {
+        kongctlTerminal.dispose()
+      } catch {
+        // Ignore errors on dispose
+      }
+    }
+    kongctlTerminal = window.createTerminal({
+      name: KONGCTL_TERMINAL_NAME,
+      shellPath: process.env.SHELL || undefined,
+      env,
+    })
+  }
+
+  return kongctlTerminal
+}
 
 /** Global function to update kongctl context - set during activation */
 let updateKongctlContextGlobal: (() => Promise<void>) | undefined
@@ -365,38 +403,10 @@ export function activate(context: ExtensionContext) {
         // Silently continue without token if there's an error
       }
 
-      // Reuse or create the kongctl terminal
-      // If the env has changed, we must dispose and recreate
-      const terminalName = 'kongctl'
-      let recreate = false
-      if (kongctlTerminal) {
-        // If terminal is disposed, or env has changed, recreate
-        // VS Code does not allow changing env after creation, so we check
-        try {
-          // If terminal is disposed, VS Code throws on .name
-          if (kongctlTerminal.name !== terminalName) {
-            recreate = true
-          }
-        } catch {
-          recreate = true
-        }
-      }
-      if (!kongctlTerminal || recreate) {
-        if (kongctlTerminal) {
-          try {
-            kongctlTerminal.dispose()
-          } catch {
-            // Ignore errors on dispose
-          }
-        }
-        kongctlTerminal = window.createTerminal({
-          name: terminalName,
-          shellPath: process.env.SHELL || undefined,
-          env,
-        })
-      }
-      kongctlTerminal.show(true)
-      kongctlTerminal.sendText(fullCommand, true)
+      // Get or create the shared kongctl terminal
+      const terminal = getOrCreateKongctlTerminal(env)
+      terminal.show(true)
+      terminal.sendText(fullCommand, true)
     },
   )
 

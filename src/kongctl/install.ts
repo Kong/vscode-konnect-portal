@@ -1,54 +1,70 @@
 import * as vscode from 'vscode'
 import { createDebugInfoText } from '../utils/debug-info'
 import { checkKongctlAvailable } from './status'
-import { updateKongctlContext } from '../extension'
+import { updateKongctlContext, getOrCreateKongctlTerminal } from '../extension'
 
 
 
 /**
- * Attempts to install kongctl using the recommended command for the user's platform.
+ * Attempts to install kongctl using brew if available, otherwise guides user to manual installation.
  * Shows success or error messages with appropriate actions.
  */
 export async function installKongctlWithFeedback(context?: vscode.ExtensionContext) {
-  // Determine the install command based on platform
-  let installCommand: string
+  // Check if we can use brew for automatic installation (macOS with brew installed)
   if (process.platform === 'darwin') {
-    installCommand = 'brew install --cask kong/kongctl/kongctl'
-  } else if (process.platform === 'linux') {
-    installCommand = [
-      '# Download the latest release from https://github.com/Kong/kongctl/releases',
-      'curl -sL https://github.com/Kong/kongctl/releases/latest/download/kongctl_linux_amd64.zip -o kongctl_linux_amd64.zip',
-      'unzip kongctl_linux_amd64.zip -d /tmp',
-      'sudo cp /tmp/kongctl /usr/local/bin/',
-      'rm kongctl_linux_amd64.zip',
-    ].join(' && ')
-  } else if (process.platform === 'win32') {
-    installCommand = 'winget install Kong.kongctl'
-  } else {
-    vscode.window.showErrorMessage('Unsupported platform for automatic kongctl installation.')
-    return
-  }
-
-  // Use or create the shared kongctl terminal to show the command execution
-  const terminalName = 'kongctl'
-  let kongctlTerminal: vscode.Terminal | undefined = undefined
-  // Try to find an existing terminal named 'kongctl'
-  for (const term of vscode.window.terminals) {
-    if (term.name === terminalName) {
-      kongctlTerminal = term
-      break
+    // Check if brew is available
+    const brewAvailable = await checkHomebrewStatus()
+    if (brewAvailable) {
+      await installWithHomebrew(context)
+      return
     }
   }
-  if (!kongctlTerminal) {
-    kongctlTerminal = vscode.window.createTerminal({
-      name: terminalName,
-      shellPath: process.env.SHELL || undefined,
-    })
+
+  // For all other cases (Linux, Windows, or macOS without brew), show manual installation instructions
+  const result = await vscode.window.showInformationMessage(
+    'Automatic installation is not available for your system. Please install kongctl manually according to the installation instructions.',
+    'View Install Instructions',
+    'Copy Debug Info',
+  )
+
+  if (result === 'View Install Instructions') {
+    vscode.env.openExternal(vscode.Uri.parse('https://github.com/Kong/kongctl?tab=readme-ov-file#installation'))
+  } else if (result === 'Copy Debug Info') {
+    const debugText = createDebugInfoText('kongctl installation help requested', context)
+    await vscode.env.clipboard.writeText(debugText)
+    vscode.window.showInformationMessage('Debug information copied to clipboard')
   }
+
+  // Check if kongctl became available after user interaction
+  await checkInstallationStatus(context)
+}
+
+/**
+ * Check if homebrew is available on the system
+ */
+async function checkHomebrewStatus(): Promise<boolean> {
+  try {
+    const { exec } = await import('child_process')
+    return new Promise((resolve) => {
+      exec('which brew', (error) => {
+        resolve(!error)
+      })
+    })
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Install kongctl using brew
+ */
+async function installWithHomebrew(context?: vscode.ExtensionContext) {
+  // Get or create the shared kongctl terminal to show the command execution
+  const kongctlTerminal = getOrCreateKongctlTerminal()
   kongctlTerminal.show(true)
 
   // Show immediate feedback
-  vscode.window.showInformationMessage('Installing kongctl... Please wait for the command to complete.')
+  vscode.window.showInformationMessage('Installing kongctl with brew...')
 
   // Create a promise that resolves when the terminal process completes
   const processCompletion = new Promise<number>((resolve) => {
@@ -70,7 +86,8 @@ export async function installKongctlWithFeedback(context?: vscode.ExtensionConte
     })
   })
 
-  // Send the command to the terminal
+  // Send the brew install command to the terminal
+  const installCommand = 'brew install --cask kong/kongctl/kongctl'
   kongctlTerminal.sendText(installCommand, true)
 
   // Await the process completion
