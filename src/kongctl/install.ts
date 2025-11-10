@@ -1,10 +1,7 @@
 import * as vscode from 'vscode'
-import { KongctlInstallActions } from '../types/ui-actions'
 import { createDebugInfoText } from '../utils/debug-info'
 import { checkKongctlAvailable } from './status'
 import { updateKongctlContext } from '../extension'
-
-const INSTALL_DOC_URL = 'https://github.com/Kong/kongctl?tab=readme-ov-file#installation'
 
 
 
