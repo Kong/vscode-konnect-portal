@@ -133,8 +133,6 @@ describe('KonnectRequestService', () => {
         {},
         mockStorageService,
       )
-
-      // Note: executeKongctl now handles both terminal visibility and output capture
     })
 
     it('should fall back to API when kongctl is not available', async () => {

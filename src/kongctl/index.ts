@@ -173,12 +173,15 @@ export async function executeKongctl(
     })
     let stdout = ''
     let stderr = ''
+
     child.stdout?.on('data', (data) => {
       stdout += data.toString()
     })
+
     child.stderr?.on('data', (data) => {
       stderr += data.toString()
     })
+
     const timeoutId = setTimeout(() => {
       child.kill('SIGTERM')
       resolve({
@@ -188,6 +191,7 @@ export async function executeKongctl(
         success: false,
       })
     }, timeout)
+
     child.on('close', (code) => {
       clearTimeout(timeoutId)
       resolve({
@@ -197,6 +201,7 @@ export async function executeKongctl(
         success: code === 0,
       })
     })
+
     child.on('error', (error) => {
       clearTimeout(timeoutId)
       const errorMessage = error.message

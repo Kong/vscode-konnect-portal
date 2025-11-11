@@ -494,8 +494,7 @@ export function activate(context: ExtensionContext) {
           }
         }
       }
-      // Note: We don't need to handle non-MDC/Markdown files as the preview
-      // will remain open with the last viewed document
+      // Note: We don't need to handle non-MDC/Markdown files as the preview will remain open with the last viewed document
     },
   )
 
