@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.3.1...v1.4.0) (2025-11-11)
+
+
+### Features
+
+* install prompt ([#27](https://github.com/Kong/vscode-konnect-portal/issues/27)) ([1ab70cb](https://github.com/Kong/vscode-konnect-portal/commit/1ab70cbe50aed9b377fa14314f6415ecd3d15142))
+
 ## [1.3.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.3.0...v1.3.1) (2025-11-07)
 
 
