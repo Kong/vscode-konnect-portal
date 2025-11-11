@@ -1,5 +1,4 @@
 import * as vscode from 'vscode'
-import { createDebugInfoText } from '../utils/debug-info'
 import { checkKongctlAvailable } from './status'
 import { updateKongctlContext, getOrCreateKongctlTerminal } from '../extension'
 import { KongctlInstallActions } from '../types/ui-actions'
@@ -15,6 +14,9 @@ export async function installKongctlWithFeedback(context?: vscode.ExtensionConte
     const brewAvailable = await checkHomebrewStatus()
     if (brewAvailable) {
       await installWithHomebrew(context)
+
+      // Check if kongctl became available after user interaction
+      await checkInstallationStatus(context)
       return
     }
   }
@@ -23,19 +25,11 @@ export async function installKongctlWithFeedback(context?: vscode.ExtensionConte
   const result = await vscode.window.showInformationMessage(
     'Automatic installation is not available for your system. Please install kongctl manually.',
     KongctlInstallActions.VIEW_INSTALL_INSTRUCTIONS,
-    KongctlInstallActions.COPY_DEBUG_INFO,
   )
 
   if (result === KongctlInstallActions.VIEW_INSTALL_INSTRUCTIONS) {
     vscode.env.openExternal(vscode.Uri.parse('https://github.com/Kong/kongctl?tab=readme-ov-file#installation'))
-  } else if (result === KongctlInstallActions.COPY_DEBUG_INFO) {
-    const debugText = createDebugInfoText('kongctl installation help requested', context)
-    await vscode.env.clipboard.writeText(debugText)
-    vscode.window.showInformationMessage('Debug information copied to clipboard')
   }
-
-  // Check if kongctl became available after user interaction
-  await checkInstallationStatus(context)
 }
 
 /**
@@ -119,17 +113,12 @@ async function checkInstallationStatus(context?: vscode.ExtensionContext) {
       'kongctl does not appear to be installed or available in your PATH. If the installation is still in progress, you can check status later using the "Check Status" command.',
       KongctlInstallActions.INSTALLATION_INSTRUCTIONS,
       KongctlInstallActions.CHECK_STATUS_NOW,
-      KongctlInstallActions.COPY_DEBUG_INFO,
     )
     if (result === KongctlInstallActions.INSTALLATION_INSTRUCTIONS) {
       vscode.env.openExternal(vscode.Uri.parse('https://github.com/Kong/kongctl?tab=readme-ov-file#installation'))
     } else if (result === KongctlInstallActions.CHECK_STATUS_NOW) {
       // Trigger another status check
       await checkInstallationStatus(context)
-    } else if (result === KongctlInstallActions.COPY_DEBUG_INFO) {
-      const debugText = createDebugInfoText('kongctl install verification failed', context)
-      await vscode.env.clipboard.writeText(debugText)
-      vscode.window.showInformationMessage('Debug information copied to clipboard')
     }
   }
 }
