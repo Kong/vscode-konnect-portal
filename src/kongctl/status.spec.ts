@@ -103,7 +103,7 @@ describe('kongctl status module tests', () => {
       const result = await checkKongctlAvailable()
 
       expect(result).toBe(true)
-      expect(executeKongctl).toHaveBeenCalledWith(['version', '--full', '--output', 'json'], {})
+      expect(executeKongctl).toHaveBeenCalledWith(['version', '--full', '--output', 'json'], { showInTerminal: false })
     })
 
     it('should return false when kongctl version command fails', async () => {
@@ -117,7 +117,7 @@ describe('kongctl status module tests', () => {
       const result = await checkKongctlAvailable()
 
       expect(result).toBe(false)
-      expect(executeKongctl).toHaveBeenCalledWith(['version', '--full', '--output', 'json'], {})
+      expect(executeKongctl).toHaveBeenCalledWith(['version', '--full', '--output', 'json'], { showInTerminal: false })
     })
 
     it('should return false when executeKongctl throws an exception', async () => {

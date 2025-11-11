@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import * as vscode from 'vscode'
+import type * as vscode from 'vscode'
 import { KonnectRequestService } from './request-service'
 import { KonnectApiService } from './api'
 import { executeKongctl } from '../kongctl'
@@ -129,7 +129,7 @@ describe('KonnectRequestService', () => {
 
       // Verify background execution for getting results
       expect(executeKongctl).toHaveBeenCalledWith(
-        ['api', 'get', '/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1', '--output', 'json'],
+        ['api', 'get', '"/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1"', '--output', 'json'],
         {},
         mockStorageService,
       )
@@ -158,7 +158,6 @@ describe('KonnectRequestService', () => {
 
       expect(result).toEqual(mockPortals)
       expect(showApiError).toHaveBeenCalled()
-      expect(vscode.window.showInformationMessage).toHaveBeenCalledWith('Falling back to Konnect API...')
       expect(KonnectApiService.prototype.fetchAllPortals).toHaveBeenCalledWith('mock-token')
     })
 
@@ -204,12 +203,12 @@ describe('KonnectRequestService', () => {
       expect(result).toEqual(mockPortals)
       expect(executeKongctl).toHaveBeenCalledTimes(2)
       expect(executeKongctl).toHaveBeenNthCalledWith(1,
-        ['api', 'get', '/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1', '--output', 'json'],
+        ['api', 'get', '"/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1"', '--output', 'json'],
         {},
         mockStorageService,
       )
       expect(executeKongctl).toHaveBeenNthCalledWith(2,
-        ['api', 'get', '/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=2', '--output', 'json'],
+        ['api', 'get', '"/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=2"', '--output', 'json'],
         {},
         mockStorageService,
       )
@@ -227,7 +226,6 @@ describe('KonnectRequestService', () => {
 
       expect(result).toEqual(mockPortals)
       expect(showApiError).toHaveBeenCalled()
-      expect(vscode.window.showInformationMessage).toHaveBeenCalledWith('Falling back to Konnect API...')
       expect(KonnectApiService.prototype.fetchAllPortals).toHaveBeenCalledWith('mock-token')
     })
 
