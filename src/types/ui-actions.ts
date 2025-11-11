@@ -85,6 +85,10 @@ export enum WebviewTimeoutActions {
  * Actions for kongctl installation prompts
  */
 export enum KongctlInstallActions {
+  VIEW_INSTALL_INSTRUCTIONS = 'View Install Instructions',
+  INSTALLATION_INSTRUCTIONS = 'Installation Instructions',
+  CHECK_STATUS_NOW = 'Check Status Now',
+  COPY_DEBUG_INFO = 'Copy Debug Info',
   LEARN_MORE = 'Learn More',
   CONFIGURE_PATH = 'Configure Path',
 }
