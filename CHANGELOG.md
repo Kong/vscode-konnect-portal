@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.4.2...v1.5.0) (2025-11-11)
+
+
+### Features
+
+* use kongctl or api ([#28](https://github.com/Kong/vscode-konnect-portal/issues/28)) ([39d9573](https://github.com/Kong/vscode-konnect-portal/commit/39d95731584973db3c33c0ca96598151d7dea3b6))
+
 ## [1.4.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.4.1...v1.4.2) (2025-11-11)
 
 
