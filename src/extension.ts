@@ -24,9 +24,8 @@ import {
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
 import { KONGCTL_TERMINAL_NAME } from './constants/kongctl'
-import { checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/feedback'
 import { installKongctlWithFeedback } from './kongctl/install'
-import { checkKongctlAvailable } from './kongctl/status'
+import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/status'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
