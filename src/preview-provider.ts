@@ -274,7 +274,7 @@ export class PreviewProvider implements Disposable {
     const panel = window.createWebviewPanel(
       PreviewProvider.viewType,
       `Portal Preview - ${basename(document.fileName)}`,
-      ViewColumn.Beside,
+      { viewColumn: ViewColumn.Beside, preserveFocus: true },
       {
         enableScripts: true,
         retainContextWhenHidden: true,
