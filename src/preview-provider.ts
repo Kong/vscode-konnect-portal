@@ -70,19 +70,17 @@ export class PreviewProvider implements Disposable {
     const hasToken = await this.storageService.hasValidToken()
     if (!hasToken) {
       // No token configured, show token configuration message
-      void window
-        .showWarningMessage(
-          'No Konnect token configured. Please configure your Personal Access Token to continue.',
-          TokenConfigurationActions.CONFIGURE_TOKEN,
-          TokenConfigurationActions.LEARN_MORE,
-        )
-        .then((selection) => {
-          if (selection === TokenConfigurationActions.CONFIGURE_TOKEN) {
-            commands.executeCommand('kong.konnect.devPortal.configureToken')
-          } else if (selection === TokenConfigurationActions.LEARN_MORE) {
-            env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
-          }
-        })
+      const selection = await window.showWarningMessage(
+        'No Konnect token configured. Please configure your Personal Access Token to continue.',
+        TokenConfigurationActions.CONFIGURE_TOKEN,
+        TokenConfigurationActions.LEARN_MORE,
+      )
+
+      if (selection === TokenConfigurationActions.CONFIGURE_TOKEN) {
+        await commands.executeCommand('kong.konnect.devPortal.configureToken')
+      } else if (selection === TokenConfigurationActions.LEARN_MORE) {
+        await env.openExternal(Uri.parse('https://developer.konghq.com/konnect-api/#personal-access-tokens'))
+      }
       return
     }
 
@@ -322,7 +320,33 @@ export class PreviewProvider implements Disposable {
     this.panelState.panel = panel
 
     // Send initial content
-    void this.sendContentUpdate(document, config, true)
+    this.sendInitialContent(document, config)
+  }
+
+  /** Send initial content with proper error handling */
+  private sendInitialContent(document: TextDocument, config: PortalPreviewConfig): void {
+    this.sendContentUpdate(document, config, true).catch((error) => {
+      console.error('Failed to send initial content:', error)
+    })
+  }
+
+  /** Handle timeout warning with action buttons */
+  private async handleTimeoutWarning(warning: string): Promise<void> {
+    try {
+      const selection = await window.showWarningMessage(
+        `Konnect Portal: ${warning}`,
+        WebviewTimeoutActions.OPEN_SETTINGS,
+        WebviewTimeoutActions.REFRESH_PREVIEW,
+      )
+
+      if (selection === WebviewTimeoutActions.OPEN_SETTINGS) {
+        await commands.executeCommand('workbench.action.openSettings', 'kong.konnect.devPortal')
+      } else if (selection === WebviewTimeoutActions.REFRESH_PREVIEW) {
+        await commands.executeCommand('kong.konnect.devPortal.refreshPreview')
+      }
+    } catch (error) {
+      console.error('Failed to handle timeout warning:', error)
+    }
   }
 
   /** Sends content update to the webview */
@@ -459,19 +483,7 @@ export class PreviewProvider implements Disposable {
         if (message.warning) {
           if (message.warningType === 'timeout') {
             // Special handling for timeout warnings with action buttons
-            void window
-              .showWarningMessage(
-                `Konnect Portal: ${message.warning}`,
-                WebviewTimeoutActions.OPEN_SETTINGS,
-                WebviewTimeoutActions.REFRESH_PREVIEW,
-              )
-              .then((selection) => {
-                if (selection === WebviewTimeoutActions.OPEN_SETTINGS) {
-                  commands.executeCommand('workbench.action.openSettings', 'kong.konnect.devPortal')
-                } else if (selection === WebviewTimeoutActions.REFRESH_PREVIEW) {
-                  commands.executeCommand('kong.konnect.devPortal.refreshPreview')
-                }
-              })
+            this.handleTimeoutWarning(message.warning)
           } else {
             window.showWarningMessage(`Konnect Portal: ${message.warning}`)
           }

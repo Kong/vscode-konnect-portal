@@ -81,8 +81,7 @@ export function getOrCreateKongctlTerminal(env?: Record<string, string | undefin
   return kongctlTerminal
 }
 
-/** Global function to update kongctl context - set during activation */
-let updateKongctlContextGlobal: (() => Promise<void>) | undefined
+
 
 /** Updates the VS Code context to reflect preview state */
 function updatePreviewContextFromProvider(): void {
@@ -131,22 +130,44 @@ async function checkMDCExtension(): Promise<boolean> {
 }
 
 /** Shows a helpful notification about MDC extension for .mdc files */
-function showMDCExtensionRecommendation(): void {
-  void window
-    .showInformationMessage(
-      'For the best experience with MDC syntax, we recommend installing the MDC - Markdown Components extension.',
-      MDCExtensionActions.INSTALL_EXTENSION,
-      MDCExtensionActions.DONT_SHOW_AGAIN,
-    )
-    .then((selection) => {
-      if (selection === MDCExtensionActions.INSTALL_EXTENSION) {
-        commands.executeCommand('workbench.extensions.search', 'Nuxt.mdc')
-      } else if (selection === MDCExtensionActions.DONT_SHOW_AGAIN) {
-        // Store preference to not show again
-        const config = workspace.getConfiguration(CONFIG_SECTION)
-        config.update('showMDCRecommendation', false, true)
+async function showMDCExtensionRecommendation(): Promise<void> {
+  const selection = await window.showInformationMessage(
+    'For the best experience with MDC syntax, we recommend installing the MDC - Markdown Components extension.',
+    MDCExtensionActions.INSTALL_EXTENSION,
+    MDCExtensionActions.DONT_SHOW_AGAIN,
+  )
+
+  if (selection === MDCExtensionActions.INSTALL_EXTENSION) {
+    await commands.executeCommand('workbench.extensions.search', 'Nuxt.mdc')
+  } else if (selection === MDCExtensionActions.DONT_SHOW_AGAIN) {
+    // Store preference to not show again
+    const config = workspace.getConfiguration(CONFIG_SECTION)
+    await config.update('showMDCRecommendation', false, true)
+  }
+}
+
+/** Initialize kongctl context with proper error handling */
+function initializeKongctlContext(): void {
+  updateKongctlContext().catch((error) => {
+    console.error('Failed to initialize kongctl context:', error)
+  })
+}
+
+/** Check MDC extension and show recommendation if needed */
+async function checkAndShowMDCRecommendation(): Promise<void> {
+  try {
+    const hasMDCExtension = await checkMDCExtension()
+    if (!hasMDCExtension) {
+      // Show recommendation for both MDC and Markdown files to enhance syntax highlighting
+      const config = workspace.getConfiguration(CONFIG_SECTION)
+      const showRecommendation = config.get<boolean>('showMDCRecommendation', true)
+      if (showRecommendation) {
+        await showMDCExtensionRecommendation()
       }
-    })
+    }
+  } catch (error) {
+    console.error('Failed to check MDC extension or show recommendation:', error)
+  }
 }
 
 /**
@@ -413,15 +434,19 @@ export function activate(context: ExtensionContext) {
   // Listen for configuration changes
   const configChangeListener = workspace.onDidChangeConfiguration(
     async (event) => {
-      if (event.affectsConfiguration(CONFIG_SECTION)) {
-        const config = getConfiguration()
-        debug.log('Portal Preview configuration changed:', config)
-        await previewProvider?.updateConfiguration(config)
-      }
+      try {
+        if (event.affectsConfiguration(CONFIG_SECTION)) {
+          const config = getConfiguration()
+          debug.log('Portal Preview configuration changed:', config)
+          await previewProvider?.updateConfiguration(config)
+        }
 
-      // Update kongctl context if kongctl configuration changed
-      if (event.affectsConfiguration('kong.konnect.kongctl')) {
-        void updateKongctlContextGlobal?.()
+        // Update kongctl context if kongctl configuration changed
+        if (event.affectsConfiguration('kong.konnect.kongctl')) {
+          await updateKongctlContext()
+        }
+      } catch (error) {
+        console.error('Failed to handle configuration change:', error)
       }
     },
   )
@@ -473,25 +498,19 @@ export function activate(context: ExtensionContext) {
     editorChangeListener,
   )
 
-  // Function to update kongctl availability context
-  updateKongctlContextGlobal = async () => {
-    try {
-      const isAvailable = await checkKongctlAvailable()
-      await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', isAvailable)
-    } catch {
-      await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', false)
-    }
-  }
 
   // Set initial kongctl context
-  void updateKongctlContextGlobal()
+  initializeKongctlContext()
 
   // Auto-open for active editor if autoOpenPreview is enabled
   const activeEditor = window.activeTextEditor
   if (activeEditor && isMarkdownOrMDC(activeEditor.document)) {
     const config = getConfiguration()
     if (config.autoOpenPreview) {
-      void previewProvider.openPreview(activeEditor.document)
+      // Fire-and-forget auto-open with proper error handling
+      previewProvider.openPreview(activeEditor.document).catch((error) => {
+        console.error('Failed to auto-open preview:', error)
+      })
     }
   }
 }
@@ -500,8 +519,11 @@ export function activate(context: ExtensionContext) {
  * Updates the kongctl context to show/hide commands based on CLI availability
  */
 export async function updateKongctlContext(): Promise<void> {
-  if (updateKongctlContextGlobal) {
-    await updateKongctlContextGlobal()
+  try {
+    const isAvailable = await checkKongctlAvailable()
+    await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', isAvailable)
+  } catch {
+    await commands.executeCommand('setContext', 'kong.konnect.kongctl.available', false)
   }
 }
 
@@ -544,16 +566,7 @@ function isMarkdownOrMDC(document: TextDocument): boolean {
   // For supported file types, check if we should recommend the MDC extension
   if (isMDCFile || isMarkdownFile) {
     // Check for MDC extension asynchronously but don't block file type determination
-    void checkMDCExtension().then((hasMDCExtension) => {
-      if (!hasMDCExtension) {
-        // Show recommendation for both MDC and Markdown files to enhance syntax highlighting
-        const config = workspace.getConfiguration(CONFIG_SECTION)
-        const showRecommendation = config.get<boolean>('showMDCRecommendation', true)
-        if (showRecommendation) {
-          showMDCExtensionRecommendation()
-        }
-      }
-    })
+    checkAndShowMDCRecommendation()
     return true // Allow preview for both file types regardless of MDC extension
   }
 
