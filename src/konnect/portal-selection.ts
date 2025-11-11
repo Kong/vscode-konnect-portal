@@ -70,7 +70,7 @@ export class PortalSelectionService {
 
           // Create quick pick items
           const portalItems = portals.map(portal => {
-            const label = portal.display_name || portal.name
+            const label = portal.display_name && portal.display_name !== 'Developer Portal' ? portal.display_name : portal.name
             const description = portal.description || undefined
             const detail = portal.canonical_domain
 
