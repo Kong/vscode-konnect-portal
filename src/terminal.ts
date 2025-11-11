@@ -2,31 +2,47 @@ import { KONGCTL_TERMINAL_NAME } from './constants/kongctl'
 import {
   window,
 } from 'vscode'
-import type { Terminal } from 'vscode'
+import type { Terminal,
+  Disposable } from 'vscode'
 
 /** Global instance of the kongctl terminal for reuse */
+
 let kongctlTerminal: Terminal | undefined
+let terminalClosedListener: Disposable | undefined
+
+/**
+ * Checks if a terminal is closed or disposed using only public API.
+ * @param term The terminal instance to check
+ * @returns True if the terminal is closed/disposed, false otherwise
+ */
+function isTerminalClosed(term: Terminal | undefined): boolean {
+  if (!term) return true
+  // Defensive: try accessing .name, catch if disposed
+  try {
+    // If the terminal is disposed, VS Code throws on .name
+    void term.name
+    return false
+  } catch {
+    return true
+  }
+}
 
 /**
  * Gets or creates the shared kongctl terminal instance
  * @param env Optional environment variables to set for the terminal
  * @returns The kongctl terminal instance
  */
-export function getOrCreateKongctlTerminal(env?: Record<string, string | undefined>): Terminal {
-  let recreate = false
-  if (kongctlTerminal) {
-    // If terminal is disposed, recreate
-    try {
-      // If terminal is disposed, VS Code throws on .name
-      if (kongctlTerminal.name !== KONGCTL_TERMINAL_NAME) {
-        recreate = true
-      }
-    } catch {
-      recreate = true
-    }
-  }
 
-  if (!kongctlTerminal || recreate) {
+/**
+ * Gets or creates the shared kongctl terminal instance.
+ * Ensures only one terminal instance is used for all kongctl commands.
+ * Recreates the terminal if it was closed or disposed by the user.
+ * @param env Optional environment variables to set for the terminal
+ * @returns The kongctl terminal instance
+ */
+export function getOrCreateKongctlTerminal(env?: Record<string, string | undefined>): Terminal {
+  // Recreate if missing or disposed
+  if (!kongctlTerminal || isTerminalClosed(kongctlTerminal)) {
     if (kongctlTerminal) {
       try {
         kongctlTerminal.dispose()
@@ -39,8 +55,17 @@ export function getOrCreateKongctlTerminal(env?: Record<string, string | undefin
       shellPath: process.env.SHELL || undefined,
       env,
     })
+    // Clean up previous listener
+    if (terminalClosedListener) {
+      terminalClosedListener.dispose()
+    }
+    // Listen for terminal close and clear the reference
+    terminalClosedListener = window.onDidCloseTerminal((closed) => {
+      if (closed === kongctlTerminal) {
+        kongctlTerminal = undefined
+      }
+    })
   }
-
   return kongctlTerminal
 }
 
