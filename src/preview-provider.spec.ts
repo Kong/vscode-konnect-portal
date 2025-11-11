@@ -267,7 +267,10 @@ describe('PreviewProvider', () => {
       expect(window.createWebviewPanel).toHaveBeenCalledWith(
         'portalPreview',
         'Portal Preview - test.md',
-        ViewColumn.Beside,
+        expect.objectContaining({
+          viewColumn: ViewColumn.Beside,
+          preserveFocus: true,
+        }),
         expect.objectContaining({
           enableScripts: true,
           retainContextWhenHidden: true,

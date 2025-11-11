@@ -10,7 +10,7 @@ import type { KongctlConfig, FileStats, DiagnosticInfo } from '../types/kongctl'
  */
 export async function checkKongctlAvailable(): Promise<boolean> {
   try {
-    const result = await executeKongctl(['version', '--full', '--output', 'json'], {})
+    const result = await executeKongctl(['version', '--full', '--output', 'json'], { showInTerminal: false })
     return result.success
   } catch {
     return false
@@ -102,7 +102,7 @@ export async function showKongctlDiagnostics(): Promise<void> {
     let executionError = 'None'
 
     // Always try to execute to get detailed error info
-    const versionResult = await executeKongctl(['version', '--full', '--output', 'json'], {})
+    const versionResult = await executeKongctl(['version', '--full', '--output', 'json'], { showInTerminal: false })
     if (versionResult.success) {
       versionInfo = formatKongctlVersion(versionResult.stdout)
     } else {
@@ -207,7 +207,7 @@ export async function showKongctlAvailableMessage(): Promise<void> {
     // Update context to reflect current availability
     await updateKongctlContext()
 
-    const versionResult = await executeKongctl(['version', '--full', '--output', 'json'], {})
+    const versionResult = await executeKongctl(['version', '--full', '--output', 'json'], { showInTerminal: false })
     const versionInfo = versionResult.success ? formatKongctlVersion(versionResult.stdout) : 'Version unknown'
 
     vscode.window.showInformationMessage(

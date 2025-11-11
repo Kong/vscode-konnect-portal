@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 import { withHttps } from 'ufo'
 import type { StoredPortalConfig } from './types/konnect'
-import { KonnectApiService, ApiError } from './konnect/api'
+import { KonnectRequestService } from './konnect/request-service'
+import { ApiError } from './konnect/api'
 import type { PortalStorageService } from './storage'
 import { showApiError } from './utils/error-handling'
 import { PORTAL_SELECTION_MESSAGES } from './constants/messages'
@@ -10,8 +11,8 @@ import { PORTAL_SELECTION_MESSAGES } from './constants/messages'
  * Service for managing portal selection workflow
  */
 export class PortalSelectionService {
-  /** Service for making Konnect API requests */
-  private readonly apiService: KonnectApiService
+  /** Service for making Konnect requests (CLI first, API fallback) */
+  private readonly requestService: KonnectRequestService
 
   /** Service for managing secure storage of portal configuration */
   private readonly storageService: PortalStorageService
@@ -25,7 +26,7 @@ export class PortalSelectionService {
    * @param context VS Code extension context
    */
   constructor(storageService: PortalStorageService, context: vscode.ExtensionContext) {
-    this.apiService = new KonnectApiService()
+    this.requestService = new KonnectRequestService(storageService, context)
     this.storageService = storageService
     this.context = context
   }
@@ -51,7 +52,7 @@ export class PortalSelectionService {
         try {
           progress.report({ increment: 20, message: PORTAL_SELECTION_MESSAGES.FETCHING_PORTAL_LIST })
 
-          const portals = await this.apiService.fetchAllPortals(token)
+          const portals = await this.requestService.fetchAllPortals()
 
           if (cancellationToken.isCancellationRequested) {
             return undefined

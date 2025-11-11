@@ -36,11 +36,15 @@ vi.mock('ufo', () => ({
 // Create global mock function that we can access in tests
 const mockFetchAllPortals = vi.fn()
 
-// Mock API service with proper constructor
-vi.mock('./konnect/api', () => ({
-  KonnectApiService: class MockKonnectApiService {
+// Mock request service
+vi.mock('./konnect/request-service', () => ({
+  KonnectRequestService: class MockKonnectRequestService {
     fetchAllPortals = mockFetchAllPortals
   },
+}))
+
+// Mock API error class
+vi.mock('./konnect/api', () => ({
   ApiError: class ApiError extends Error {
     constructor(message: string, public traceId?: string, public statusCode?: number) {
       super(message)
@@ -58,7 +62,7 @@ describe('konnect/portal-selection', () => {
   let portalSelectionService: PortalSelectionService
   let mockStorageService: PortalStorageService
   let mockContext: ReturnType<typeof createMockContext>
-  let mockApiService: any
+
 
   beforeEach(async () => {
     vi.clearAllMocks()
@@ -82,10 +86,7 @@ describe('konnect/portal-selection', () => {
       mockContext as unknown as ExtensionContext,
     )
 
-    // Use the global mock function directly
-    mockApiService = {
-      fetchAllPortals: mockFetchAllPortals,
-    }
+    // mockFetchAllPortals is available globally
   })
 
   afterEach(() => {
@@ -129,8 +130,8 @@ describe('konnect/portal-selection', () => {
       })
 
       it('should show warning when no portals are found', async () => {
-        mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
-        mockApiService.fetchAllPortals.mockResolvedValueOnce([])
+        mockFetchAllPortals.mockResolvedValueOnce([])
+        vi.mocked(mockStorageService.getToken).mockResolvedValueOnce(testTokens.valid)
 
         const result = await portalSelectionService.selectPortal()
 
@@ -142,7 +143,7 @@ describe('konnect/portal-selection', () => {
 
       it('should return undefined when user cancels selection', async () => {
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
-        mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
+        mockFetchAllPortals.mockResolvedValueOnce(mockPortals)
         mockShowQuickPick.mockResolvedValueOnce(undefined)
 
         const result = await portalSelectionService.selectPortal()
@@ -153,7 +154,7 @@ describe('konnect/portal-selection', () => {
       it('should successfully select and store portal with complete workflow verification', async () => {
         // Setup mocks for successful workflow
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
-        mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
+        mockFetchAllPortals.mockResolvedValueOnce(mockPortals)
         mockShowQuickPick.mockResolvedValueOnce(mockQuickPickItems[0])
 
         const selectedPortal = mockQuickPickItems[0].portal
@@ -181,7 +182,7 @@ describe('konnect/portal-selection', () => {
         expect(result).toEqual(expectedConfig)
 
         // Verify API was called with correct token
-        expect(mockApiService.fetchAllPortals).toHaveBeenCalledWith(testTokens.valid)
+        expect(mockFetchAllPortals).toHaveBeenCalled()
 
         // Verify complete data structure
         expect(result).toMatchObject({
@@ -198,7 +199,7 @@ describe('konnect/portal-selection', () => {
 
         // Setup initial state with token
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
-        mockApiService.fetchAllPortals.mockRejectedValueOnce(apiError)
+        mockFetchAllPortals.mockRejectedValueOnce(apiError)
 
         const { showApiError } = await import('./utils/error-handling')
 
@@ -257,7 +258,7 @@ describe('konnect/portal-selection', () => {
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
 
         // Step 2: API call for portals
-        mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
+        mockFetchAllPortals.mockResolvedValueOnce(mockPortals)
 
         // Step 3: User portal selection
         mockShowQuickPick.mockResolvedValueOnce(mockQuickPickItems[0])
@@ -276,7 +277,7 @@ describe('konnect/portal-selection', () => {
 
         // Verify all required operations were performed
         expect(mockStorageService.getToken).toHaveBeenCalledWith()
-        expect(mockApiService.fetchAllPortals).toHaveBeenCalledWith(testTokens.valid)
+        expect(mockFetchAllPortals).toHaveBeenCalled()
         expect(mockStorageService.storeSelectedPortal).toHaveBeenCalledWith(result)
         expect(mockShowInformationMessage).toHaveBeenCalledWith(
           expect.stringContaining('Portal "Portal 1 Name" selected'),
@@ -289,7 +290,7 @@ describe('konnect/portal-selection', () => {
 
         // Step 2: API failure with 401
         const apiError = new ApiError('Invalid token', 'trace-456', 401)
-        mockApiService.fetchAllPortals.mockRejectedValueOnce(apiError)
+        mockFetchAllPortals.mockRejectedValueOnce(apiError)
 
         const { showApiError } = await import('./utils/error-handling')
 
@@ -314,7 +315,7 @@ describe('konnect/portal-selection', () => {
       it('should handle UI cancellation without side effects', async () => {
         // Setup successful API call
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
-        mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
+        mockFetchAllPortals.mockResolvedValueOnce(mockPortals)
 
         // User cancels selection
         mockShowQuickPick.mockResolvedValueOnce(undefined)
@@ -331,13 +332,13 @@ describe('konnect/portal-selection', () => {
         expect(result).toBeUndefined()
 
         // Verify API was still called (user saw the options before canceling)
-        expect(mockApiService.fetchAllPortals).toHaveBeenCalledWith(testTokens.valid)
+        expect(mockFetchAllPortals).toHaveBeenCalled()
       })
 
       it('should handle empty portal list with appropriate user feedback', async () => {
         // Setup valid token but no portals
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
-        mockApiService.fetchAllPortals.mockResolvedValueOnce([])
+        mockFetchAllPortals.mockResolvedValueOnce([])
 
         // Execute workflow
         const result = await portalSelectionService.selectPortal()
@@ -359,7 +360,7 @@ describe('konnect/portal-selection', () => {
       it('should handle progress reporting workflow correctly', async () => {
         // Setup successful workflow
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
-        mockApiService.fetchAllPortals.mockResolvedValueOnce(mockPortals)
+        mockFetchAllPortals.mockResolvedValueOnce(mockPortals)
         mockShowQuickPick.mockResolvedValueOnce(mockQuickPickItems[0])
 
         // Execute workflow
