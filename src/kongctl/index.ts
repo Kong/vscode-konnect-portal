@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
 import { promisify } from 'util'
+import { getOrCreateKongctlTerminal } from '../terminal'
 import type { KongctlCommandResult } from '../types/kongctl'
 import type { PortalStorageService } from '../storage'
 
@@ -100,7 +101,6 @@ export async function executeKongctl(
   let terminal: vscode.Terminal | undefined
   if (showInTerminal) {
     try {
-      const { getOrCreateKongctlTerminal } = await import('../extension')
       terminal = getOrCreateKongctlTerminal(env)
       terminal.show(true)
       const fullCommand = `kongctl ${args.join(' ')}`

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import { checkKongctlAvailable } from './status'
-import { updateKongctlContext, getOrCreateKongctlTerminal } from '../extension'
+import { updateKongctlContext } from '../extension'
+import { getOrCreateKongctlTerminal } from '../terminal'
 import { KongctlInstallActions } from '../types/ui-actions'
 
 /**
