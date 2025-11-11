@@ -81,7 +81,23 @@ export function getOrCreateKongctlTerminal(env?: Record<string, string | undefin
   return kongctlTerminal
 }
 
-
+/**
+ * Safely disposes the active kongctl terminal instance if it exists
+ * This function terminates the terminal session and clears the global reference
+ * Used when credentials are cleared to ensure token is purged from terminal environment
+ */
+export function disposeKongctlTerminal(): void {
+  if (kongctlTerminal) {
+    try {
+      kongctlTerminal.dispose()
+      debug.log('Kongctl terminal disposed successfully')
+    } catch (error) {
+      debug.log('Error disposing kongctl terminal:', error)
+    } finally {
+      kongctlTerminal = undefined
+    }
+  }
+}
 
 /** Updates the VS Code context to reflect preview state */
 function updatePreviewContextFromProvider(): void {
@@ -340,6 +356,8 @@ export function activate(context: ExtensionContext) {
 
         if (confirm === CredentialActions.DELETE_TOKEN) {
           await storageService?.clearAll()
+          /** Dispose active kongctl terminal to purge token from environment */
+          disposeKongctlTerminal()
           window.showInformationMessage('All credentials cleared successfully.')
         }
       } catch (error) {
