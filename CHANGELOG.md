@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.4.1...v1.4.2) (2025-11-11)
+
+
+### Bug Fixes
+
+* discard terminal when token deleted ([c53b68c](https://github.com/Kong/vscode-konnect-portal/commit/c53b68c039c25286369f7faf597dc4bb36ec1744))
+
 ## [1.4.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.4.0...v1.4.1) (2025-11-11)
 
 
