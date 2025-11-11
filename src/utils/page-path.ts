@@ -3,6 +3,15 @@ import { workspace, window } from 'vscode'
 import type { TextDocument } from 'vscode'
 import { debug } from './debug'
 
+/** Helper function to show error message with proper async handling */
+async function showErrorMessage(message: string): Promise<void> {
+  try {
+    await window.showErrorMessage(message)
+  } catch (error) {
+    console.error('Failed to show error message:', error)
+  }
+}
+
 /** Result of document type detection */
 export interface DocumentPathInfo {
   type: 'page' | 'snippet' | 'default' | 'error'
@@ -202,7 +211,7 @@ export function getDocumentPathInfo(
   const snippetError = checkSnippetSubdirectoryError(document, snippetsDirectory)
   if (snippetError) {
     // Show error message to user
-    void window.showErrorMessage(snippetError)
+    showErrorMessage(snippetError)
     return {
       type: 'error',
       errorMessage: snippetError,

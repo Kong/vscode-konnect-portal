@@ -24,7 +24,6 @@ export enum PortalSelectionActions {
 export enum TokenConfigurationActions {
   CONFIGURE_TOKEN = 'Configure Konnect Personal Access Token (PAT)',
   LEARN_MORE = 'Learn more',
-  CANCEL = 'Cancel',
 }
 
 /**
@@ -32,7 +31,6 @@ export enum TokenConfigurationActions {
  */
 export enum CredentialActions {
   DELETE_TOKEN = 'Delete Access Token',
-  CANCEL = 'Cancel',
 }
 
 /**
@@ -41,36 +39,9 @@ export enum CredentialActions {
 export enum MDCExtensionActions {
   INSTALL_EXTENSION = 'Install MDC Extension',
   DONT_SHOW_AGAIN = "Don't Show Again",
-  CANCEL = 'Cancel',
 }
 
-/**
- * Actions for token update prompts
- */
-export enum TokenUpdateActions {
-  UPDATE_TOKEN = 'Update Token',
-  SELECT_PORTAL = 'Select Portal',
-  LATER = 'Later',
-}
 
-/**
- * Generic confirmation actions
- */
-export enum ConfirmationActions {
-  YES = 'Yes',
-  NO = 'No',
-  OK = 'OK',
-  CANCEL = 'Cancel',
-}
-
-/**
- * Actions for portal setup prompts in preview provider
- */
-export enum PortalSetupActions {
-  CONFIGURE_TOKEN = 'Configure Konnect Personal Access Token (PAT)',
-  SELECT_PORTAL = 'Select Portal',
-  CANCEL = 'Cancel',
-}
 
 /**
  * Actions for webview timeout warnings
@@ -78,13 +49,15 @@ export enum PortalSetupActions {
 export enum WebviewTimeoutActions {
   OPEN_SETTINGS = 'Open Settings',
   REFRESH_PREVIEW = 'Refresh Portal Preview',
-  CANCEL = 'Cancel',
 }
 
 /**
  * Actions for kongctl installation prompts
  */
 export enum KongctlInstallActions {
+  VIEW_INSTALL_INSTRUCTIONS = 'View Install Instructions',
+  INSTALLATION_INSTRUCTIONS = 'Installation Instructions',
+  CHECK_STATUS_NOW = 'Check Status Now',
   LEARN_MORE = 'Learn More',
   CONFIGURE_PATH = 'Configure Path',
 }

@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import { executeKongctl } from './index'
 import { checkKongctlAvailable, getKongctlConfig, getKongctlDiagnostics } from './status'
 import { KongctlInstallActions } from '../types/ui-actions'
+import { updateKongctlContext } from '../extension'
 
 /**
  * Format kongctl version JSON output for display
@@ -30,6 +31,9 @@ export async function showKongctlDiagnostics(): Promise<void> {
     const diagnostics = await getKongctlDiagnostics()
     const isAvailable = await checkKongctlAvailable()
 
+    // Update context to reflect current availability
+    await updateKongctlContext()
+
     let versionInfo = 'Version: Unknown'
     let executionError = 'None'
 
@@ -46,7 +50,7 @@ export async function showKongctlDiagnostics(): Promise<void> {
 • Configured Path: '${diagnostics.configuredPath || 'kongctl'}'
 ${diagnostics.foundInPath ? `• Found in PATH: '${diagnostics.foundInPath}'` : '• Could not determine if kongctl is installed'}
 • ${versionInfo}
-${executionError ? `• Execution Error: ${executionError}` : '• No errors'}
+${executionError && executionError !== 'None' ? `• Execution Error: ${executionError}` : '• No errors'}
 `.trim()
 
     await vscode.window.showInformationMessage(
@@ -136,6 +140,9 @@ export async function checkAndNotifyKongctlAvailability(): Promise<boolean> {
  */
 export async function showKongctlAvailableMessage(): Promise<void> {
   try {
+    // Update context to reflect current availability
+    await updateKongctlContext()
+
     const versionResult = await executeKongctl(['version', '--full', '--output', 'json'], {})
     const versionInfo = versionResult.success ? formatKongctlVersion(versionResult.stdout) : 'Version unknown'
 
@@ -144,6 +151,9 @@ export async function showKongctlAvailableMessage(): Promise<void> {
       { modal: true, detail: versionInfo },
     )
   } catch {
+    // Update context even if version check fails
+    await updateKongctlContext()
+
     // Fallback to simple message if version check fails
     vscode.window.showInformationMessage(
       'kongctl is installed and available.',
