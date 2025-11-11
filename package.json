@@ -33,6 +33,7 @@
     "commit": "cz"
   },
   "dependencies": {
+    "strip-ansi": "^7.1.2",
     "ufo": "^1.6.1",
     "uncrypto": "^0.1.3"
   },
