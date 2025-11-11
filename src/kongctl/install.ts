@@ -8,17 +8,13 @@ import { KongctlInstallActions } from '../types/ui-actions'
  * Shows success or error messages with appropriate actions.
  */
 export async function installKongctlWithFeedback(context?: vscode.ExtensionContext) {
-  // Check if we can use brew for automatic installation (macOS with brew installed)
-  if (process.platform === 'darwin') {
-    // Check if brew is available
-    const brewAvailable = await checkHomebrewStatus()
-    if (brewAvailable) {
-      await installWithHomebrew(context)
-
-      // Check if kongctl became available after user interaction
-      await checkInstallationStatus(context)
-      return
-    }
+  // Check if homebrew is available for automatic installation
+  const brewAvailable = await checkHomebrewStatus()
+  if (brewAvailable) {
+    await installWithHomebrew(context)
+    // Check if kongctl became available after user interaction
+    await checkInstallationStatus(context)
+    return
   }
 
   // For all other cases (Linux, Windows, or macOS without brew), show manual installation instructions
