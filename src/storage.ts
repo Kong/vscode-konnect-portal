@@ -1,5 +1,5 @@
 import type { ExtensionContext, SecretStorage } from 'vscode'
-import type { StoredPortalConfig } from '../types/konnect'
+import type { StoredPortalConfig } from './types/konnect'
 
 /**
  * Keys for secret storage

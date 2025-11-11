@@ -8,7 +8,7 @@ import {
   mockSerializedPortalConfig,
   mockInvalidJsonString,
   createMockContext,
-} from '../test/fixtures/konnect-storage'
+} from './test/fixtures/konnect-storage'
 
 // Mock vscode module
 vi.mock('vscode', () => ({

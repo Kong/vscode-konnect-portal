@@ -4,7 +4,7 @@ import * as path from 'path'
 import { promisify } from 'util'
 import { spawn } from 'child_process'
 import type { KongctlCommandResult } from '../types/kongctl'
-import type { PortalStorageService } from '../konnect/storage'
+import type { PortalStorageService } from '../storage'
 
 const exists = promisify(fs.exists)
 

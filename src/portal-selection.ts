@@ -1,10 +1,10 @@
 import * as vscode from 'vscode'
 import { withHttps } from 'ufo'
-import type { StoredPortalConfig } from '../types/konnect'
-import { KonnectApiService, ApiError } from './api'
+import type { StoredPortalConfig } from './types/konnect'
+import { KonnectApiService, ApiError } from './konnect/api'
 import type { PortalStorageService } from './storage'
-import { showApiError } from '../utils/error-handling'
-import { PORTAL_SELECTION_MESSAGES } from '../constants/messages'
+import { showApiError } from './utils/error-handling'
+import { PORTAL_SELECTION_MESSAGES } from './constants/messages'
 
 /**
  * Service for managing portal selection workflow

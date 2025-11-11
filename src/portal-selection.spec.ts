@@ -2,18 +2,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { ExtensionContext } from 'vscode'
 import { PortalSelectionService } from './portal-selection'
 import type { PortalStorageService } from './storage'
-import { ApiError } from './api'
-import { PORTAL_SELECTION_MESSAGES } from '../constants/messages'
+import { ApiError } from './konnect/api'
+import { PORTAL_SELECTION_MESSAGES } from './constants/messages'
 import {
   mockPortals,
   testTokens,
-} from '../test/fixtures/konnect-api'
+} from './test/fixtures/konnect-api'
 import {
   createMockContext,
   createMockProgress,
   createMockCancellationToken,
   mockQuickPickItems,
-} from '../test/fixtures/konnect-storage'
+} from './test/fixtures/konnect-storage'
 
 // Mock vscode module
 vi.mock('vscode', () => ({
@@ -47,7 +47,7 @@ vi.mock('./api', () => ({
 }))
 
 // Mock error handling utility
-vi.mock('../utils/error-handling', () => ({
+vi.mock('./utils/error-handling', () => ({
   showApiError: vi.fn(),
 }))
 
@@ -192,7 +192,7 @@ describe('konnect/portal-selection', () => {
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
         mockApiService.fetchAllPortals.mockRejectedValueOnce(apiError)
 
-        const { showApiError } = await import('../utils/error-handling')
+        const { showApiError } = await import('./utils/error-handling')
 
         // Execute portal selection (should fail with 401)
         const result = await portalSelectionService.selectPortal()
@@ -283,7 +283,7 @@ describe('konnect/portal-selection', () => {
         const apiError = new ApiError('Invalid token', 'trace-456', 401)
         mockApiService.fetchAllPortals.mockRejectedValueOnce(apiError)
 
-        const { showApiError } = await import('../utils/error-handling')
+        const { showApiError } = await import('./utils/error-handling')
 
         // Execute workflow (should fail gracefully)
         const result = await portalSelectionService.selectPortal()

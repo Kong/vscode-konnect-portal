@@ -17,7 +17,7 @@ import type {
   WebviewUpdateContentMessage,
   WebviewNavigateMessage,
 } from './types'
-import type { PortalStorageService } from './konnect/storage'
+import type { PortalStorageService } from './storage'
 import type { StoredPortalConfig } from './types/konnect'
 import { getConfiguration } from './extension'
 import { debug } from './utils/debug'
