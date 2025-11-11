@@ -33,10 +33,13 @@ vi.mock('ufo', () => ({
   withHttps: vi.fn((domain: string) => `https://${domain}`),
 }))
 
-// Mock API service with a simple function
-vi.mock('./api', () => ({
-  KonnectApiService: class {
-    fetchAllPortals = vi.fn()
+// Create global mock function that we can access in tests
+const mockFetchAllPortals = vi.fn()
+
+// Mock API service with proper constructor
+vi.mock('./konnect/api', () => ({
+  KonnectApiService: class MockKonnectApiService {
+    fetchAllPortals = mockFetchAllPortals
   },
   ApiError: class ApiError extends Error {
     constructor(message: string, public traceId?: string, public statusCode?: number) {
@@ -60,6 +63,9 @@ describe('konnect/portal-selection', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
 
+    // Reset the global mock function
+    mockFetchAllPortals.mockReset()
+
     // Setup mock context
     mockContext = createMockContext()
 
@@ -76,8 +82,10 @@ describe('konnect/portal-selection', () => {
       mockContext as unknown as ExtensionContext,
     )
 
-    // Get reference to the mocked API service instance
-    mockApiService = (portalSelectionService as any).apiService
+    // Use the global mock function directly
+    mockApiService = {
+      fetchAllPortals: mockFetchAllPortals,
+    }
   })
 
   afterEach(() => {
