@@ -1,6 +1,7 @@
 import type { KonnectPortal, KonnectPortalsResponse } from '../types/konnect'
 import type { ApiErrorInfo } from '../types'
 import { API_ERROR_MESSAGES } from '../constants/messages'
+import { workspace } from 'vscode'
 
 /**
  * Custom error class for API errors with trace ID support
@@ -38,10 +39,18 @@ export class ApiError extends Error {
   }
 }
 
+
 /**
- * Base API configuration for Konnect
+ * Returns the Konnect API base URL for the selected region
+ * @returns Base URL string (e.g., 'https://us.api.konghq.com')
  */
-const KONNECT_BASE_URL = 'https://us.api.konghq.com'
+function getKonnectBaseUrl(): string {
+  // Read region from global/user settings, fallback to 'us'
+  const config = workspace.getConfiguration()
+  const region = config.get<string>('kong.konnect.region', 'us')
+  return `https://${region}.api.konghq.com`
+}
+
 const API_VERSION = 'v3'
 
 /**
@@ -49,7 +58,7 @@ const API_VERSION = 'v3'
  */
 export class KonnectApiService {
   /** Base URL for all API requests */
-  private readonly baseUrl: string
+  private baseUrl: string
 
   /** Request timeout in milliseconds */
   private readonly timeout: number
@@ -59,8 +68,15 @@ export class KonnectApiService {
    * @param timeout Request timeout in milliseconds (default: 10000)
    */
   constructor(timeout = 10000) {
-    this.baseUrl = `${KONNECT_BASE_URL}/${API_VERSION}`
+    this.baseUrl = `${getKonnectBaseUrl()}/${API_VERSION}`
     this.timeout = timeout
+  }
+
+  /**
+   * Updates the base URL (call if region changes at runtime)
+   */
+  updateBaseUrl(): void {
+    this.baseUrl = `${getKonnectBaseUrl()}/${API_VERSION}`
   }
 
   /**

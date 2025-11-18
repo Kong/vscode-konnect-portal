@@ -137,6 +137,12 @@
         "category": "Konnect Portal"
       },
       {
+        "command": "kong.konnect.selectRegion",
+        "title": "Select Konnect Region",
+        "icon": "$(globe)",
+        "category": "Konnect Portal"
+      },
+      {
         "command": "kong.konnect.kongctl.install",
         "title": "Install CLI",
         "icon": "$(cloud-download)",
@@ -269,6 +275,11 @@
             "content/snippets",
             "src/snippets"
           ]
+        },
+        "kong.konnect.region": {
+          "type": "string",
+          "default": "us",
+          "description": "The Konnect region code to use for API requests (e.g., 'us', 'eu', 'au', 'me', 'in', 'sg'). Set via the 'Select Konnect Region' command as needed."
         },
         "kong.konnect.kongctl.path": {
           "type": "string",

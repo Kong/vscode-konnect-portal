@@ -1,5 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ApiError, KonnectApiService } from './api'
+// Mock VS Code workspace.getConfiguration for region
+vi.mock('vscode', () => ({
+  workspace: {
+    getConfiguration: vi.fn(() => ({
+      get: vi.fn((key, def) => {
+        if (key === 'kong.konnect.region') return 'us'
+        return def
+      }),
+    })),
+  },
+}))
 import { API_ERROR_MESSAGES } from '../constants/messages'
 import {
   mockPortals,

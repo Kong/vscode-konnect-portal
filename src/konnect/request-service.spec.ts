@@ -8,13 +8,21 @@ import { showApiError } from '../utils/error-handling'
 import type { PortalStorageService } from '../storage'
 import type { KonnectPortal } from '../types/konnect'
 
-// Mock VS Code module
+// Mock VS Code module (must be first)
 vi.mock('vscode', () => ({
   window: {
     showInformationMessage: vi.fn(),
     showErrorMessage: vi.fn(),
   },
   ExtensionContext: vi.fn(),
+  workspace: {
+    getConfiguration: vi.fn(() => ({
+      get: vi.fn((key, def) => {
+        if (key === 'kong.konnect.region') return 'us'
+        return def
+      }),
+    })),
+  },
 }))
 
 // Mock dependencies
@@ -129,7 +137,13 @@ describe('KonnectRequestService', () => {
 
       // Verify background execution for getting results
       expect(executeKongctl).toHaveBeenCalledWith(
-        ['api', 'get', '"/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1"', '--output', 'json'],
+        [
+          'api',
+          'get',
+          '"https://us.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1"',
+          '--output',
+          'json',
+        ],
         {},
         mockStorageService,
       )
@@ -203,12 +217,24 @@ describe('KonnectRequestService', () => {
       expect(result).toEqual(mockPortals)
       expect(executeKongctl).toHaveBeenCalledTimes(2)
       expect(executeKongctl).toHaveBeenNthCalledWith(1,
-        ['api', 'get', '"/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1"', '--output', 'json'],
+        [
+          'api',
+          'get',
+          '"https://us.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1"',
+          '--output',
+          'json',
+        ],
         {},
         mockStorageService,
       )
       expect(executeKongctl).toHaveBeenNthCalledWith(2,
-        ['api', 'get', '"/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=2"', '--output', 'json'],
+        [
+          'api',
+          'get',
+          '"https://us.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=2"',
+          '--output',
+          'json',
+        ],
         {},
         mockStorageService,
       )
