@@ -42,5 +42,6 @@ jobs:
         run: pnpm package
 
       - name: Extension tests
+        # Command must be run with xvfb-run to provide a virtual framebuffer for VS Code UI tests
         run: xvfb-run -a pnpm test:extension
 
