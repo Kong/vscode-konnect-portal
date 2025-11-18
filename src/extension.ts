@@ -234,7 +234,7 @@ export function activate(context: ExtensionContext) {
     async () => {
       try {
         const config = workspace.getConfiguration()
-        const regions = await fetchAvailableRegions()
+        const regions = await fetchAvailableRegions(storageService)
         if (!regions.length) {
           window.showErrorMessage('No regions available to select.')
           return

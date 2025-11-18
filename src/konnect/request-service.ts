@@ -8,7 +8,7 @@ function getKonnectRegion(): string {
 }
 import type * as vscode from 'vscode'
 import { executeKongctl } from '../kongctl'
-import stripAnsi from 'strip-ansi'
+import { parseKongctlJsonOutput } from '../kongctl/parse'
 import { checkKongctlAvailable } from '../kongctl/status'
 import { KonnectApiService, ApiError } from './api'
 import type { PortalStorageService } from '../storage'
@@ -92,6 +92,8 @@ export class KonnectRequestService {
     while (true) {
       const region = getKonnectRegion()
       const baseUrl = `https://${region}.api.konghq.com/v3/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
+      console.log('BASE_URL', baseUrl)
+
       const args = [
         'api',
         'get',
@@ -104,15 +106,13 @@ export class KonnectRequestService {
       const result = await executeKongctl(args, {}, this.storageService)
 
       if (!result.success) {
-        throw new Error(`Kongctl command failed: ${result.stderr || result.stdout}`)
+        throw new Error(result.stderr || result.stdout)
       }
 
-      // Remove ANSI escape codes and all non-printable control characters except standard whitespace
-      let cleanStdout = stripAnsi(result.stdout.trim())
-      cleanStdout = cleanStdout.replace(/[^\r\n\t\x20-\x7E]/g, '')
+      // Use shared kongctl output parser for robust JSON extraction
       let response
       try {
-        response = JSON.parse(cleanStdout)
+        response = parseKongctlJsonOutput(result.stdout)
       } catch (parseError) {
         throw new Error(`Failed to parse kongctl response: ${parseError}`)
       }

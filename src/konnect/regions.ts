@@ -1,16 +1,18 @@
 import { executeKongctl } from '../kongctl'
 import { checkKongctlAvailable } from '../kongctl/status'
-import stripAnsi from 'strip-ansi'
+import { parseKongctlJsonOutput } from '../kongctl/parse'
+import type { PortalStorageService } from '../storage'
 
 /**
  * Fetches the list of available Konnect regions using kongctl CLI or API fallback
+ * @param storageService PortalStorageService instance for token injection
  * @returns Promise resolving to array of region codes (e.g., ['us', 'eu'])
  */
-export async function fetchAvailableRegions(): Promise<string[]> {
+export async function fetchAvailableRegions(storageService?: PortalStorageService): Promise<string[]> {
   // Try kongctl first if available
   if (await checkKongctlAvailable()) {
     try {
-      return await fetchRegionsWithKongctl()
+      return await fetchRegionsWithKongctl(storageService)
     } catch {
       // Fallback to API fetch if kongctl fails
     }
@@ -20,9 +22,10 @@ export async function fetchAvailableRegions(): Promise<string[]> {
 
 /**
  * Fetches regions using kongctl CLI
+ * @param storageService PortalStorageService instance for token injection
  * @returns Promise resolving to array of region codes
  */
-async function fetchRegionsWithKongctl(): Promise<string[]> {
+async function fetchRegionsWithKongctl(storageService?: PortalStorageService): Promise<string[]> {
   const args = [
     'api',
     'get',
@@ -30,16 +33,14 @@ async function fetchRegionsWithKongctl(): Promise<string[]> {
     '--output',
     'json',
   ]
-  const result = await executeKongctl(args)
+  const result = await executeKongctl(args, {}, storageService)
   if (!result.success) {
-    throw new Error(`Kongctl command failed: ${result.stderr || result.stdout}`)
+    throw new Error(result.stderr || result.stdout)
   }
-  let cleanStdout = stripAnsi(result.stdout.trim())
-  // Remove ANSI escape codes and all non-printable control characters except standard whitespace
-  cleanStdout = cleanStdout.replace(/[^\n\t\x20-\x7E]/g, '')
+  // Use shared kongctl output parser for robust JSON extraction
   let response
   try {
-    response = JSON.parse(cleanStdout)
+    response = parseKongctlJsonOutput(result.stdout)
   } catch (parseError) {
     throw new Error(`Failed to parse kongctl response: ${parseError}`)
   }
