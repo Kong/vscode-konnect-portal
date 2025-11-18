@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.5.0...v1.6.0) (2025-11-18)
+
+
+### Features
+
+* support region switching ([#31](https://github.com/Kong/vscode-konnect-portal/issues/31)) ([7b82b35](https://github.com/Kong/vscode-konnect-portal/commit/7b82b350fd7d663d2f9b6650504987e852fbf502))
+
 # [1.5.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.4.2...v1.5.0) (2025-11-11)
 
 
