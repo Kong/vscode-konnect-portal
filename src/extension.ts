@@ -24,6 +24,7 @@ import {
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
 import { installKongctlWithFeedback } from './kongctl/install'
+import { fetchAvailableRegions } from './konnect/regions'
 import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/status'
 
 /** Global instance of the preview provider for managing webview panels */
@@ -165,6 +166,7 @@ export function activate(context: ExtensionContext) {
     },
   )
 
+  // Register refresh preview command
   const refreshPreviewCommand = commands.registerCommand(
     'kong.konnect.devPortal.refreshPreview',
     () => {
@@ -226,6 +228,33 @@ export function activate(context: ExtensionContext) {
     },
   )
 
+  // Register Select Konnect Region command
+  const selectRegionCommand = commands.registerCommand(
+    'kong.konnect.selectRegion',
+    async () => {
+      try {
+        const config = workspace.getConfiguration()
+        const regions = await fetchAvailableRegions()
+        if (!regions.length) {
+          window.showErrorMessage('No regions available to select.')
+          return
+        }
+        const selected = await window.showQuickPick(regions, {
+          placeHolder: 'Select a Konnect region',
+          canPickMany: false,
+          ignoreFocusOut: true,
+        })
+        if (!selected) return
+        await config.update('kong.konnect.region', selected, true)
+        window.showInformationMessage(`Konnect region set to '${selected}'.`)
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        window.showErrorMessage(`Failed to select region: ${errorMessage}`)
+      }
+    },
+  )
+
+  // Register the Select Portal command
   const selectPortalCommand = commands.registerCommand(
     'kong.konnect.devPortal.selectPortal',
     async () => {
@@ -283,6 +312,7 @@ export function activate(context: ExtensionContext) {
     },
   )
 
+  // Register Delete Konnect Token command
   const deleteTokenCommand = commands.registerCommand(
     'kong.konnect.devPortal.deleteToken',
     async () => {
@@ -444,6 +474,7 @@ export function activate(context: ExtensionContext) {
     refreshPreviewCommand,
     configureTokenCommand,
     selectPortalCommand,
+    selectRegionCommand,
     deleteTokenCommand,
     checkKongctlStatusCommand,
     showKongctlDiagnosticsCommand,

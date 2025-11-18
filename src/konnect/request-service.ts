@@ -1,3 +1,11 @@
+import { workspace } from 'vscode'
+/**
+ * Gets the current Konnect region from settings (default 'us')
+ */
+function getKonnectRegion(): string {
+  const config = workspace.getConfiguration()
+  return config.get<string>('kong.konnect.region', 'us')
+}
 import type * as vscode from 'vscode'
 import { executeKongctl } from '../kongctl'
 import stripAnsi from 'strip-ansi'
@@ -80,12 +88,14 @@ export class KonnectRequestService {
     const pageSize = 100
 
     // Continue fetching pages until we have all portals
+
     while (true) {
+      const region = getKonnectRegion()
+      const baseUrl = `https://${region}.api.konghq.com/v3/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
       const args = [
         'api',
         'get',
-        // Must quote the URL to avoid shell interpretation issues
-        `"/v3/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}"`,
+        `"${baseUrl}"`,
         '--output',
         'json',
       ]
