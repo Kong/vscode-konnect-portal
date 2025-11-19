@@ -2,6 +2,7 @@ import { executeKongctl } from '../kongctl'
 import { checkKongctlAvailable } from '../kongctl/status'
 import { parseKongctlJsonOutput } from '../kongctl/parse'
 import type { PortalStorageService } from '../storage'
+import { debug } from '../utils/debug'
 
 /**
  * Fetches the list of available Konnect regions using kongctl CLI or API fallback
@@ -15,6 +16,7 @@ export async function fetchAvailableRegions(storageService?: PortalStorageServic
       return await fetchRegionsWithKongctl(storageService)
     } catch {
       // Fallback to API fetch if kongctl fails
+      debug.warn('Failed to fetch regions with kongctl, falling back to API')
     }
   }
   return await fetchRegionsWithApi()
@@ -27,9 +29,8 @@ export async function fetchAvailableRegions(storageService?: PortalStorageServic
  */
 async function fetchRegionsWithKongctl(storageService?: PortalStorageService): Promise<string[]> {
   const args = [
-    'api',
     'get',
-    '"https://global.api.konghq.com/v3/available-regions"',
+    'regions',
     '--output',
     'json',
   ]
