@@ -10,7 +10,7 @@ vi.mock('vscode', () => ({
     getWorkspaceFolder: vi.fn(),
   },
   window: {
-    showErrorMessage: vi.fn(),
+    showWarningMessage: vi.fn(),
   },
 }))
 
@@ -123,7 +123,7 @@ describe('page-path', () => {
         })
       })
 
-      it('should return error for snippet in subdirectory', () => {
+      it('should show warning for snippet in subdirectory but still allow preview', () => {
         const workspaceFolder = createMockWorkspaceFolder({ name: 'workspace', fsPath: '/workspace' })
         const document = createMockTextDocument({
           fileName: 'nested.md',
@@ -135,12 +135,13 @@ describe('page-path', () => {
 
         const result = getDocumentPathInfo(document, '', 'snippets')
 
-        expect(vi.mocked(window.showErrorMessage)).toHaveBeenCalledWith(
+        expect(vi.mocked(window.showWarningMessage)).toHaveBeenCalledWith(
           'Snippets in subdirectories are not supported. Please move "nested.md" to the root of your snippets directory.',
         )
         expect(result).toEqual({
-          type: 'error',
-          errorMessage: 'Snippets in subdirectories are not supported. Please move "nested.md" to the root of your snippets directory.',
+          type: 'snippet',
+          path: '/_preview-mode/snippets/categorynested',
+          snippetName: 'categorynested',
         })
       })
     })

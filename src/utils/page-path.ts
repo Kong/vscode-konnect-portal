@@ -3,12 +3,12 @@ import { workspace, window } from 'vscode'
 import type { TextDocument } from 'vscode'
 import { debug } from './debug'
 
-/** Helper function to show error message with proper async handling */
-async function showErrorMessage(message: string): Promise<void> {
+/** Helper function to show warning message with proper async handling */
+async function showWarningMessage(message: string): Promise<void> {
   try {
-    await window.showErrorMessage(message)
+    await window.showWarningMessage(message)
   } catch (error) {
-    console.error('Failed to show error message:', error)
+    console.error('Failed to show warning message:', error)
   }
 }
 
@@ -207,15 +207,11 @@ export function getDocumentPathInfo(
   pagesDirectory: string,
   snippetsDirectory: string,
 ): DocumentPathInfo {
-  // First check if there's a snippets subdirectory error
-  const snippetError = checkSnippetSubdirectoryError(document, snippetsDirectory)
-  if (snippetError) {
-    // Show error message to user
-    showErrorMessage(snippetError)
-    return {
-      type: 'error',
-      errorMessage: snippetError,
-    }
+  // Check if there's a snippets subdirectory warning
+  const snippetWarning = checkSnippetSubdirectoryError(document, snippetsDirectory)
+  if (snippetWarning) {
+    // Show warning message to user but continue to load the preview
+    showWarningMessage(snippetWarning)
   }
 
   // Then check if it's a snippet
