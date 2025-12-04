@@ -242,23 +242,23 @@ suite('Page Path Resolution Tests', () => {
       const originalGetWorkspaceFolder = vscode.workspace.getWorkspaceFolder
       vscode.workspace.getWorkspaceFolder = () => mockWorkspaceFolder
 
-      // Mock showErrorMessage to capture the error
-      let errorMessage = ''
-      const originalShowErrorMessage = vscode.window.showErrorMessage
-      vscode.window.showErrorMessage = (message: string) => {
-        errorMessage = message
+      // Mock showWarningMessage to capture the warning
+      let warningMessage = ''
+      const originalShowWarningMessage = vscode.window.showWarningMessage
+      vscode.window.showWarningMessage = (message: string) => {
+        warningMessage = message
         return Promise.resolve(undefined)
       }
 
       try {
         const result = getDocumentPathInfo(document, pagesDirectory, snippetsDirectory)
 
-        assert.strictEqual(result.type, 'error', 'Should return error type for subdirectory snippets')
-        assert.ok(result.errorMessage?.includes('subdirectories are not supported'), 'Should have appropriate error message')
-        assert.ok(errorMessage.includes('subdirectories are not supported'), 'Should show error to user')
+        assert.strictEqual(result.type, 'snippet', 'Should return snippet type for subdirectory snippets')
+        assert.strictEqual(result.errorMessage, undefined, 'Should not have error message')
+        assert.ok(warningMessage.includes('subdirectories are not supported'), 'Should show warning to user')
       } finally {
         vscode.workspace.getWorkspaceFolder = originalGetWorkspaceFolder
-        vscode.window.showErrorMessage = originalShowErrorMessage
+        vscode.window.showWarningMessage = originalShowWarningMessage
       }
     })
   })
