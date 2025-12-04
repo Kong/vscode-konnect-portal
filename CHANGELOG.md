@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.6.0...v1.6.1) (2025-12-04)
+
+
+### Bug Fixes
+
+* show snippet warning ([819d8a5](https://github.com/Kong/vscode-konnect-portal/commit/819d8a5de240aca09fb48d34c47b0108c936f95f))
+
 # [1.6.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.5.0...v1.6.0) (2025-11-18)
 
 
