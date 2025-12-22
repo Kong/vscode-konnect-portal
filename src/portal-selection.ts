@@ -5,6 +5,7 @@ import { KonnectRequestService } from './konnect/request-service'
 import { ApiError } from './konnect/api'
 import type { PortalStorageService } from './storage'
 import { showApiError } from './utils/error-handling'
+import { debug } from './utils/debug'
 import { PORTAL_SELECTION_MESSAGES } from './constants/messages'
 
 /**
@@ -29,6 +30,76 @@ export class PortalSelectionService {
     this.requestService = new KonnectRequestService(storageService, context)
     this.storageService = storageService
     this.context = context
+  }
+
+  /**
+   * Validates the stored portal selection against the current list of available portals.
+   * Runs silently in the background - only shows UI if action is needed.
+   * Should always be called at session start.
+   *
+   * @returns The stored portal config if still valid, undefined if cleared/invalid
+   */
+  async validateStoredPortal(): Promise<StoredPortalConfig | undefined> {
+    debug.log('Validating stored portal selection on session start')
+
+    const storedPortal = await this.storageService.getSelectedPortal()
+
+    // No portal stored - nothing to validate
+    if (!storedPortal) {
+      debug.log('No stored portal to validate')
+      return undefined
+    }
+
+    debug.log('Found stored portal:', {
+      id: storedPortal.id,
+      displayName: storedPortal.displayName,
+    })
+
+    // Check if we have a token
+    const hasToken = await this.storageService.hasValidToken()
+    if (!hasToken) {
+      debug.log('No token available, skipping portal validation')
+      return storedPortal // Can't validate without token, let normal flow handle it
+    }
+
+    try {
+      // Fetch current list of portals (silently, no progress indicator)
+      debug.log('Fetching portal list to validate stored selection')
+      const portals = await this.requestService.fetchAllPortals()
+
+      // Check if stored portal exists in the list
+      const portalExists = portals.some(p => p.id === storedPortal.id)
+
+      if (portalExists) {
+        // Portal still valid, continue silently
+        debug.log('Stored portal validated successfully')
+        return storedPortal
+      } else {
+        // Portal no longer available, clear it and show warning
+        debug.log('Stored portal no longer available, clearing selection:', {
+          id: storedPortal.id,
+          displayName: storedPortal.displayName,
+          availablePortalCount: portals.length,
+        })
+        await this.storageService.clearSelectedPortal()
+        return undefined
+      }
+    } catch (error) {
+      // Handle 401 errors (bad token)
+      if (error instanceof ApiError && error.statusCode === 401) {
+        debug.log('Token expired during portal validation, clearing credentials')
+        await this.storageService.clearToken()
+        await this.storageService.clearSelectedPortal()
+        // Show error using existing pattern
+        await showApiError('Session expired', error, this.context)
+        return undefined
+      }
+
+      // For other errors (network issues, etc.), log but allow continuation
+      // The user can still work, and validation will retry on next session
+      debug.error('Failed to validate portal selection:', error)
+      return storedPortal
+    }
   }
 
   /**

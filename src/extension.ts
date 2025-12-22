@@ -141,6 +141,9 @@ export function activate(context: ExtensionContext) {
   storageService = new PortalStorageService(context)
   portalSelectionService = new PortalSelectionService(storageService, context)
 
+  // Validate stored portal on session start
+  portalSelectionService?.validateStoredPortal()
+
   // Register the preview provider
   previewProvider = new PreviewProvider(context, storageService)
 
