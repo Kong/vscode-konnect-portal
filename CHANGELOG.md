@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.6.1...v1.6.2) (2025-12-22)
+
+
+### Bug Fixes
+
+* validate portal on startup ([3711fe0](https://github.com/Kong/vscode-konnect-portal/commit/3711fe0ac11fe9337d2eceb52170a91b73af749b))
+
 ## [1.6.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.6.0...v1.6.1) (2025-12-04)
 
 
