@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/Kong/vscode-konnect-portal/compare/v1.6.2...v1.6.3) (2025-12-22)
+
+
+### Bug Fixes
+
+* publisher id ([e1a93d7](https://github.com/Kong/vscode-konnect-portal/commit/e1a93d7a649e7d7362e278ec31c096b21fd38b00))
+
 ## [1.6.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.6.1...v1.6.2) (2025-12-22)
 
 
