@@ -19,29 +19,9 @@ A VS Code extension that provides real-time preview functionality for MDC (Markd
 
 ## Features
 
-- **Real-time Preview**: Live preview updates as you type in MDC and Markdown files
+- **Real-time Preview**: Live Portal preview updates as you type in MDC and Markdown files
 - **Konnect Integration**: Token-based authentication with Kong Konnect allows you to interact securely with Konnect APIs
-
-## Recommended Extensions
-
-For the best experience with MDC (Markdown Components) files, we recommend installing the **MDC - Markdown Components** extension:
-
-- **Extension ID**: `Nuxt.mdc`
-- **Marketplace Link**: [MDC - Markdown Components](https://marketplace.visualstudio.com/items?itemName=Nuxt.mdc)
-
-This extension provides:
-
-- Enhanced editing experience and syntax highlighting for `.mdc` files
-- MDC support for component name and prop suggestions
-- Editor document code folding and formatting
-
-You can install it by:
-
-1. Opening the Extensions panel in VS Code (`Ctrl+Shift+X` or `Cmd+Shift+X`)
-2. Searching for "MDC" or using the extension ID `Nuxt.mdc`
-3. Clicking "Install"
-
-> **Note**: Portal Preview will work without the MDC extension, but you'll get a better authoring experience with it installed.
+- **kongctl CLI Integration**: Seamless integration with [`kongctl` CLI](https://github.com/Kong/kongctl) for enhanced portal management
 
 ## Installation
 
@@ -51,20 +31,6 @@ You can install it by:
 4. Select a Dev Portal from your Konnect account
 5. Open an MDC (`.mdc`) or Markdown (`.md`) file
 6. Use the "Open Portal Preview" command or click the preview icon
-
-## Configuration
-
-The extension provides several configuration options in VS Code settings. You can access these by going to **Settings** → Search for "Portal Preview":
-
-| Setting | Type | Default | Description | Example |
-|---------|------|---------|-------------|---------|
-| `kong.konnect.devPortal.autoOpenPreview` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
-| `kong.konnect.devPortal.previewUpdateDelay` | `number` | `500` | Delay in milliseconds before updating preview after content changes (500-3000) | Use `1000` for slower updates |
-| `kong.konnect.devPortal.readyTimeout` | `number` | `5000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
-| `kong.konnect.devPortal.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
-| `kong.konnect.devPortal.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
-| `kong.konnect.devPortal.pagesDirectory` | `string` | `"pages"` | Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Leave empty to disable path calculation. | `"pages"`, `"docs/pages"`, `"src/content/documentation"` |
-| `kong.konnect.devPortal.snippetsDirectory` | `string` | `"snippets"` | Directory relative to workspace root containing your snippets (.md/.mdc files). When set, snippet names will be extracted from filenames. Subdirectories are not supported. Leave empty to disable snippet detection. | `"snippets"`, `"docs/snippets"`, `"src/content/snippets"` |
 
 ## Setup and Usage
 
@@ -110,6 +76,41 @@ Once configured:
 1. Open an MDC (.mdc) or Markdown (.md) file
 2. Open the preview panel using any of the methods above
 3. Start editing your file - the preview will update automatically
+
+## Recommended Extensions
+
+For the best experience with MDC (Markdown Components) files, we recommend installing the **MDC - Markdown Components** extension:
+
+- **Extension ID**: `Nuxt.mdc`
+- **Marketplace Link**: [MDC - Markdown Components](https://marketplace.visualstudio.com/items?itemName=Nuxt.mdc)
+
+This extension provides:
+
+- Enhanced editing experience and syntax highlighting for `.mdc` files
+- MDC support for component name and prop suggestions
+- Editor document code folding and formatting
+
+You can install it by:
+
+1. Opening the Extensions panel in VS Code (`Ctrl+Shift+X` or `Cmd+Shift+X`)
+2. Searching for "MDC" or using the extension ID `Nuxt.mdc`
+3. Clicking "Install"
+
+> **Note**: Portal Preview will work without the MDC extension, but you'll get a better authoring experience with it installed.
+
+## Configuration
+
+The extension provides several configuration options in VS Code settings. You can access these by going to **Settings** → Search for "Portal Preview":
+
+| Setting | Type | Default | Description | Example |
+|---------|------|---------|-------------|---------|
+| `kong.konnect.devPortal.autoOpenPreview` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
+| `kong.konnect.devPortal.previewUpdateDelay` | `number` | `500` | Delay in milliseconds before updating preview after content changes (500-3000) | Use `1000` for slower updates |
+| `kong.konnect.devPortal.readyTimeout` | `number` | `5000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
+| `kong.konnect.devPortal.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
+| `kong.konnect.devPortal.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
+| `kong.konnect.devPortal.pagesDirectory` | `string` | `"pages"` | Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Leave empty to disable path calculation. | `"pages"`, `"docs/pages"`, `"src/content/documentation"` |
+| `kong.konnect.devPortal.snippetsDirectory` | `string` | `"snippets"` | Directory relative to workspace root containing your snippets (.md/.mdc files). When set, snippet names will be extracted from filenames. Subdirectories are not supported. Leave empty to disable snippet detection. | `"snippets"`, `"docs/snippets"`, `"src/content/snippets"` |
 
 ## Commands
 
@@ -250,7 +251,7 @@ pnpm watch
 The extension uses multiple build processes due to different runtime requirements:
 
 - **`pnpm build`** - Complete production build (runs all build steps automatically)
-- **`pnpm build:webview`** - Compiles `src/webview/webview.ts` → `src/webview/webview.js` (embedded in webview HTML)
+- **`pnpm build:webview`** - Compiles `src/webview/webview.ts` → `src/webview/webview.js` (No need to run manually, included in `build` script above)
 - **`pnpm build:extension-tests`** - Compiles extension test files to CommonJS format for VS Code test runner
 
 ### Testing
