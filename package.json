@@ -67,7 +67,7 @@
     "vite": "^7.1.12",
     "vitest": "^4.0.16"
   },
-  "publisher": "kong",
+  "publisher": "konghq",
   "repository": {
     "type": "git",
     "url": "https://github.com/Kong/vscode-konnect-portal.git"
