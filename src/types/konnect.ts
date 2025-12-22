@@ -58,11 +58,3 @@ export interface StoredPortalConfig {
   origin: string
   canonicalDomain: string
 }
-
-/**
- * API error response with optional trace ID
- */
-export interface KonnectAPIError extends Error {
-  status?: number
-  traceId?: string
-}

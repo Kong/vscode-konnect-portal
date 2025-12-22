@@ -92,7 +92,6 @@ export class KonnectRequestService {
     while (true) {
       const region = getKonnectRegion()
       const baseUrl = `https://${region}.api.konghq.com/v3/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
-      console.log('BASE_URL', baseUrl)
 
       const args = [
         'api',

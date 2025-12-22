@@ -4,6 +4,7 @@ import {
 } from 'vscode'
 import type { Terminal,
   Disposable } from 'vscode'
+import { debug } from './utils/debug'
 
 /** Global instance of the kongctl terminal for reuse */
 
@@ -26,12 +27,6 @@ function isTerminalClosed(term: Terminal | undefined): boolean {
     return true
   }
 }
-
-/**
- * Gets or creates the shared kongctl terminal instance
- * @param env Optional environment variables to set for the terminal
- * @returns The kongctl terminal instance
- */
 
 /**
  * Gets or creates the shared kongctl terminal instance.
