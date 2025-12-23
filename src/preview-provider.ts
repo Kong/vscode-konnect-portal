@@ -304,7 +304,6 @@ export class PreviewProvider implements Disposable {
     try {
       // Inject snippets first, then send current content
       await this.injectAllSnippets()
-      debug.log('Snippets injected, now sending current content for:', this.panelState.currentDocument.fileName)
 
       // Force update by clearing lastContent so sendContentUpdate doesn't skip
       this.panelState.lastContent = undefined
