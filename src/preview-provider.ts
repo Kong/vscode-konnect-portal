@@ -98,14 +98,15 @@ export class PreviewProvider implements Disposable {
 
     // Set current document before creating panel so it's available when webview loads
     this.panelState.currentDocument = document
-    this.panelState.isVisible = true
 
     if (this.panelState.panel) {
-      // Panel exists, just reveal it
+      // Panel exists, just reveal it and update
+      this.panelState.isVisible = true
       this.panelState.panel.reveal(ViewColumn.Beside)
       await this.updateContent(document)
     } else {
       // Create new panel
+      this.panelState.isVisible = true
       await this.createWebviewPanel(document, config, portalConfig)
     }
   }
@@ -433,6 +434,9 @@ export class PreviewProvider implements Disposable {
     )
 
     this.panelState.panel = panel
+
+    // Reveal the panel to ensure it's visible after creation
+    panel.reveal(ViewColumn.Beside, false)
 
     // Don't send initial content here - wait for webview:request:content
     // This ensures snippets are injected before the page content
