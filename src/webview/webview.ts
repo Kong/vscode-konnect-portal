@@ -169,11 +169,7 @@ function handleContentUpdate(message: any): void {
     action: PortalPreviewAction.UPDATE,
   }
   if (iframeReady) {
-    debug.log('Iframe is ready, sending message immediately to portal iframe', {
-      contentLength: portalMessage.content.length,
-      path: portalMessage.path,
-      snippetName: portalMessage.snippet_name,
-    })
+    debug.log('Iframe is ready, sending message immediately to portal iframe')
     sendMessageToIframe(portalMessage)
   } else {
     debug.log('Iframe not ready, storing as pending message', {
@@ -415,10 +411,7 @@ if (iframe) {
     startReadyTimeout()
     debug.log('Waiting for portal:preview:ready message from iframe...')
     // Notify extension that iframe has loaded (triggers snippet injection reset)
-    // Skip notification for about:blank to avoid unnecessary resets
-    if (currentUrl !== 'about:blank') {
-      vscode.postMessage({ type: 'webview:iframe:loaded' })
-    }
+    vscode.postMessage({ type: 'webview:iframe:loaded' })
   })
   iframe.addEventListener('error', function(event) {
     console.error('Iframe failed to load:', event)
