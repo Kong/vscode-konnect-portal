@@ -408,6 +408,11 @@ if (iframe) {
     clearReadyTimeout()
     startReadyTimeout()
     debug.log('Waiting for portal:preview:ready message from iframe...')
+    // Notify extension that iframe has loaded (triggers snippet injection reset)
+    // Skip notification for about:blank to avoid unnecessary resets
+    if (currentUrl !== 'about:blank') {
+      vscode.postMessage({ type: 'webview:iframe:loaded' })
+    }
   })
   iframe.addEventListener('error', function(event) {
     console.error('Iframe failed to load:', event)

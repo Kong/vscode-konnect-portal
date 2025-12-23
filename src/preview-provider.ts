@@ -48,6 +48,9 @@ export class PreviewProvider implements Disposable {
   /** Unique identifier for this preview instance */
   private previewId: string
 
+  /** Tracks whether snippets have been injected for the current iframe instance */
+  private snippetsInjected: boolean = false
+
   /**
    * Creates a new PreviewProvider instance
    * @param context VS Code extension context for accessing resources
@@ -93,6 +96,10 @@ export class PreviewProvider implements Disposable {
       return
     }
 
+    // Set current document before creating panel so it's available when webview loads
+    this.panelState.currentDocument = document
+    this.panelState.isVisible = true
+
     if (this.panelState.panel) {
       // Panel exists, just reveal it
       this.panelState.panel.reveal(ViewColumn.Beside)
@@ -101,9 +108,6 @@ export class PreviewProvider implements Disposable {
       // Create new panel
       await this.createWebviewPanel(document, config, portalConfig)
     }
-
-    this.panelState.currentDocument = document
-    this.panelState.isVisible = true
   }
 
   /** Checks if there is an active preview panel */
@@ -175,6 +179,9 @@ export class PreviewProvider implements Disposable {
       return
     }
 
+    // Reset snippets flag since refresh will reload the iframe
+    this.snippetsInjected = false
+
     const message: WebviewRefreshMessage = {
       type: 'webview:refresh',
       content,
@@ -193,6 +200,13 @@ export class PreviewProvider implements Disposable {
    */
   private async injectAllSnippets(): Promise<void> {
     debug.log('injectAllSnippets called')
+
+    // Only inject once per iframe instance
+    if (this.snippetsInjected) {
+      debug.log('Snippets already injected for this iframe instance, skipping')
+      return
+    }
+
     const config = getConfiguration()
 
     if (!config.snippetsDirectory || !this.panelState.panel) {
@@ -235,6 +249,7 @@ export class PreviewProvider implements Disposable {
       }
 
       debug.log('All snippets injected successfully')
+      this.snippetsInjected = true
     } catch (error) {
       debug.log('Error injecting snippets:', error)
     }
@@ -581,6 +596,11 @@ export class PreviewProvider implements Disposable {
             window.showWarningMessage(`Konnect Portal: ${message.warning}`)
           }
         }
+        break
+      case 'webview:iframe:loaded':
+        // Iframe has loaded/reloaded - reset snippets flag for re-injection
+        debug.log('Iframe loaded, resetting snippets injection flag')
+        this.snippetsInjected = false
         break
       case 'webview:request:content':
         // Portal is ready and requesting the current content
