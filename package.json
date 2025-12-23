@@ -6,12 +6,6 @@
   "icon": "images/icon.png",
   "license": "Apache-2.0",
   "type": "module",
-  "packageManager": "pnpm@10.18.3",
-  "engines": {
-    "node": ">=22.20.0",
-    "pnpm": ">=10.18.3",
-    "vscode": ">=1.105.0"
-  },
   "scripts": {
     "dev": "vite build --watch --mode development",
     "lint": "eslint",
@@ -31,6 +25,16 @@
     "vscode:prepublish": "pnpm run build",
     "semantic-release": "semantic-release",
     "commit": "cz"
+  },
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=22.20.0",
+    "pnpm": ">=10.18.3",
+    "vscode": ">=1.105.0"
+  },
+  "volta": {
+    "node": "22.20.0",
+    "pnpm": "10.18.3"
   },
   "dependencies": {
     "strip-ansi": "^7.1.2",

@@ -294,18 +294,20 @@ function handlePortalMessage(message: any): void {
     data: message,
   })
   if (message.action === PortalPreviewIncomingAction.READY) {
-    debug.log('Portal is ready! Sending current content...')
+    debug.log('Portal is ready!')
     clearReadyTimeout()
     iframeReady = true
     hideLoading()
+
     if (pendingMessage) {
       debug.log('Sending stored pending message:', pendingMessage)
       sendMessageToIframe(pendingMessage)
       pendingMessage = null
-    } else {
-      debug.log('No pending message, requesting current content from extension')
-      vscode.postMessage({ type: 'webview:request:content' })
     }
+
+    // Always request content from extension to inject snippets
+    debug.log('Requesting content from extension for snippet injection')
+    vscode.postMessage({ type: 'webview:request:content' })
   }
 }
 

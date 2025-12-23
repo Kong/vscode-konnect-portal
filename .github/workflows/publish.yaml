@@ -53,6 +53,9 @@ jobs:
         if: steps.semantic-release.outputs.new_release_published == 'true'
         run: pnpm package
 
+      # TODO: Use https://code.visualstudio.com/api/working-with-extensions/publishing-extension#autoincrement-the-extension-version
+      # to version and publish the extension
+
       # - name: Publish extension to marketplace
       #   if: steps.semantic.outputs.new_release_published == 'true'
       #   run: pnpm publish
