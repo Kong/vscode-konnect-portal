@@ -169,10 +169,16 @@ function handleContentUpdate(message: any): void {
     action: PortalPreviewAction.UPDATE,
   }
   if (iframeReady) {
-    debug.log('Iframe is ready, sending message immediately')
+    debug.log('Iframe is ready, sending message immediately to portal iframe', {
+      contentLength: portalMessage.content.length,
+      path: portalMessage.path,
+      snippetName: portalMessage.snippet_name,
+    })
     sendMessageToIframe(portalMessage)
   } else {
-    debug.log('Iframe not ready, storing as pending message')
+    debug.log('Iframe not ready, storing as pending message', {
+      contentLength: portalMessage.content.length,
+    })
     pendingMessage = portalMessage
   }
 }
@@ -305,8 +311,8 @@ function handlePortalMessage(message: any): void {
       pendingMessage = null
     }
 
-    // Always request content from extension to inject snippets
-    debug.log('Requesting content from extension for snippet injection')
+    // Always request content from extension to inject snippets and send latest page content
+    debug.log('Requesting content from extension for snippet injection and page content')
     vscode.postMessage({ type: 'webview:request:content' })
   }
 }

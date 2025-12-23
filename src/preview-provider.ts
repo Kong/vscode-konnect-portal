@@ -304,12 +304,13 @@ export class PreviewProvider implements Disposable {
     try {
       // Inject snippets first, then send current content
       await this.injectAllSnippets()
-      debug.log('Snippets injected, now sending current content')
+      debug.log('Snippets injected, now sending current content for:', this.panelState.currentDocument.fileName)
 
       // Force update by clearing lastContent so sendContentUpdate doesn't skip
       this.panelState.lastContent = undefined
 
       await this.sendContentUpdate(this.panelState.currentDocument, config)
+      debug.log('Content update sent successfully')
     } catch (error) {
       debug.log('Error in snippet injection:', error)
       // Still send current content even if snippets fail
@@ -438,8 +439,9 @@ export class PreviewProvider implements Disposable {
     // Reveal the panel to ensure it's visible after creation
     panel.reveal(ViewColumn.Beside, false)
 
-    // Don't send initial content here - wait for webview:request:content
-    // This ensures snippets are injected before the page content
+    // Send initial content - this will be stored as pendingMessage and sent when portal is ready
+    // When portal:preview:ready fires, webview will also request fresh content with snippets
+    await this.sendContentUpdate(document, config, true)
   }
 
   /** Handle timeout warning with action buttons */
