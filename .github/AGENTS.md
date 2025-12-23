@@ -40,7 +40,7 @@
 - Prefer single quotes for strings in TypeScript files, except when using template literals, and never use semi-colons.
 - All types and interfaces should have a TSDoc or JSDoc comment block describing their purpose
 - Whenever the build command is run as part of verifying changes, first always run the typecheck command.
-- Always prefer try/catch blocks for async/await operations instead of .then/.catch chaining.
+- Always require try/catch blocks for async/await operations instead of .then/.catch chaining.
 
 ### Error Handling
 - Use try/catch blocks for async operations
