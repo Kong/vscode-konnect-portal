@@ -102,7 +102,8 @@ export async function executeKongctl(
   if (showInTerminal) {
     try {
       terminal = getOrCreateKongctlTerminal(env)
-      terminal.show(true)
+      // Don't show terminal panel - let user open it manually if they want to see output
+      // terminal.show(true)
       const fullCommand = `kongctl ${args.join(' ')}`
       terminal.sendText(fullCommand, true)
     } catch {
