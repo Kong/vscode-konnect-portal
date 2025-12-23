@@ -66,12 +66,12 @@ export function generateWebviewHTML(
   try {
     const htmlPath = join(extensionPath, 'src', 'webview', 'webview.html')
     let htmlContent = readFileSync(htmlPath, 'utf8')
-    const iframeSrc = addPreviewParams('https://dev-portal.dehaven.org', previewId, path)
+    const iframeSrc = addPreviewParams(portalConfig.origin, previewId, path)
     // Replace template variables with actual values
     htmlContent = htmlContent.replace(/\{%%TEMPLATE_CSS_CONTENT%%\}/g, `<style>${cssContent}</style>`)
     htmlContent = htmlContent.replace(/\{%%TEMPLATE_JS_CONTENT%%\}/g, `<script>${jsContent}</script>`)
     htmlContent = htmlContent.replace(/\{%%TEMPLATE_IFRAME_SRC%%\}/g, iframeSrc)
-    htmlContent = htmlContent.replace(/\{%%TEMPLATE_PORTAL_ORIGIN%%\}/g, 'https://dev-portal.dehaven.org')
+    htmlContent = htmlContent.replace(/\{%%TEMPLATE_PORTAL_ORIGIN%%\}/g, portalConfig.origin)
     return htmlContent
   } catch (error) {
     debug.error('Failed to load webview HTML template:', error)
@@ -80,7 +80,7 @@ export function generateWebviewHTML(
      * if the external template file is missing or cannot be loaded. This fallback includes
      * the full loading and error overlays for a consistent user experience.
      */
-    const iframeSrc = addPreviewParams('https://dev-portal.dehaven.org', previewId, path)
+    const iframeSrc = addPreviewParams(portalConfig.origin, previewId, path)
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -102,7 +102,7 @@ export function generateWebviewHTML(
            <div class="loading-progress">
              <div class="loading-progress-bar"></div>
            </div>
-           <p class="loading-text">Connecting to ${'https://dev-portal.dehaven.org'}</p>
+           <p class="loading-text">Connecting to ${portalConfig.origin}</p>
          </div>
        </div>
        <div class="error-overlay hidden" id="error-overlay">
