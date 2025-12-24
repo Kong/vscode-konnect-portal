@@ -313,20 +313,13 @@ export class PreviewProvider implements Disposable {
       this.panelState.lastContent = undefined
 
       await this.sendContentUpdate(this.panelState.currentDocument, config)
-
-      // Hide loading overlay after snippets and content have been sent
-      const loadingMessage: WebviewLoadingMessage = {
-        type: 'webview:loading',
-        loading: false,
-      }
-      this.panelState.panel.webview.postMessage(loadingMessage)
     } catch (error) {
       debug.log('Error in sendCurrentContent:', error)
       // Still send current content even if snippets fail
       this.panelState.lastContent = undefined
       await this.sendContentUpdate(this.panelState.currentDocument, config)
-
-      // Hide loading even if there was an error
+    } finally {
+      // Hide loading state
       const loadingMessage: WebviewLoadingMessage = {
         type: 'webview:loading',
         loading: false,
