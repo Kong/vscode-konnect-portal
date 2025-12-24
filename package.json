@@ -280,6 +280,11 @@
             "src/snippets"
           ]
         },
+        "kong.konnect.devPortal.injectSnippets": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically inject all snippets from your snippets directory, if configured, into the portal preview so the local snippet content is available in page previews. Set to false to only load published snippets in the preview."
+        },
         "kong.konnect.region": {
           "type": "string",
           "default": "us",

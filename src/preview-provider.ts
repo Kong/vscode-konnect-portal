@@ -236,13 +236,19 @@ export class PreviewProvider implements Disposable {
   private async injectAllSnippets(): Promise<void> {
     debug.log('injectAllSnippets called')
 
+    const config = getConfiguration()
+
+    // Check if feature is enabled
+    if (!config.injectSnippets) {
+      debug.log('Snippet injection disabled by configuration')
+      return
+    }
+
     // Only inject once per iframe instance
     if (this.snippetsInjected) {
       debug.log('Snippets already injected for this iframe instance, skipping')
       return
     }
-
-    const config = getConfiguration()
 
     if (!config.snippetsDirectory || !this.panelState.panel) {
       debug.log('No snippets directory or panel available')

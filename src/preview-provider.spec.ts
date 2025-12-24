@@ -82,6 +82,7 @@ describe('PreviewProvider', () => {
     showMDCRecommendation: true,
     pagesDirectory: 'pages',
     snippetsDirectory: 'snippets',
+    injectSnippets: true,
   }
 
   const mockPortalConfig: StoredPortalConfig = {

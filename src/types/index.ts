@@ -40,6 +40,7 @@ export interface PortalPreviewConfig {
   showMDCRecommendation: boolean
   pagesDirectory: string
   snippetsDirectory: string
+  injectSnippets: boolean
 }
 
 /**
