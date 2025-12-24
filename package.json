@@ -6,12 +6,6 @@
   "icon": "images/icon.png",
   "license": "Apache-2.0",
   "type": "module",
-  "packageManager": "pnpm@10.18.3",
-  "engines": {
-    "node": ">=22.20.0",
-    "pnpm": ">=10.18.3",
-    "vscode": ">=1.105.0"
-  },
   "scripts": {
     "dev": "vite build --watch --mode development",
     "lint": "eslint",
@@ -31,6 +25,16 @@
     "vscode:prepublish": "pnpm run build",
     "semantic-release": "semantic-release",
     "commit": "cz"
+  },
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=22.20.0",
+    "pnpm": ">=10.18.3",
+    "vscode": ">=1.105.0"
+  },
+  "volta": {
+    "node": "22.20.0",
+    "pnpm": "10.18.3"
   },
   "dependencies": {
     "strip-ansi": "^7.1.2",
@@ -275,6 +279,11 @@
             "content/snippets",
             "src/snippets"
           ]
+        },
+        "kong.konnect.devPortal.injectSnippets": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically inject all snippets from your snippets directory, if configured, into the portal preview so the local snippet content is available in page previews. Set to false to only load published snippets in the preview."
         },
         "kong.konnect.region": {
           "type": "string",

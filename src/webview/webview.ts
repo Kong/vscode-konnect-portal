@@ -169,10 +169,12 @@ function handleContentUpdate(message: any): void {
     action: PortalPreviewAction.UPDATE,
   }
   if (iframeReady) {
-    debug.log('Iframe is ready, sending message immediately')
+    debug.log('Iframe is ready, sending message immediately to portal iframe')
     sendMessageToIframe(portalMessage)
   } else {
-    debug.log('Iframe not ready, storing as pending message')
+    debug.log('Iframe not ready, storing as pending message', {
+      contentLength: portalMessage.content.length,
+    })
     pendingMessage = portalMessage
   }
 }
@@ -294,18 +296,20 @@ function handlePortalMessage(message: any): void {
     data: message,
   })
   if (message.action === PortalPreviewIncomingAction.READY) {
-    debug.log('Portal is ready! Sending current content...')
+    debug.log('Portal is ready!')
     clearReadyTimeout()
     iframeReady = true
-    hideLoading()
+    // Don't hide loading yet - wait for extension to finish snippet injection and content update
+
     if (pendingMessage) {
       debug.log('Sending stored pending message:', pendingMessage)
       sendMessageToIframe(pendingMessage)
       pendingMessage = null
-    } else {
-      debug.log('No pending message, requesting current content from extension')
-      vscode.postMessage({ type: 'webview:request:content' })
     }
+
+    // Always request content from extension to inject snippets and send latest page content
+    debug.log('Requesting content from extension for snippet injection and page content')
+    vscode.postMessage({ type: 'webview:request:content' })
   }
 }
 
@@ -406,6 +410,8 @@ if (iframe) {
     clearReadyTimeout()
     startReadyTimeout()
     debug.log('Waiting for portal:preview:ready message from iframe...')
+    // Notify extension that iframe has loaded (triggers snippet injection reset)
+    vscode.postMessage({ type: 'webview:iframe:loaded' })
   })
   iframe.addEventListener('error', function(event) {
     console.error('Iframe failed to load:', event)

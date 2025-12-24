@@ -40,6 +40,7 @@ export interface PortalPreviewConfig {
   showMDCRecommendation: boolean
   pagesDirectory: string
   snippetsDirectory: string
+  injectSnippets: boolean
 }
 
 /**
@@ -131,6 +132,13 @@ export interface WebviewRequestContentMessage extends BaseWebviewMessage {
 }
 
 /**
+ * Message to notify extension that iframe has loaded/reloaded
+ */
+export interface WebviewIframeLoadedMessage extends BaseWebviewMessage {
+  type: 'webview:iframe:loaded'
+}
+
+/**
  * Discriminated union of all webview message types
  */
 export type WebviewMessage =
@@ -142,6 +150,7 @@ export type WebviewMessage =
   | WebviewErrorMessage
   | WebviewWarningMessage
   | WebviewRequestContentMessage
+  | WebviewIframeLoadedMessage
 
 /**
  * Preview panel state
