@@ -493,24 +493,20 @@ describe('PreviewProvider', () => {
 
   describe('updateConfiguration', () => {
     it('should do nothing when no panel exists', async () => {
-      await previewProvider.updateConfiguration(mockConfig)
+      await previewProvider.updateConfiguration()
 
       expect(debug.log).not.toHaveBeenCalled()
     })
 
-    it('should regenerate webview when portal configuration is available', async () => {
+    it('should dispose panel when configuration changes', async () => {
       await previewProvider.openPreview(mockDocument)
+      const panel = (previewProvider as any).panelState.panel
       vi.clearAllMocks()
 
-      await previewProvider.updateConfiguration(mockConfig)
+      await previewProvider.updateConfiguration()
 
-      expect(debug.log).toHaveBeenCalledWith('Updating webview configuration:', {
-        hasPortal: true,
-        portalName: 'Test Portal',
-      })
-      expect(debug.log).toHaveBeenCalledWith(
-        'Portal configuration available, regenerating webview content',
-      )
+      expect(debug.log).toHaveBeenCalledWith('Configuration changed, closing preview panel')
+      expect(panel.dispose).toHaveBeenCalled()
     })
   })
 

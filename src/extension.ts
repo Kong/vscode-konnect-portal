@@ -297,8 +297,7 @@ export function activate(context: ExtensionContext) {
               })
 
               // Update the webview configuration to use the new portal
-              const config = getConfiguration()
-              await previewProvider.updateConfiguration(config)
+              await previewProvider.updateConfiguration()
             }
           } else {
             // No active preview, check if there's an active document that can be previewed
@@ -428,7 +427,7 @@ export function activate(context: ExtensionContext) {
         if (event.affectsConfiguration(CONFIG_SECTION)) {
           const config = getConfiguration()
           debug.log('Portal Preview configuration changed:', config)
-          await previewProvider?.updateConfiguration(config)
+          await previewProvider?.updateConfiguration()
         }
 
         // Update kongctl context if kongctl configuration changed

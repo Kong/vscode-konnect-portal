@@ -354,41 +354,16 @@ export class PreviewProvider implements Disposable {
     }, config.previewUpdateDelay)
   }
 
-  /** Updates the configuration in the webview */
-  public async updateConfiguration(config: PortalPreviewConfig): Promise<void> {
+  /** Updates the configuration by closing the preview panel (user can reopen to apply changes) */
+  public async updateConfiguration(): Promise<void> {
     if (!this.panelState.panel) {
       return
     }
 
-    // Check if we have a portal configured
-    const portalConfig = await this.storageService.getSelectedPortal()
-
-    debug.log('Updating webview configuration:', {
-      hasPortal: !!portalConfig,
-      portalName: portalConfig?.displayName || 'none',
-    })
-
-    // If portal configuration changed, regenerate the entire webview
-    if (portalConfig) {
-      debug.log('Portal configuration available, regenerating webview content')
-
-      // Clear cached content state since we're regenerating the webview
-      this.panelState.lastContent = undefined
-
-      // Regenerate the entire webview HTML with new portal config
-      this.panelState.panel.webview.html = this.getWebviewContent(config, portalConfig, this.panelState.currentDocument)
-
-      // If we have a current document, send the content
-      if (this.panelState.currentDocument) {
-        // Add a small delay to ensure the webview is ready
-        setTimeout(() => {
-          this.sendContentUpdate(this.panelState.currentDocument!, config, true)
-        }, 100)
-      }
-    } else {
-      // No portal configured, show message to user
-      debug.log('No portal configuration available')
-    }
+    debug.log('Configuration changed, closing preview panel')
+    // Dispose the panel - user can reopen it to see changes take effect
+    // The onDidDispose handler will clean up all state properly
+    this.panelState.panel.dispose()
   }
 
   /** Creates a new webview panel */
