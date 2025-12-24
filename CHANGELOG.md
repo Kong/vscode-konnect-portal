@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.6.3...v1.7.0) (2025-12-24)
+
+
+### Features
+
+* **snippets:** inject all snippets for display ([#41](https://github.com/Kong/vscode-konnect-portal/issues/41)) ([c3a30df](https://github.com/Kong/vscode-konnect-portal/commit/c3a30df3a8f2148ad82868c76f49ba8a960068db))
+
 ## [1.6.3](https://github.com/Kong/vscode-konnect-portal/compare/v1.6.2...v1.6.3) (2025-12-22)
 
 
