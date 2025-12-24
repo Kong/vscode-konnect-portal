@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.0...v1.7.1) (2025-12-24)
+
+
+### Bug Fixes
+
+* no need to delay snippet injection ([ed65bbb](https://github.com/Kong/vscode-konnect-portal/commit/ed65bbb2db1ee19c0cfc08fee9fa50ddc2a9bbec))
+
 # [1.7.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.6.3...v1.7.0) (2025-12-24)
 
 
