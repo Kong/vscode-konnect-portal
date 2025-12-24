@@ -619,6 +619,11 @@ export class PreviewProvider implements Disposable {
           }
         }
         break
+      case 'webview:iframe:loaded':
+        // Iframe has loaded/reloaded - reset snippets flag for re-injection
+        debug.log('Iframe loaded, resetting snippets injection flag')
+        this.snippetsInjected = false
+        break
       case 'webview:request:content':
         // Portal is ready and requesting the current content
         this.sendCurrentContent().catch((error) => {
