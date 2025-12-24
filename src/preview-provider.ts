@@ -284,9 +284,6 @@ export class PreviewProvider implements Disposable {
         }
 
         this.panelState.panel.webview.postMessage(message)
-
-        // Small delay to allow iframe to process
-        await new Promise(resolve => setTimeout(resolve, 10))
       }
 
       debug.log('All snippets injected successfully')
