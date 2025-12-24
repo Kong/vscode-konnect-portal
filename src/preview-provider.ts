@@ -96,19 +96,17 @@ export class PreviewProvider implements Disposable {
       return
     }
 
-    // Set current document before creating panel so it's available when webview loads
-    this.panelState.currentDocument = document
-
     if (this.panelState.panel) {
-      // Panel exists, just reveal it and update
-      this.panelState.isVisible = true
+      // Panel exists, just reveal it
       this.panelState.panel.reveal(ViewColumn.Beside)
       await this.updateContent(document)
     } else {
       // Create new panel
-      this.panelState.isVisible = true
       await this.createWebviewPanel(document, config, portalConfig)
     }
+
+    this.panelState.currentDocument = document
+    this.panelState.isVisible = true
   }
 
   /** Checks if there is an active preview panel */
@@ -196,6 +194,42 @@ export class PreviewProvider implements Disposable {
   }
 
   /**
+   * Recursively reads all .md and .mdc files from a directory
+   */
+  private async readAllSnippets(dirPath: string): Promise<Array<{ name: string, content: string }>> {
+    const snippets: Array<{ name: string, content: string }> = []
+
+    const readDir = async (path: string) => {
+      try {
+        const entries = await workspace.fs.readDirectory(Uri.file(path))
+
+        for (const [name, type] of entries) {
+          const fullPath = join(path, name)
+
+          if (type === 2) {
+            // Directory - recurse
+            await readDir(fullPath)
+          } else if (type === 1 && /\.(md|mdc)$/i.test(name)) {
+            // File - read it
+            const content = await workspace.fs.readFile(Uri.file(fullPath))
+            const text = Buffer.from(content).toString('utf8').trim()
+            const snippetName = name.replace(/\.(md|mdc)$/i, '').replace(/[^\w-]/g, '')
+
+            if (snippetName && text) {
+              snippets.push({ name: snippetName, content: text })
+            }
+          }
+        }
+      } catch {
+        // Ignore errors for individual directories
+      }
+    }
+
+    await readDir(dirPath)
+    return snippets
+  }
+
+  /**
    * Injects all snippets from snippets directory into the iframe with delays between each
    * Called once when iframe becomes ready
    */
@@ -256,42 +290,6 @@ export class PreviewProvider implements Disposable {
     }
   }
 
-  /**
-   * Recursively reads all .md and .mdc files from a directory
-   */
-  private async readAllSnippets(dirPath: string): Promise<Array<{ name: string, content: string }>> {
-    const snippets: Array<{ name: string, content: string }> = []
-
-    const readDir = async (path: string) => {
-      try {
-        const entries = await workspace.fs.readDirectory(Uri.file(path))
-
-        for (const [name, type] of entries) {
-          const fullPath = join(path, name)
-
-          if (type === 2) {
-            // Directory - recurse
-            await readDir(fullPath)
-          } else if (type === 1 && /\.(md|mdc)$/i.test(name)) {
-            // File - read it
-            const content = await workspace.fs.readFile(Uri.file(fullPath))
-            const text = Buffer.from(content).toString('utf8').trim()
-            const snippetName = name.replace(/\.(md|mdc)$/i, '').replace(/[^\w-]/g, '')
-
-            if (snippetName && text) {
-              snippets.push({ name: snippetName, content: text })
-            }
-          }
-        }
-      } catch {
-        // Ignore errors for individual directories
-      }
-    }
-
-    await readDir(dirPath)
-    return snippets
-  }
-
   /** Sends the current document content to the webview */
   private async sendCurrentContent(): Promise<void> {
     if (!this.panelState.panel || !this.panelState.currentDocument) {
@@ -309,12 +307,25 @@ export class PreviewProvider implements Disposable {
       this.panelState.lastContent = undefined
 
       await this.sendContentUpdate(this.panelState.currentDocument, config)
-      debug.log('Content update sent successfully')
+
+      // Hide loading overlay after snippets and content have been sent
+      const loadingMessage: WebviewLoadingMessage = {
+        type: 'webview:loading',
+        loading: false,
+      }
+      this.panelState.panel.webview.postMessage(loadingMessage)
     } catch (error) {
-      debug.log('Error in snippet injection:', error)
+      debug.log('Error in sendCurrentContent:', error)
       // Still send current content even if snippets fail
       this.panelState.lastContent = undefined
       await this.sendContentUpdate(this.panelState.currentDocument, config)
+
+      // Hide loading even if there was an error
+      const loadingMessage: WebviewLoadingMessage = {
+        type: 'webview:loading',
+        loading: false,
+      }
+      this.panelState.panel.webview.postMessage(loadingMessage)
     }
   }
 
@@ -405,6 +416,9 @@ export class PreviewProvider implements Disposable {
       this.panelState.panel = undefined
       this.panelState.isVisible = false
       this.panelState.currentDocument = undefined
+      this.panelState.lastContent = undefined
+      // Reset snippets flag so they'll be injected when panel is reopened
+      this.snippetsInjected = false
       // Update VS Code context to reflect that preview is no longer active
       updatePreviewContext(false)
     }, null, this.disposables)
@@ -435,12 +449,15 @@ export class PreviewProvider implements Disposable {
 
     this.panelState.panel = panel
 
-    // Reveal the panel to ensure it's visible after creation
-    panel.reveal(ViewColumn.Beside, false)
+    // Send initial content
+    this.sendInitialContent(document, config)
+  }
 
-    // Send initial content - this will be stored as pendingMessage and sent when portal is ready
-    // When portal:preview:ready fires, webview will also request fresh content with snippets
-    await this.sendContentUpdate(document, config, true)
+  /** Send initial content with proper error handling */
+  private sendInitialContent(document: TextDocument, config: PortalPreviewConfig): void {
+    this.sendContentUpdate(document, config, true).catch((error) => {
+      console.error('Failed to send initial content:', error)
+    })
   }
 
   /** Handle timeout warning with action buttons */
@@ -601,11 +618,6 @@ export class PreviewProvider implements Disposable {
             window.showWarningMessage(`Konnect Portal: ${message.warning}`)
           }
         }
-        break
-      case 'webview:iframe:loaded':
-        // Iframe has loaded/reloaded - reset snippets flag for re-injection
-        debug.log('Iframe loaded, resetting snippets injection flag')
-        this.snippetsInjected = false
         break
       case 'webview:request:content':
         // Portal is ready and requesting the current content

@@ -299,7 +299,7 @@ function handlePortalMessage(message: any): void {
     debug.log('Portal is ready!')
     clearReadyTimeout()
     iframeReady = true
-    hideLoading()
+    // Don't hide loading yet - wait for extension to finish snippet injection and content update
 
     if (pendingMessage) {
       debug.log('Sending stored pending message:', pendingMessage)
