@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.9](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.8...v1.7.9) (2026-01-05)
+
+
+### Bug Fixes
+
+* remove repo ([4ddbf35](https://github.com/Kong/vscode-konnect-portal/commit/4ddbf35aad425ef1642fd51e2758616ec8a7f0e0))
+
 ## [1.7.8](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.7...v1.7.8) (2026-01-05)
 
 
