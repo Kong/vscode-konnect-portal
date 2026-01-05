@@ -21,9 +21,9 @@
     "build:extension-tests": "vite build --config vite.config.extension-tests.ts",
     "build-and-test-extension": "pnpm build && pnpm test:extension",
     "package": "vsce package",
-    "publish": "vsce publish",
+    "release": "FORCE_COLOR=1 commit-and-tag-version --config ./.versionrc.json --skip.tag --skip.commit",
+    "publish": "vsce publish --access public --pre-release",
     "vscode:prepublish": "pnpm run build",
-    "semantic-release": "semantic-release",
     "commit": "cz"
   },
   "packageManager": "pnpm@10.18.3",
@@ -47,8 +47,6 @@
     "@digitalroute/cz-conventional-changelog-for-jira": "^8.0.1",
     "@evilmartians/lefthook": "^2.0.12",
     "@kong/eslint-config-kong-ui": "^1.6.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
     "@stylistic/stylelint-plugin": "^4.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "~24.8.1",
@@ -60,13 +58,13 @@
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.6.2",
+    "commit-and-tag-version": "^12.6.1",
     "commitizen": "^4.3.1",
     "eslint": "^9.38.0",
     "glob": "^11.1.0",
     "jsdom": "^27.1.0",
     "mocha": "^11.7.5",
     "rimraf": "^6.0.1",
-    "semantic-release": "^25.0.2",
     "typescript": "^5.9.3",
     "vite": "^7.1.12",
     "vitest": "^4.0.16"
@@ -314,47 +312,5 @@
       "jiraPrepend": "[",
       "jiraAppend": "]"
     }
-  },
-  "release": {
-    "branches": [
-      "+([0-9])?(.{+([0-9]),x}).x",
-      "main",
-      "next",
-      "next-major",
-      {
-        "name": "beta",
-        "prerelease": true
-      },
-      {
-        "name": "alpha",
-        "prerelease": true
-      }
-    ],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      [
-        "@semantic-release/changelog",
-        {
-          "changelogFile": "CHANGELOG.md"
-        }
-      ],
-      [
-        "@semantic-release/npm",
-        {
-          "npmPublish": false
-        }
-      ],
-      [
-        "@semantic-release/git",
-        {
-          "assets": [
-            "CHANGELOG.md",
-            "package.json"
-          ]
-        }
-      ],
-      "@semantic-release/github"
-    ]
   }
 }
