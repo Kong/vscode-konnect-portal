@@ -87,6 +87,5 @@ jobs:
 
           # Create GitHub Release using the generated tag and changelog
           gh release create "v${{ steps.version.outputs.version }}" \
-            --repo kong-ui/vscode-konnect-portal \
             --title "v${{ steps.version.outputs.version }}" \
             --notes-from-tag "v${{ steps.version.outputs.version }}"
