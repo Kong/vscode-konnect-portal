@@ -60,7 +60,7 @@ jobs:
           git pull --rebase origin main
 
           # Push changes to main branch
-          git push origin main
+          git push origin main --follow-tags
 
       - name: Build extension package
         # TODO: Eventually remove --pre-release flag when ready for stable releases
