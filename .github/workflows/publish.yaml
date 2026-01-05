@@ -85,6 +85,9 @@ jobs:
           # Pull in latest main branch changes
           git fetch --tags
 
+          # Confirm tag exists
+          git tag -l "v${{ steps.version.outputs.version }}"
+
           # Create GitHub Release using the generated tag and changelog
           gh release create "v${{ steps.version.outputs.version }}" \
             --title "v${{ steps.version.outputs.version }}" \
