@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.6](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.1...v1.7.6) (2026-01-05)
+
+
+### Bug Fixes
+
+* command ([b7ec011](https://github.com/Kong/vscode-konnect-portal/commit/b7ec011e6f0c472ffdbbd783027353379e1f75ae))
+* create github release from tag ([4ce733e](https://github.com/Kong/vscode-konnect-portal/commit/4ce733e8a35822b6d9c3da3748b0eeb34668a263))
+* publish flags ([0653363](https://github.com/Kong/vscode-konnect-portal/commit/065336391f0a58042c4a515e921fca848bbf970c))
+* **publish:** remove invalid flag ([5dafb0a](https://github.com/Kong/vscode-konnect-portal/commit/5dafb0a85d954531228fc6cf09807fb42926e817))
+* **publish:** set up publish pipeline ([#47](https://github.com/Kong/vscode-konnect-portal/issues/47)) ([0d90adc](https://github.com/Kong/vscode-konnect-portal/commit/0d90adc3bc281eadebb37071c887c89fb0308ff7))
+* release ([a5cae1e](https://github.com/Kong/vscode-konnect-portal/commit/a5cae1e64886580bc499ca4f209bc7490d6ec5c0))
+
 ## [1.7.5](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.1...v1.7.5) (2026-01-05)
 
 
