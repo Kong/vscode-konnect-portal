@@ -21,7 +21,7 @@
     "build:extension-tests": "vite build --config vite.config.extension-tests.ts",
     "build-and-test-extension": "pnpm build && pnpm test:extension",
     "package": "vsce package",
-    "release": "FORCE_COLOR=1 commit-and-tag-version --config ./.versionrc.json --skip.tag --skip.commit",
+    "release": "FORCE_COLOR=1 commit-and-tag-version --config ./.versionrc.json",
     "publish": "vsce publish --access public --pre-release",
     "vscode:prepublish": "pnpm run build",
     "commit": "cz"

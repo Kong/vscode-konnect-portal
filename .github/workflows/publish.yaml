@@ -48,7 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
         run: |
-          # Version the extension, update the CHANGELOG.md, but skip adding the git tag (this will be done in the `publish` step)
+          # Version the extension, update the CHANGELOG.md, and create the git tag
           pnpm release
 
           # Extract version from package.json and set as step output
@@ -74,4 +74,4 @@ jobs:
           pnpm vsce publish ${{ steps.version.outputs.version }} \
             --access public \
             --pre-release \
-            -m "chore(release): publish extension version ${{ steps.version.outputs.version }} [skip ci]"
+            --no-git-tag-version
