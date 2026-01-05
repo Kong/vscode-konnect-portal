@@ -57,7 +57,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
           # Pull in latest main branch changes
-          git pull --rebase origin main
+          git pull --rebase --tags origin main
 
           # Push changes to main branch
           git push origin main --follow-tags
@@ -82,6 +82,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
         run: |
+          # Pull in latest main branch changes
+          git pull --rebase --tags origin main
+
+          # Create GitHub Release using the generated tag and changelog
           gh release create "v${{ steps.version.outputs.version }}" \
             --repo kong-ui/vscode-konnect-portal \
             --title "v${{ steps.version.outputs.version }}" \
