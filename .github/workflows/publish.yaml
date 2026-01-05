@@ -72,6 +72,6 @@ jobs:
         # TODO: Eventually remove --pre-release flag when ready for stable releases
         run: |
           pnpm vsce publish ${{ steps.version.outputs.version }} \
-            --access public \
             --pre-release \
+            --no-update-package-json \
             --no-git-tag-version
