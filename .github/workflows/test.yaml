@@ -39,7 +39,8 @@ jobs:
 
       # We build and package here to ensure the build process works before merging to main
       - name: Build and package extension
-        run: pnpm package
+        # TODO: Eventually remove --pre-release flag when ready for stable releases
+        run: pnpm vsce package --pre-release
 
       - name: Extension tests
         # Command must be run with xvfb-run to provide a virtual framebuffer for VS Code UI tests
