@@ -76,3 +76,13 @@ jobs:
             --pre-release \
             --no-update-package-json \
             --no-git-tag-version
+
+      - name: Create GitHub Release
+        if: ${{ steps.version.outputs.version != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --repo kong-ui/vscode-konnect-portal \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes-from-tag "v${{ steps.version.outputs.version }}"
