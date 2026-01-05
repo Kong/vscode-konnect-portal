@@ -64,7 +64,7 @@ jobs:
 
       - name: Build extension package
         # TODO: Eventually remove --pre-release flag when ready for stable releases
-        run: pnpm package --pre-release
+        run: pnpm vsce package --pre-release
 
       - name: Publish extension to marketplace
         if: ${{ steps.version.outputs.version != '' }}
