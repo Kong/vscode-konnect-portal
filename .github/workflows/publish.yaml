@@ -83,7 +83,7 @@ jobs:
           GH_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
         run: |
           # Pull in latest main branch changes
-          git pull --rebase --tags origin main
+          git fetch --tags
 
           # Create GitHub Release using the generated tag and changelog
           gh release create "v${{ steps.version.outputs.version }}" \
