@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.12](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.11...v1.7.12) (2026-01-06)
+
 ## [1.7.11](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.10...v1.7.11) (2026-01-05)
 
 
