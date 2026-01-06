@@ -1,0 +1,9 @@
+{
+  "bumpFiles": [
+    {
+      "filename": "./package.json",
+      "type": "json"
+    }
+  ],
+  "releaseCommitMessageFormat": "chore(release): bump extension version [skip ci]"
+}

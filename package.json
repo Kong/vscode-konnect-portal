@@ -1,6 +1,6 @@
 {
   "name": "vscode-konnect-dev-portal-toolkit",
-  "version": "1.7.1",
+  "version": "1.7.11",
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
   "icon": "images/icon.png",
@@ -20,10 +20,8 @@
     "build:webview": "rimraf src/webview/webview.js && tsc --project tsconfig.webview.json",
     "build:extension-tests": "vite build --config vite.config.extension-tests.ts",
     "build-and-test-extension": "pnpm build && pnpm test:extension",
-    "package": "vsce package",
-    "publish": "vsce publish",
+    "release": "FORCE_COLOR=1 commit-and-tag-version --config ./.versionrc.json",
     "vscode:prepublish": "pnpm run build",
-    "semantic-release": "semantic-release",
     "commit": "cz"
   },
   "packageManager": "pnpm@10.27.0",
@@ -33,7 +31,7 @@
     "vscode": ">=1.105.0 <2.0.0"
   },
   "volta": {
-    "node": "22.21.1",
+    "node": "24.12.0",
     "pnpm": "10.27.0"
   },
   "dependencies": {
@@ -45,10 +43,8 @@
     "@commitlint/cli": "^20.3.0",
     "@commitlint/config-conventional": "^20.3.0",
     "@digitalroute/cz-conventional-changelog-for-jira": "^8.0.1",
-    "@evilmartians/lefthook": "^2.0.12",
+    "@evilmartians/lefthook": "^2.0.13",
     "@kong/eslint-config-kong-ui": "^1.6.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
     "@stylistic/stylelint-plugin": "^4.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "~24.10.4",
@@ -60,13 +56,13 @@
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
+    "commit-and-tag-version": "^12.6.1",
     "commitizen": "^4.3.1",
     "eslint": "^9.39.2",
-    "glob": "^11.1.0",
+    "glob": "^13.0.0",
     "jsdom": "^27.4.0",
     "mocha": "^11.7.5",
     "rimraf": "^6.1.2",
-    "semantic-release": "^25.0.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.0",
     "vitest": "^4.0.16"
@@ -314,47 +310,5 @@
       "jiraPrepend": "[",
       "jiraAppend": "]"
     }
-  },
-  "release": {
-    "branches": [
-      "+([0-9])?(.{+([0-9]),x}).x",
-      "main",
-      "next",
-      "next-major",
-      {
-        "name": "beta",
-        "prerelease": true
-      },
-      {
-        "name": "alpha",
-        "prerelease": true
-      }
-    ],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      [
-        "@semantic-release/changelog",
-        {
-          "changelogFile": "CHANGELOG.md"
-        }
-      ],
-      [
-        "@semantic-release/npm",
-        {
-          "npmPublish": false
-        }
-      ],
-      [
-        "@semantic-release/git",
-        {
-          "assets": [
-            "CHANGELOG.md",
-            "package.json"
-          ]
-        }
-      ],
-      "@semantic-release/github"
-    ]
   }
 }

@@ -37,25 +37,58 @@ jobs:
       - name: Setup PNPM with Dependencies
         uses: ./.github/actions/setup-pnpm-with-dependencies/
 
-      - name: Configure Git
+      - name: Set up git user
         run: |
+          git config user.name 'kong-ui[bot]'
           git config user.email "konnectx-engineers+kongponents-bot@konghq.com"
-          git config user.name "Kong UI Bot"
 
-      - name: Version the package and generate changelog with semantic-release
-        id: semantic-release
-        uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
+      - name: Version the extension and generate changelog
+        id: version
+        shell: bash
         env:
-          # Since branch protections are on (pushing commits) you need to use a bot PAT
-          GITHUB_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
+          GH_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
+        run: |
+          # Version the extension, update the CHANGELOG.md, and create the git tag
+          pnpm release
+
+          # Extract version from package.json and set as step output
+          VERSION=$(jq -r '.version' package.json)
+          echo "New version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Pull in latest main branch changes
+          git pull --rebase --tags origin main
+
+          # Push changes to main branch
+          git push origin main --follow-tags
 
       - name: Build extension package
-        if: steps.semantic-release.outputs.new_release_published == 'true'
-        run: pnpm package
+        # TODO: Eventually remove --pre-release flag when ready for stable releases
+        run: pnpm vsce package --pre-release
 
-      # TODO: Use https://code.visualstudio.com/api/working-with-extensions/publishing-extension#autoincrement-the-extension-version
-      # to version and publish the extension
+      - name: Publish extension to marketplace
+        if: ${{ steps.version.outputs.version != '' }}
+        env:
+          VSCE_PAT: ${{ secrets.AZURE_DEVOPS_MARKETPLACE_PUBLISH_TOKEN }}
+        # TODO: Eventually remove --pre-release flag when ready for stable releases
+        run: |
+          pnpm vsce publish ${{ steps.version.outputs.version }} \
+            --pre-release \
+            --no-update-package-json \
+            --no-git-tag-version
 
-      # - name: Publish extension to marketplace
-      #   if: steps.semantic.outputs.new_release_published == 'true'
-      #   run: pnpm publish
+      - name: Create GitHub Release
+        if: ${{ steps.version.outputs.version != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.KONGPONENTS_BOT_PAT }}
+        run: |
+          # Pull in latest main branch changes
+          git fetch --tags
+
+          # Confirm tag exists
+          git tag -l "v${{ steps.version.outputs.version }}"
+
+          # Create GitHub Release using the generated tag and changelog
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes-from-tag
