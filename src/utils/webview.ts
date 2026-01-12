@@ -1,8 +1,11 @@
-import { join } from 'path'
-import { readFileSync } from 'fs'
 import type { PortalPreviewConfig } from '../types'
 import type { StoredPortalConfig } from '../types/konnect'
 import { debug } from './debug'
+
+// Bundle webview resources at build time
+import htmlTemplate from '../webview/webview.html?raw'
+import cssTemplate from '../webview/webview.css?raw'
+import jsTemplate from '../webview/webview.js?raw'
 
 /**
  * Adds the preview=true and preview_id query parameters to a URL, and optionally includes a path
@@ -64,8 +67,8 @@ export function generateWebviewHTML(
   path = '',
 ): string {
   try {
-    const htmlPath = join(extensionPath, 'src', 'webview', 'webview.html')
-    let htmlContent = readFileSync(htmlPath, 'utf8')
+    // Use bundled HTML template (no file I/O needed)
+    let htmlContent = htmlTemplate
     const iframeSrc = addPreviewParams(portalConfig.origin, previewId, path)
     // Replace template variables with actual values
     htmlContent = htmlContent.replace(/\{%%TEMPLATE_CSS_CONTENT%%\}/g, `<style>${cssContent}</style>`)
@@ -74,7 +77,7 @@ export function generateWebviewHTML(
     htmlContent = htmlContent.replace(/\{%%TEMPLATE_PORTAL_ORIGIN%%\}/g, portalConfig.origin)
     return htmlContent
   } catch (error) {
-    debug.error('Failed to load webview HTML template:', error)
+    debug.error('Failed to process webview HTML template:', error)
     /**
      * Fallback HTML template is kept inline here to ensure the extension remains functional
      * if the external template file is missing or cannot be loaded. This fallback includes
@@ -136,14 +139,14 @@ export function generateWebviewHTML(
 }
 
 /**
- * Loads CSS content from external file with fallback
- * @param extensionPath Path to the extension directory
+ * Loads CSS content from bundled template with fallback
+ * @param extensionPath Path to the extension directory (unused, kept for API compatibility)
  * @returns CSS content string
  */
 export function loadWebviewCSS(extensionPath: string): string {
   try {
-    const cssPath = join(extensionPath, 'src', 'webview', 'webview.css')
-    return readFileSync(cssPath, 'utf8')
+    // Use bundled CSS template (no file I/O needed)
+    return cssTemplate
   } catch (error) {
     debug.error('Failed to load webview CSS:', error)
     // Return minimal fallback CSS
@@ -166,8 +169,8 @@ export function loadWebviewCSS(extensionPath: string): string {
 }
 
 /**
- * Loads JavaScript content from external file and processes template variables
- * @param extensionPath Path to the extension directory
+ * Loads JavaScript content from bundled template and processes template variables
+ * @param extensionPath Path to the extension directory (unused, kept for API compatibility)
  * @param config Portal preview configuration
  * @param previewId Unique preview identifier
  * @returns Processed JavaScript content string
@@ -178,9 +181,9 @@ export function loadWebviewJS(
   previewId: string,
 ): string {
   try {
+    // Use bundled JavaScript template (no file I/O needed)
     // This file is separately compiled from `src/webview/webview.ts` during the build via the `build:webview` script
-    const jsPath = join(extensionPath, 'src', 'webview', 'webview.js')
-    let jsContent = readFileSync(jsPath, 'utf8')
+    let jsContent = jsTemplate
 
     // Replace template variables with actual values
     jsContent = jsContent.replace(/\{%%TEMPLATE_PREVIEW_ID%%\}/g, previewId)
