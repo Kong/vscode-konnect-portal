@@ -268,10 +268,8 @@ pnpm package
 ```
 
 **Publishing:**
-```bash
-# For VS Code Marketplace (requires appropriate permissions)
-pnpm publish
-```
+
+Automated via GitHub Actions.
 
 ---
 
