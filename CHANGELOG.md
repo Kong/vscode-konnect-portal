@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.17](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.16...v1.7.17) (2026-01-13)
+
+
+### Bug Fixes
+
+* remove title change ([964b453](https://github.com/Kong/vscode-konnect-portal/commit/964b453220bf3bd075d9c6bbf3e7a05d34c49ec2))
+
 ## [1.7.16](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.14...v1.7.16) (2026-01-13)
 
 
