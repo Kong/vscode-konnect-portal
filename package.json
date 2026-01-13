@@ -226,7 +226,7 @@
       ]
     },
     "configuration": {
-      "title": "Konnect Dev Portal Toolkit [Tech Preview]",
+      "title": "Konnect Dev Portal Toolkit",
       "properties": {
         "kong.konnect.devPortal.autoOpenPreview": {
           "type": "boolean",
