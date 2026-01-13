@@ -1,8 +1,4 @@
-<!-- <p align="center">
-<img src="./resources/icon.png" width="377" alt="Konnect Dev Portal Toolkit" />
-</p> -->
-
-<h1 align="center">Konnect Dev Portal Toolkit</h1>
+<h1 align="center">Konnect Dev Portal Toolkit [Tech Preview]</h1>
 
 <p align="center">
 <a href="https://marketplace.visualstudio.com/items?itemName=konghq.vscode-konnect-dev-portal-toolkit">
@@ -16,6 +12,9 @@
 A VS Code extension that provides real-time preview functionality for MDC (Markdown Components) and Markdown files with Konnect portal integration.
 
 ---
+
+> **Important**
+> This extension is currently in **Tech Preview**. Features and APIs may change before the final release.
 
 ## Features
 
