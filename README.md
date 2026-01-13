@@ -22,18 +22,41 @@ A VS Code extension that provides real-time preview functionality for MDC (Markd
 - **Konnect Integration**: Token-based authentication with Kong Konnect allows you to interact securely with Konnect APIs
 - **kongctl CLI Integration**: Seamless integration with [`kongctl` CLI](https://github.com/Kong/kongctl) for enhanced portal management
 
-## Installation
-
-1. Download the extension from the VS Code Marketplace
-2. Install it in VS Code
-3. Configure your Konnect Personal Access Token
-4. Select a Dev Portal from your Konnect account
-5. Open an MDC (`.mdc`) or Markdown (`.md`) file
-6. Use the "Open Portal Preview" command or click the preview icon
-
 ## Setup and Usage
 
-### 1. Configure Konnect Personal Access Token (PAT)
+### 1. Configure Directory Structure
+
+Before configuring your Konnect access, you need to set up your workspace directory structure for pages and snippets.
+
+**Default Directory Structure:**
+
+By default, the extension expects the following directories in your workspace root:
+- `pages/` - For your portal pages (`.md` and `.mdc` files)
+  - **Supports nested subdirectories** for organizing content hierarchically
+  - Example: `pages/getting-started/overview.md` is valid
+- `snippets/` - For reusable content snippets (`.md` and `.mdc` files)
+  - **Must use a flat structure** - subdirectories are **not** supported. All snippet files must be in the root of the snippets directory
+    - Example: `snippets/api-example.md` is valid, but `snippets/examples/api.md` will cause errors
+  - **File names become snippet names** (e.g., `snippets/api-example.md` → snippet name: `api-example`)
+
+**Setup Options:**
+
+1. **Use the default directories** (Recommended for new projects):
+   - Create a `pages/` folder in your workspace root for your portal pages
+    - Organize page files in subdirectories as needed (e.g., `pages/guides/`, `pages/api/`)
+   - Create a `snippets/` folder in your workspace root for your reusable snippets
+    - Keep all snippet files directly in the `snippets/` folder (no subdirectories)
+
+2. **Use custom directories** (If you have an existing structure):
+   - Open VS Code Settings (`Ctrl+,` or `Cmd+,`)
+   - Search for "Portal Preview"
+   - Update `kong.konnect.devPortal.pagesDirectory` to match your pages folder path
+   - Update `kong.konnect.devPortal.snippetsDirectory` to match your snippets folder path
+   - Paths should be relative to your workspace root (e.g., `"docs/pages"`, `"content/snippets"`)
+
+> **Important**: Proper directory configuration is essential for optimal preview performance. Without correct configuration, you will not be able to preview snippets that haven't been already published to your portal. Remember that the snippets directory must maintain a flat structure - files in snippet subdirectories will trigger errors. See the [File Organization](#file-organization) section for detailed structure guidelines.
+
+### 2. Configure Konnect Personal Access Token (PAT)
 
 Before using the extension, you need to configure your Konnect Personal Access Token:
 
@@ -49,7 +72,7 @@ Before using the extension, you need to configure your Konnect Personal Access T
     - Paste your Personal Access Token
     - Click OK
 
-### 2. Select a Portal
+### 3. Select a Portal
 
 Once your token is configured:
 
@@ -60,7 +83,7 @@ Once your token is configured:
 
 > **Note**: You may select a new Dev Portal at any time by running the "Select Portal" command again.
 
-### 3. Open Portal Preview
+### 4. Open Portal Preview
 
 There are several ways to open the live preview:
 
@@ -68,7 +91,7 @@ There are several ways to open the live preview:
 2. **Editor Menu**: Right-click in a MDC/Markdown file and select "Open Portal Preview"
 3. **Toolbar Button**: Click the preview icon in the editor toolbar when viewing MDC/Markdown files
 
-### 4. Live Preview
+### 5. Live Preview
 
 Once configured:
 
@@ -130,55 +153,6 @@ The extension supports the following file types:
 - **Markdown**: `.md` files
 - **MDC (Markdown Components)**: `.mdc` files
 
-### File Organization
-
-For optimal portal preview experience:
-
-**Pages:**
-- **Organize files** in a dedicated pages directory (e.g., `pages/`)
-- **Configure** the `kong.konnect.devPortal.pagesDirectory` setting to match your structure
-- **Use subdirectories** to organize content hierarchically (e.g., `pages/getting-started/overview.md` → `/getting-started/overview`)
-
-**Snippets:**
-- **Organize files** in a dedicated snippets directory (e.g., `snippets/`)
-- **Configure** the `kong.konnect.devPortal.snippetsDirectory` setting to match your structure
-- **Use flat structure** - subdirectories are not supported (files must be in the root of the snippets directory)
-- **File names become snippet names** (e.g., `snippets/api-example.md` → snippet name: `api-example`)
-
-## Troubleshooting
-
-### "No portal selected" or Token Issues
-
-If you see configuration warnings:
-
-1. **Configure Konnect Personal Access Token (PAT)**: Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
-2. **Select Portal**: Run "Konnect Portal: Select Portal"
-3. **Update Token**: If your token expired, run "Konnect Portal: Configure Konnect Personal Access Token (PAT)" again
-
-### Token Format Errors
-
-Ensure your Personal Access Token:
-- Starts with `kpat_`
-- Is copied completely from Konnect
-- Has the necessary permissions for portal access
-
-### Preview not updating
-
-If the preview isn't updating when you edit files:
-
-1. Verify your portal selection is valid
-2. Check your network connection to Konnect
-3. Try refreshing the preview panel
-4. Enable debug mode to see detailed logs
-
-### Extension not activating
-
-The extension only activates when:
-
-- Opening MDC (.mdc) files
-- Opening Markdown (.md) files
-- Running portal preview commands
-
 ## Pages vs Snippets
 
 This extension supports two distinct types of content for your Kong Dev Portal:
@@ -218,6 +192,40 @@ dev-portal-project/
     ├── code-samples.md             # → Snippet Name: "code-samples"
     └── troubleshooting.md          # → Snippet Name: "troubleshooting"
 ```
+
+## Troubleshooting
+
+### "No portal selected" or Token Issues
+
+If you see configuration warnings:
+
+1. **Configure Konnect Personal Access Token (PAT)**: Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
+2. **Select Portal**: Run "Konnect Portal: Select Portal"
+3. **Update Token**: If your token expired, run "Konnect Portal: Configure Konnect Personal Access Token (PAT)" again
+
+### Token Format Errors
+
+Ensure your Personal Access Token:
+- Starts with `kpat_`
+- Is copied completely from Konnect
+- Has the necessary permissions for portal access
+
+### Preview not updating
+
+If the preview isn't updating when you edit files:
+
+1. Verify your portal selection is valid
+2. Check your network connection to Konnect
+3. Try refreshing the preview panel
+4. Enable debug mode to see detailed logs
+
+### Extension not activating
+
+The extension only activates when:
+
+- Opening MDC (.mdc) files
+- Opening Markdown (.md) files
+- Running portal preview commands
 
 ## Security
 
