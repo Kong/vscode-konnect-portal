@@ -13,8 +13,9 @@ A VS Code extension that provides real-time preview functionality for MDC (Markd
 
 ---
 
-> **Important**
-> This extension is currently in **Tech Preview**. Features and APIs may change before the final release.
+## Tech Preview
+
+**Important**: This extension is currently in **Tech Preview**. Features and APIs may change before the final release.
 
 ## Features
 
