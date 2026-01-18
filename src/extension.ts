@@ -2,7 +2,6 @@ import {
   commands,
   window,
   workspace,
-  extensions,
   env,
   Uri,
 } from 'vscode'
@@ -20,12 +19,12 @@ import {
   PortalSelectionActions,
   TokenConfigurationActions,
   CredentialActions,
-  MDCExtensionActions,
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
 import { installKongctlWithFeedback } from './kongctl/install'
 import { fetchAvailableRegions } from './konnect/regions'
 import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/status'
+import { checkAndShowMDCRecommendation } from './utils/mdc-extension'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
@@ -60,70 +59,11 @@ function hasActivePreviewableDocument(): boolean {
   ) || false
 }
 
-/**
- * Checks if the MDC extension is installed and shows helpful message if not
- * @returns true if MDC extension is available, false otherwise
- */
-async function checkMDCExtension(): Promise<boolean> {
-  const mdcExtension = extensions.getExtension('Nuxt.mdc')
-
-  if (!mdcExtension) {
-    debug.log('MDC extension not found, Portal Preview will work with reduced functionality for .mdc files')
-    return false
-  }
-
-  if (!mdcExtension.isActive) {
-    debug.log('MDC extension found but not active, attempting to activate')
-    try {
-      await mdcExtension.activate()
-      debug.log('MDC extension activated successfully')
-    } catch (error) {
-      debug.error('Failed to activate MDC extension:', error)
-    }
-  }
-
-  return true
-}
-
-/** Shows a helpful notification about MDC extension for .mdc files */
-async function showMDCExtensionRecommendation(): Promise<void> {
-  const selection = await window.showInformationMessage(
-    'For the best experience with MDC syntax, we recommend installing the MDC - Markdown Components extension.',
-    MDCExtensionActions.INSTALL_EXTENSION,
-    MDCExtensionActions.DONT_SHOW_AGAIN,
-  )
-
-  if (selection === MDCExtensionActions.INSTALL_EXTENSION) {
-    await commands.executeCommand('workbench.extensions.search', 'Nuxt.mdc')
-  } else if (selection === MDCExtensionActions.DONT_SHOW_AGAIN) {
-    // Store preference to not show again
-    const config = workspace.getConfiguration(CONFIG_SECTION)
-    await config.update('showMDCRecommendation', false, true)
-  }
-}
-
 /** Initialize kongctl context with proper error handling */
 function initializeKongctlContext(): void {
   updateKongctlContext().catch((error) => {
     console.error('Failed to initialize kongctl context:', error)
   })
-}
-
-/** Check MDC extension and show recommendation if needed */
-async function checkAndShowMDCRecommendation(): Promise<void> {
-  try {
-    const hasMDCExtension = await checkMDCExtension()
-    if (!hasMDCExtension) {
-      // Show recommendation for both MDC and Markdown files to enhance syntax highlighting
-      const config = workspace.getConfiguration(CONFIG_SECTION)
-      const showRecommendation = config.get<boolean>('showMDCRecommendation', true)
-      if (showRecommendation) {
-        await showMDCExtensionRecommendation()
-      }
-    }
-  } catch (error) {
-    console.error('Failed to check MDC extension or show recommendation:', error)
-  }
 }
 
 /**

@@ -7,6 +7,7 @@ import type { PortalStorageService } from './storage'
 import { showApiError } from './utils/error-handling'
 import { debug } from './utils/debug'
 import { PORTAL_SELECTION_MESSAGES } from './constants/messages'
+import { checkAndPromptMDCExtensionForPortal } from './utils/mdc-extension'
 
 /**
  * Service for managing portal selection workflow
@@ -178,6 +179,14 @@ export class PortalSelectionService {
 
           // Store the selection
           await this.storageService.storeSelectedPortal(config)
+
+          // Sync MDC extension settings with the portal origin
+          try {
+            await checkAndPromptMDCExtensionForPortal(config.origin)
+          } catch (error) {
+            // Silent failure - don't block portal selection if MDC sync fails
+            debug.error('Failed to sync MDC extension settings:', error)
+          }
 
           vscode.window.showInformationMessage(
             PORTAL_SELECTION_MESSAGES.PORTAL_SELECTED(config.displayName!, config.origin),
