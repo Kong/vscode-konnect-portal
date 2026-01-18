@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.17...v1.8.0) (2026-01-18)
+
+
+### Features
+
+* **mdc:** set mdc extension settings on portal selection ([#53](https://github.com/Kong/vscode-konnect-portal/issues/53)) ([0a01d48](https://github.com/Kong/vscode-konnect-portal/commit/0a01d4822684bfad458e393693c2bfbe662a9339))
+
 ## [1.7.17](https://github.com/Kong/vscode-konnect-portal/compare/v1.7.16...v1.7.17) (2026-01-13)
 
 
