@@ -43,6 +43,11 @@ vi.mock('./konnect/request-service', () => ({
   },
 }))
 
+// Mock MDC extension utilities
+vi.mock('./utils/mdc-extension', () => ({
+  checkAndPromptMDCExtensionForPortal: vi.fn().mockResolvedValue(undefined),
+}))
+
 // Mock API error class
 vi.mock('./konnect/api', () => ({
   ApiError: class ApiError extends Error {
