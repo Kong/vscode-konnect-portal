@@ -580,9 +580,6 @@ export function deactivate() {
   // Dispose of preview provider and clean up resources
   previewProvider?.dispose()
 
-  // Dispose of terminal
-  disposeKongctlTerminal()
-
   // Clear global references
   previewProvider = undefined
   storageService = undefined
