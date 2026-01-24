@@ -5,7 +5,7 @@ import {
   env,
   Uri,
 } from 'vscode'
-import type { ExtensionContext, TextDocument } from 'vscode'
+import type { ExtensionContext, TextDocument, FileSystemWatcher } from 'vscode'
 import { PreviewProvider } from './preview-provider'
 import type { PortalPreviewConfig } from './types'
 import { debug } from './utils/debug'
@@ -31,6 +31,9 @@ let previewProvider: PreviewProvider | undefined
 
 /** Global instance of the storage service for managing credentials and portal config */
 let storageService: PortalStorageService | undefined
+
+/** Active file system watchers for cleanup */
+let fileWatchers: FileSystemWatcher[] = []
 
 /** Global instance of the portal selection service for managing portal selection workflow */
 let portalSelectionService: PortalSelectionService | undefined
@@ -368,6 +371,14 @@ export function activate(context: ExtensionContext) {
           const config = getConfiguration()
           debug.log('Portal Preview configuration changed:', config)
           await previewProvider?.updateConfiguration()
+
+          // If pages or snippets directory changed, recreate file watchers
+          if (event.affectsConfiguration(`${CONFIG_SECTION}.pagesDirectory`) ||
+              event.affectsConfiguration(`${CONFIG_SECTION}.snippetsDirectory`)) {
+            debug.log('Pages or snippets directory changed, recreating file watchers')
+            disposeFileWatchers()
+            setupFileWatchers()
+          }
         }
 
         // Update kongctl context if kongctl configuration changed
@@ -383,11 +394,28 @@ export function activate(context: ExtensionContext) {
   // Listen for document changes
   const documentChangeListener = workspace.onDidChangeTextDocument(
     async (event) => {
+      // Only update if this is the active editor's document to prevent unwanted preview switches
       if (isMarkdownOrMDC(event.document)) {
-        await previewProvider?.updateContent(event.document)
+        const activeEditor = window.activeTextEditor
+        if (activeEditor && activeEditor.document === event.document) {
+          await previewProvider?.updateContent(event.document)
+        }
       }
     },
   )
+
+  // Listen for document save events to handle newly saved files
+  const documentSaveListener = workspace.onDidSaveTextDocument(async (document) => {
+    // When an untitled document is saved, it transitions from untitled: to file: scheme
+    // Only update preview if this is the currently active document to avoid unwanted switches
+    if (isMarkdownOrMDC(document)) {
+      const activeEditor = window.activeTextEditor
+      if (activeEditor && activeEditor.document === document) {
+        debug.log('Active document saved, re-evaluating path:', document.fileName)
+        await previewProvider?.updateContent(document)
+      }
+    }
+  })
 
   // Listen for active editor changes
   const editorChangeListener = window.onDidChangeActiveTextEditor(
@@ -424,9 +452,12 @@ export function activate(context: ExtensionContext) {
     runKongctlCommand,
     configChangeListener,
     documentChangeListener,
+    documentSaveListener,
     editorChangeListener,
   )
 
+  // Set up file system watchers for new file detection
+  setupFileWatchers()
 
   // Set initial kongctl context
   initializeKongctlContext()
@@ -457,11 +488,95 @@ export async function updateKongctlContext(): Promise<void> {
 }
 
 /**
+ * Disposes all active file system watchers
+ */
+function disposeFileWatchers(): void {
+  fileWatchers.forEach(watcher => watcher.dispose())
+  fileWatchers = []
+  debug.log('Disposed all file system watchers')
+}
+
+/**
+ * Sets up file system watchers for pages and snippets directories
+ * Watches for file creation, deletion, and changes to update preview
+ */
+function setupFileWatchers(): void {
+  const config = getConfiguration()
+  const workspaceFolders = workspace.workspaceFolders
+
+  if (!workspaceFolders || workspaceFolders.length === 0) {
+    debug.log('No workspace folders, skipping file watcher setup')
+    return
+  }
+
+  // Watch pages directory if configured
+  if (config.pagesDirectory && config.pagesDirectory.trim() !== '') {
+    const pagesPattern = `${config.pagesDirectory.trim()}/**/*.{md,mdc}`
+    debug.log('Setting up file watcher for pages:', pagesPattern)
+
+    const pagesWatcher = workspace.createFileSystemWatcher(pagesPattern)
+
+    pagesWatcher.onDidChange(async (uri) => {
+      debug.log('Page file changed externally:', uri.fsPath)
+      // Only update if this is the currently active document
+      const activeEditor = window.activeTextEditor
+      if (activeEditor && activeEditor.document.uri.toString() === uri.toString()) {
+        try {
+          await previewProvider?.updateContent(activeEditor.document)
+        } catch (error) {
+          debug.log('Error handling changed page file:', error)
+        }
+      }
+    })
+
+    fileWatchers.push(pagesWatcher)
+  }
+
+  // Watch snippets directory if configured
+  if (config.snippetsDirectory && config.snippetsDirectory.trim() !== '') {
+    const snippetsPattern = `${config.snippetsDirectory.trim()}/**/*.{md,mdc}`
+    debug.log('Setting up file watcher for snippets:', snippetsPattern)
+
+    const snippetsWatcher = workspace.createFileSystemWatcher(snippetsPattern)
+
+    // When snippets are created/deleted/changed, refresh the entire preview if one is active
+    // This will trigger re-injection of all snippets with the updated set
+    snippetsWatcher.onDidCreate((uri) => {
+      debug.log('Snippet file created:', uri.fsPath)
+      if (previewProvider?.hasActivePreview()) {
+        previewProvider.refreshPreview()
+      }
+    })
+
+    snippetsWatcher.onDidDelete((uri) => {
+      debug.log('Snippet file deleted:', uri.fsPath)
+      if (previewProvider?.hasActivePreview()) {
+        previewProvider.refreshPreview()
+      }
+    })
+
+    snippetsWatcher.onDidChange((uri) => {
+      debug.log('Snippet file changed externally:', uri.fsPath)
+      if (previewProvider?.hasActivePreview()) {
+        previewProvider.refreshPreview()
+      }
+    })
+
+    fileWatchers.push(snippetsWatcher)
+  }
+
+  debug.log(`File watchers setup complete. Watching ${fileWatchers.length} pattern(s)`)
+}
+
+/**
  * Deactivates the Portal Preview extension
  * Cleans up resources but preserves stored credentials and data
  * Note: Use "Konnect Portal: Clear Credentials" command to manually clear stored data
  */
 export function deactivate() {
+  // Dispose of file watchers
+  disposeFileWatchers()
+
   // Dispose of preview provider and clean up resources
   previewProvider?.dispose()
 
