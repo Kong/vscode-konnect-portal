@@ -33,6 +33,12 @@ function getPagePath(document: TextDocument, pagesDirectory: string): string | n
     return null
   }
 
+  // Untitled documents (not yet saved) cannot have a workspace folder
+  if (document.uri.scheme === 'untitled') {
+    debug.log('Document is untitled, not yet saved to workspace')
+    return null
+  }
+
   // Get the workspace folder for this document
   const workspaceFolder = workspace.getWorkspaceFolder(document.uri)
   if (!workspaceFolder) {
@@ -140,6 +146,12 @@ function getSnippetName(document: TextDocument, snippetsDirectory: string): stri
   // If no snippets directory is configured or it's empty, not a snippet
   if (!snippetsDirectory || snippetsDirectory.trim() === '') {
     debug.log('No snippets directory configured')
+    return null
+  }
+
+  // Untitled documents (not yet saved) cannot have a workspace folder
+  if (document.uri.scheme === 'untitled') {
+    debug.log('Document is untitled, not yet saved to workspace')
     return null
   }
 
