@@ -161,16 +161,24 @@ export class PreviewProvider implements Disposable {
       }
     }
 
-    // Get current document content to send after refresh
-    const currentDocument = this.panelState.currentDocument
-    if (!currentDocument) {
+    // Get document to refresh - prefer active editor, fall back to panel state
+    let documentToRefresh = window.activeTextEditor?.document
+    if (!documentToRefresh) {
+      // No active editor, fall back to the panel's current document
+      documentToRefresh = this.panelState.currentDocument
+    }
+
+    if (!documentToRefresh) {
       window.showWarningMessage('No active document to refresh preview.')
       return
     }
 
-    const content = currentDocument.getText().trim()
+    // Update the panel state to track the document we're refreshing
+    this.panelState.currentDocument = documentToRefresh
+
+    const content = documentToRefresh.getText().trim()
     const config = getConfiguration()
-    const pathInfo = getDocumentPathInfo(currentDocument, config.pagesDirectory, config.snippetsDirectory)
+    const pathInfo = getDocumentPathInfo(documentToRefresh, config.pagesDirectory, config.snippetsDirectory)
 
     // Check for error condition and abort if present
     if (pathInfo.type === 'error') {
