@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.4](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.2...v1.8.4) (2026-01-28)
+
+
+### Bug Fixes
+
+* **warnings:** only show slow timeout warning once per session [TDX-7371] ([5a3c573](https://github.com/Kong/vscode-konnect-portal/commit/5a3c573b53eaf937798dcb43fb8292ece096cf10))
+
 ## [1.8.3](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.2...v1.8.3) (2026-01-28)
 
 ## [1.8.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.1...v1.8.2) (2026-01-24)
