@@ -404,6 +404,102 @@ describe('PreviewProvider', () => {
       )
     })
 
+    it('should use active editor document when refreshing instead of panel state', async () => {
+      // Open preview with one document
+      await previewProvider.openPreview(mockDocument)
+      vi.clearAllMocks()
+
+      // Create a different active editor document
+      const differentDocument = {
+        fileName: 'different.md',
+        getText: vi.fn().mockReturnValue('# Different Content'),
+        uri: { fsPath: '/test/path/different.md' },
+      } as unknown as TextDocument
+
+      vi.mocked(window).activeTextEditor = { document: differentDocument } as any
+      vi.mocked(getDocumentPathInfo).mockReturnValue({
+        type: 'page',
+        path: '/different-page',
+      })
+
+      // Refresh should use the active editor document
+      previewProvider.refreshPreview()
+
+      expect(mockWebview.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'webview:refresh',
+          content: '# Different Content',
+          path: '/different-page',
+        }),
+      )
+    })
+
+    it('should fall back to panel state document when no active editor', async () => {
+      // Open preview with document
+      await previewProvider.openPreview(mockDocument)
+      vi.clearAllMocks()
+
+      // No active editor
+      vi.mocked(window).activeTextEditor = null as any
+
+      // Refresh should use panel state document
+      previewProvider.refreshPreview()
+
+      expect(mockWebview.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'webview:refresh',
+          content: '# Test Content',
+          path: 'test-page',
+        }),
+      )
+    })
+
+    it('should update panel state with the document being refreshed', async () => {
+      await previewProvider.openPreview(mockDocument)
+
+      const differentDocument = {
+        fileName: 'different.md',
+        getText: vi.fn().mockReturnValue('# Different Content'),
+        uri: { fsPath: '/test/path/different.md' },
+      } as unknown as TextDocument
+
+      vi.mocked(window).activeTextEditor = { document: differentDocument } as any
+
+      previewProvider.refreshPreview()
+
+      // Panel state should be updated with the refreshed document
+      expect((previewProvider as any).panelState.currentDocument).toBe(differentDocument)
+    })
+
+    it('should handle snippet documents correctly', async () => {
+      await previewProvider.openPreview(mockDocument)
+      vi.clearAllMocks()
+
+      const snippetDocument = {
+        fileName: 'my-snippet.md',
+        getText: vi.fn().mockReturnValue('# Snippet Content'),
+        uri: { fsPath: '/test/snippets/my-snippet.md' },
+      } as unknown as TextDocument
+
+      vi.mocked(window).activeTextEditor = { document: snippetDocument } as any
+      vi.mocked(getDocumentPathInfo).mockReturnValue({
+        type: 'snippet',
+        path: '/_preview-mode/snippets/my-snippet',
+        snippetName: 'my-snippet',
+      })
+
+      previewProvider.refreshPreview()
+
+      expect(mockWebview.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'webview:refresh',
+          content: '# Snippet Content',
+          path: '/_preview-mode/snippets/my-snippet',
+          snippetName: 'my-snippet',
+        }),
+      )
+    })
+
     it('should handle error path info and abort refresh', async () => {
       await previewProvider.openPreview(mockDocument)
 
