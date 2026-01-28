@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.5](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.4...v1.8.5) (2026-01-28)
+
+
+### Bug Fixes
+
+* **refresh:** preview refresh page or snippet [TDX-7373] ([#59](https://github.com/Kong/vscode-konnect-portal/issues/59)) ([7402d13](https://github.com/Kong/vscode-konnect-portal/commit/7402d1358b7954d5069fc23fdd1813820fac89fd))
+
 ## [1.8.4](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.2...v1.8.4) (2026-01-28)
 
 
