@@ -267,10 +267,46 @@ function handleRefreshPreview(message: any): void {
     showLoading()
     const currentSrc = iframe.src
     debug.log('Reloading iframe, will wait for portal:preview:ready signal')
+
+    // Reconstruct iframe URL with updated path from message
+    let newSrc = currentSrc
+    if (message && (message.path !== undefined || message.snippetName !== undefined)) {
+      try {
+        const url = new URL(currentSrc)
+
+        // Update the pathname based on whether it's a snippet or page
+        // Query params (preview=true, preview_id) are preserved automatically
+
+        if (message.snippetName) {
+          // For snippets, use the snippet preview path from the message
+          // The path should be /_preview-mode/snippets/<name>
+          url.pathname = message.path || `/_preview-mode/snippets/${message.snippetName}`
+        } else if (message.path && message.path !== '/') {
+          // For regular pages, use the page path
+          const normalizedPath = message.path.startsWith('/') ? message.path : `/${message.path}`
+          url.pathname = normalizedPath
+        } else {
+          // For default/home page
+          url.pathname = '/'
+        }
+
+        newSrc = url.toString()
+        debug.log('Updated iframe src with new path:', {
+          oldSrc: currentSrc,
+          newSrc,
+          path: message.path,
+          snippetName: message.snippetName,
+        })
+      } catch (error) {
+        debug.warn('Failed to update iframe URL with new path, using original:', error)
+        newSrc = currentSrc
+      }
+    }
+
     iframe.src = 'about:blank'
     setTimeout(() => {
-      debug.log('Setting iframe src back to:', currentSrc)
-      iframe.src = currentSrc
+      debug.log('Setting iframe src to:', newSrc)
+      iframe.src = newSrc
       startReadyTimeout()
     }, 100)
   } else {

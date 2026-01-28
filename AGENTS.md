@@ -119,3 +119,167 @@ All configuration options should be documented in the README, with proper descri
 
 ### Extension settings
 - Whenever the extension config settings are modified or added/removed, make sure you update the README accordingly.
+
+## Architecture Overview
+
+### High-Level Architecture
+
+This VS Code extension uses a **two-context architecture**:
+
+1. **Extension Context** (Node.js) - Runs in the VS Code extension host
+2. **Webview Context** (Browser) - Runs as an isolated iframe inside VS Code
+
+Communication between contexts happens via **message passing** using VS Code's webview message API.
+
+### Core Components
+
+#### Extension Side (`src/`)
+
+- **`extension.ts`** - Entry point, registers commands and event handlers
+- **`preview-provider.ts`** - Manages webview panel lifecycle and state
+  - Creates/destroys webview panels
+  - Manages `PreviewPanelState` (tracks `currentDocument`, `isVisible`, etc.)
+  - Sends messages to webview (update content, refresh, navigate)
+  - **Critical pattern**: `refreshPreview()` uses `window.activeTextEditor?.document` first, falls back to `panelState.currentDocument`
+- **`storage.ts`** - Manages secure token storage using VS Code SecretStorage API
+- **`portal-selection.ts`** - Handles portal selection workflow
+- **`konnect/`** - Konnect API integration
+  - `api.ts` - API client for fetching portals
+  - `request-service.ts` - HTTP request handling with authentication
+  - `regions.ts` - Konnect region management
+
+#### Webview Side (`src/webview/`)
+
+- **`webview.ts`** (TypeScript source) - Compiles to `webview.js`
+  - **NEVER edit `webview.js` directly** - always edit `webview.ts` and run `pnpm build:webview`
+  - Manages iframe lifecycle and message protocol
+  - Handles `webview:refresh`, `webview:update:content`, `webview:navigate` messages
+  - **Critical pattern**: On refresh, reconstructs iframe URL using path from message (not cached URL)
+- **`webview.html`** - HTML template with loading/error overlays
+- **`webview.css`** - Webview styling
+
+#### Utilities (`src/utils/`)
+
+- **`page-path.ts`** - Calculates portal paths from document locations
+  - `getDocumentPathInfo()` returns `{type: 'page' | 'snippet' | 'default' | 'error', path, snippetName}`
+  - Pages: `pages/getting-started/overview.md` → `/getting-started/overview`
+  - Snippets: `snippets/my-snippet.md` → `{path: '/_preview-mode/snippets/my-snippet', snippetName: 'my-snippet'}`
+  - Home: `pages/home.md` → `/`
+- **`webview.ts`** (different from webview/webview.ts) - Generates webview HTML
+  - `generateWebviewHTML()` - Builds complete HTML with CSS/JS/iframe
+  - `addPreviewParams()` - Constructs iframe URL with preview params
+- **`debug.ts`** - Centralized logging (respects `debug` config setting)
+
+### Message Protocol
+
+**Extension → Webview:**
+- `webview:update:content` - Send new content (debounced updates)
+- `webview:refresh` - Reload iframe with new content/path
+- `webview:navigate` - Navigate to different page (when switching documents)
+- `webview:loading` - Show/hide loading state
+
+**Webview → Extension:**
+- `webview:request:content` - Portal ready, request current content
+- `webview:iframe:loaded` - Iframe finished loading
+- `webview:error` - Error occurred in portal
+- `webview:warning` - Warning from portal
+
+### State Management
+
+**PreviewPanelState** (extension-side):
+```typescript
+{
+  panel?: WebviewPanel          // VS Code webview panel instance
+  isVisible: boolean            // Panel visibility state
+  currentDocument?: TextDocument  // Document being previewed
+  lastContent?: string          // Last sent content (for debouncing)
+}
+```
+
+**Key Pattern**: Always prefer `window.activeTextEditor?.document` over `panelState.currentDocument` when responding to user actions.
+
+### Pages vs Snippets
+
+Two distinct content types with different handling:
+
+**Pages:**
+- Located in configurable `pagesDirectory` (default: `pages/`)
+- Support nested subdirectories
+- Path calculation: file path relative to pages directory
+- Iframe URL: `https://portal.example.com/page-path?preview=true&preview_id=xyz`
+
+**Snippets:**
+- Located in configurable `snippetsDirectory` (default: `snippets/`)
+- **Must be flat** - no subdirectories allowed
+- Snippet name: filename without extension
+- Iframe URL: `https://portal.example.com/_preview-mode/snippets/snippet-name?preview=true&preview_id=xyz`
+
+### Build Process
+
+The extension has a **multi-stage build** due to different runtime contexts:
+
+1. **Webview compilation**: `pnpm build:webview` - TypeScript → JavaScript (runs in browser)
+2. **Extension compilation**: Vite builds extension code (runs in Node.js)
+3. **Test compilation**: `pnpm build:extension-tests` - Compiles tests to CommonJS
+
+**Important**: `src/webview/webview.js` is a build artifact - never edit directly.
+
+## Development Commands
+
+### Essential Commands
+
+```bash
+# Type checking (always run before build)
+pnpm typecheck
+
+# Build for production
+pnpm build
+
+# Watch mode for development
+pnpm watch       # OR: pnpm dev
+
+# Linting
+pnpm lint
+pnpm lint:fix
+
+# Testing
+pnpm test:unit                    # Run all unit tests (Vitest)
+pnpm test:unit src/file.spec.ts  # Run specific test file
+pnpm test:unit:coverage           # Run with coverage report
+pnpm test:unit:ui                 # Interactive test UI
+
+# Integration tests (requires build first)
+pnpm build && pnpm test:extension
+
+# Package extension
+pnpm package
+```
+
+### Testing Notes
+
+- **Unit tests** (`.spec.ts`) use Vitest, run in Node.js context
+- **Integration tests** (`src/test/suite/*.test.ts`) use `@vscode/test-electron`, run in actual VS Code
+- Webview code (`src/webview/webview.ts`) has **no unit test coverage** - must be tested manually
+- Always verify webview changes by running the extension in VS Code debugger
+
+### Common Development Tasks
+
+**Working on webview:**
+```bash
+# Edit src/webview/webview.ts (NOT .js)
+# Compile changes
+pnpm build:webview
+# Test in VS Code debugger (F5)
+```
+
+**Adding new configuration:**
+1. Update `package.json` configuration contribution
+2. Update `src/types/index.ts` `PortalPreviewConfig` interface
+3. Update `src/extension.ts` `getConfiguration()` function
+4. Update README.md with new setting documentation
+
+**Debugging extension:**
+- Press `F5` in VS Code to launch Extension Development Host
+- Set breakpoints in `.ts` files (not webview)
+- Use `debug.log()` for extension-side logging
+- Use browser DevTools for webview debugging (Developer: Open Webview Developer Tools)

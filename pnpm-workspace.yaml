@@ -1,5 +1,5 @@
 onlyBuiltDependencies:
-  - '@evilmartians/lefthook'
+  - 'lefthook'
   - '@vscode/vsce-sign'
   - esbuild
   - keytar
