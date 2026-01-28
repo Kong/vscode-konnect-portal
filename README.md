@@ -50,7 +50,6 @@ By default, the extension expects the following directories in your workspace ro
 
 2. **Use custom directories** (If you have an existing structure):
    - Open VS Code Settings (`Ctrl+,` or `Cmd+,`)
-   - Search for "Portal Preview"
    - Update `kong.konnect.devPortal.pagesDirectory` to match your pages folder path
    - Update `kong.konnect.devPortal.snippetsDirectory` to match your snippets folder path
    - Paths should be relative to your workspace root (e.g., `"docs/pages"`, `"content/snippets"`)
@@ -123,7 +122,7 @@ You can install it by:
 
 ## Configuration
 
-The extension provides several configuration options in VS Code settings. You can access these by going to **Settings** → Search for "Portal Preview":
+The extension provides several configuration options in VS Code settings:
 
 | Setting | Type | Default | Description | Example |
 |---------|------|---------|-------------|---------|
