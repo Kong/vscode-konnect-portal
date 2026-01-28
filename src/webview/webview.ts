@@ -50,6 +50,8 @@ let pendingMessage: any = null
 let readyTimeout: ReturnType<typeof setTimeout> | null = null
 /** Whether debug logging is enabled */
 let debugEnabled = false
+/** Tracks whether the timeout warning has been shown in this session */
+let timeoutWarningShown = false
 
 
 /** Timeout in milliseconds to wait for portal ready signal (replaced at runtime via template variable) */
@@ -110,11 +112,14 @@ function startReadyTimeout(): void {
   debug.log(`Starting ready timeout (${readyTimeoutMs}ms)...`)
   readyTimeout = setTimeout(() => {
     debug.warn('Portal ready timeout reached, sending content anyway...')
-    vscode.postMessage({
-      type: 'webview:warning',
-      warning: 'Portal preview took longer than expected to load. Continuing with content updates, but preview may not work correctly. Check your Dev Portal Base URL and network connection.',
-      warningType: 'timeout',
-    })
+    if (!timeoutWarningShown) {
+      vscode.postMessage({
+        type: 'webview:warning',
+        warning: 'Portal preview took longer than expected to load. Continuing with content updates, but preview may not work correctly. Check your Dev Portal Base URL and network connection.',
+        warningType: 'timeout',
+      })
+      timeoutWarningShown = true
+    }
     iframeReady = true
     hideLoading()
     if (pendingMessage) {
