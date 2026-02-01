@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.8](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.7...v1.8.8) (2026-02-01)
+
+
+### Bug Fixes
+
+* webview attributes ([3fd96bc](https://github.com/Kong/vscode-konnect-portal/commit/3fd96bc06036f008be3de98ebb84e05329e74e7e))
+
 ## [1.8.7](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.5...v1.8.7) (2026-02-01)
 
 
