@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.7](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.5...v1.8.7) (2026-02-01)
+
+
+### Bug Fixes
+
+* remove iframe attribute ([e569908](https://github.com/Kong/vscode-konnect-portal/commit/e5699080b5a0f5850c63d32e318e67e429589011))
+
 ## [1.8.6](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.5...v1.8.6) (2026-01-31)
 
 ## [1.8.5](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.4...v1.8.5) (2026-01-28)
