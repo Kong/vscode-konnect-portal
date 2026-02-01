@@ -7,7 +7,7 @@ Thank you for your interest in contributing to the Konnect Dev Portal Toolkit! T
 ### 1. Fork and Clone
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/vscode-konnect-portal.git
+git clone https://github.com/Kong/vscode-konnect-portal.git
 cd vscode-konnect-portal
 ```
 
