@@ -384,6 +384,8 @@ export class PreviewProvider implements Disposable {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
+        enableForms: true,
+        localResourceRoots: [],
       },
     )
 
