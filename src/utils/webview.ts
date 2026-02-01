@@ -125,7 +125,6 @@ export function generateWebviewHTML(
          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads allow-storage-access-by-user-activation"
          loading="eager"
          style="border: none; display: block;"
-         credentialless="false"
        ></iframe>
      </div>
   </div>
