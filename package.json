@@ -23,6 +23,7 @@
     "package": "vsce package --no-dependencies",
     "release": "FORCE_COLOR=1 commit-and-tag-version --config ./.versionrc.json",
     "vscode:prepublish": "pnpm run build",
+    "ovsx": "ovsx",
     "commit": "cz"
   },
   "packageManager": "pnpm@10.28.2",

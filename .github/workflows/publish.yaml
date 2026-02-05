@@ -78,9 +78,13 @@ jobs:
             --no-git-tag-version
 
       - name: Publish to Open VSX Registry
-        run: pnpm ovsx publish *.vsix
         env:
           OVSX_PAT: ${{ secrets.OPEN_VSX_TOKEN }}
+        run: |
+          pnpm ovsx publish \
+          --packageVersion ${{ steps.version.outputs.version }} \
+          --pre-release \
+          *.vsix
 
       - name: Create GitHub Release
         if: ${{ steps.version.outputs.version != '' }}
