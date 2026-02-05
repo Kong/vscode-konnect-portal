@@ -81,10 +81,7 @@ jobs:
         env:
           OVSX_PAT: ${{ secrets.OPEN_VSX_TOKEN }}
         run: |
-          pnpm ovsx publish \
-          --packageVersion ${{ steps.version.outputs.version }} \
-          --pre-release \
-          *.vsix
+          pnpm ovsx publish *.vsix
 
       - name: Create GitHub Release
         if: ${{ steps.version.outputs.version != '' }}
