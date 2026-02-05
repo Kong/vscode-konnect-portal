@@ -66,7 +66,7 @@ jobs:
         # TODO: Eventually remove --pre-release flag when ready for stable releases
         run: pnpm package --pre-release
 
-      - name: Publish extension to marketplace
+      - name: Publish extension to VS Code marketplace
         if: ${{ steps.version.outputs.version != '' }}
         env:
           VSCE_PAT: ${{ secrets.AZURE_DEVOPS_MARKETPLACE_PUBLISH_TOKEN }}
@@ -76,6 +76,11 @@ jobs:
             --pre-release \
             --no-update-package-json \
             --no-git-tag-version
+
+      - name: Publish to Open VSX Registry
+        run: pnpm ovsx publish *.vsix
+        env:
+          OVSX_PAT: ${{ secrets.OPEN_VSX_TOKEN }}
 
       - name: Create GitHub Release
         if: ${{ steps.version.outputs.version != '' }}
