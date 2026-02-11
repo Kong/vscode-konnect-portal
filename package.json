@@ -1,6 +1,6 @@
 {
   "name": "vscode-konnect-dev-portal-toolkit",
-  "version": "1.8.12",
+  "version": "1.8.13",
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
   "icon": "images/icon.png",
