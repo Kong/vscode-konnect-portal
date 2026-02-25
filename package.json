@@ -1,6 +1,6 @@
 {
   "name": "vscode-konnect-dev-portal-toolkit",
-  "version": "1.8.15",
+  "version": "1.8.16",
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
   "icon": "images/icon.png",
@@ -48,7 +48,7 @@
     "@kong/eslint-config-kong-ui": "^1.6.1",
     "@stylistic/stylelint-plugin": "^5.0.1",
     "@types/mocha": "^10.0.10",
-    "@types/node": "~24.10.11",
+    "@types/node": "~24.10.13",
     "@types/vscode": "^1.109.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
