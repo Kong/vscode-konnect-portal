@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.17](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.16...v1.8.17) (2026-02-25)
+
+
+### Bug Fixes
+
+* min vscode version ([#71](https://github.com/Kong/vscode-konnect-portal/issues/71)) ([bba59e7](https://github.com/Kong/vscode-konnect-portal/commit/bba59e71ecdccca34ec535ecf043e62bf7669fba))
+
 ## [1.8.16](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.15...v1.8.16) (2026-02-25)
 
 ## [1.8.15](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.14...v1.8.15) (2026-02-17)
