@@ -26,15 +26,15 @@
     "ovsx": "ovsx",
     "commit": "cz"
   },
-  "packageManager": "pnpm@10.28.2",
+  "packageManager": "pnpm@10.30.2",
   "engines": {
     "node": ">=22.20.0",
     "pnpm": ">=10.28.2",
     "vscode": ">=1.105.1"
   },
   "volta": {
-    "node": "24.12.0",
-    "pnpm": "10.28.2"
+    "node": "24.13.1",
+    "pnpm": "10.30.2"
   },
   "dependencies": {
     "strip-ansi": "^7.1.2",
