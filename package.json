@@ -26,7 +26,7 @@
     "ovsx": "ovsx",
     "commit": "cz"
   },
-  "packageManager": "pnpm@10.30.2",
+  "packageManager": "pnpm@10.30.3",
   "engines": {
     "node": ">=22.20.0",
     "pnpm": ">=10.28.2",
@@ -34,7 +34,7 @@
   },
   "volta": {
     "node": "24.13.1",
-    "pnpm": "10.30.2"
+    "pnpm": "10.30.3"
   },
   "dependencies": {
     "strip-ansi": "^7.1.2",
@@ -42,14 +42,14 @@
     "uncrypto": "^0.1.3"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
+    "@commitlint/cli": "^20.4.3",
+    "@commitlint/config-conventional": "^20.4.3",
     "@digitalroute/cz-conventional-changelog-for-jira": "^8.0.1",
     "@kong/eslint-config-kong-ui": "^1.6.1",
     "@stylistic/stylelint-plugin": "^5.0.1",
     "@types/mocha": "^10.0.10",
-    "@types/node": "~24.10.13",
-    "@types/vscode": "^1.105.1",
+    "@types/node": "~24.10.15",
+    "@types/vscode": "^1.106.1",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "@vitest/coverage-v8": "4.0.18",
@@ -59,10 +59,10 @@
     "@vscode/vsce": "^3.7.1",
     "commit-and-tag-version": "^12.6.1",
     "commitizen": "^4.3.1",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.4",
     "glob": "^13.0.6",
     "jsdom": "^27.4.0",
-    "lefthook": "^2.1.1",
+    "lefthook": "^2.1.3",
     "mocha": "^11.7.5",
     "ovsx": "^0.10.9",
     "rimraf": "^6.1.3",
