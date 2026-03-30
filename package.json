@@ -45,7 +45,7 @@
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
     "@digitalroute/cz-conventional-changelog-for-jira": "^8.0.1",
-    "@kong/eslint-config-kong-ui": "^1.6.1",
+    "@kong/eslint-config-kong-ui": "^1.6.2",
     "@stylistic/stylelint-plugin": "^5.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "~24.10.13",
