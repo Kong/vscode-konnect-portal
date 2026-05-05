@@ -26,38 +26,38 @@
     "ovsx": "ovsx",
     "commit": "cz"
   },
-  "packageManager": "pnpm@10.30.2",
+  "packageManager": "pnpm@10.33.1",
   "engines": {
     "node": ">=22.20.0",
     "pnpm": ">=10.28.2",
     "vscode": ">=1.105.1"
   },
   "volta": {
-    "node": "24.13.1",
-    "pnpm": "10.30.2"
+    "node": "24.15.0",
+    "pnpm": "10.33.1"
   },
   "dependencies": {
-    "strip-ansi": "^7.1.2",
+    "strip-ansi": "^7.2.0",
     "ufo": "^1.6.3",
     "uncrypto": "^0.1.3"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@digitalroute/cz-conventional-changelog-for-jira": "^8.0.1",
     "@kong/eslint-config-kong-ui": "^1.6.2",
-    "@stylistic/stylelint-plugin": "^5.0.1",
+    "@stylistic/stylelint-plugin": "^5.1.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "~24.10.13",
-    "@types/vscode": "^1.105.1",
-    "@typescript-eslint/eslint-plugin": "^8.56.1",
-    "@typescript-eslint/parser": "^8.56.1",
-    "@vitest/coverage-v8": "4.0.18",
-    "@vitest/ui": "^4.0.18",
+    "@types/node": "~24.12.2",
+    "@types/vscode": "^1.116.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "@vitest/coverage-v8": "4.1.5",
+    "@vitest/ui": "^4.1.5",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.7.1",
-    "commit-and-tag-version": "^12.6.1",
+    "@vscode/vsce": "^3.9.1",
+    "commit-and-tag-version": "^12.7.1",
     "commitizen": "^4.3.1",
     "eslint": "^9.39.2",
     "glob": "^13.0.6",
@@ -68,7 +68,7 @@
     "rimraf": "^6.1.3",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.5"
   },
   "publisher": "konghq",
   "repository": {
