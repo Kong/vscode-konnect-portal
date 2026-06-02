@@ -10,7 +10,6 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "bundler",
-    "baseUrl": "./",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
