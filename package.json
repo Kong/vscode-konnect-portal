@@ -183,6 +183,13 @@
           "group": "navigation"
         }
       ],
+      "explorer/context": [
+        {
+          "command": "kong.konnect.devPortal.openPreview",
+          "when": "resourceExtname == .md || resourceExtname == .mdc",
+          "group": "kong_konnect_devPortal@1"
+        }
+      ],
       "editor/context": [
         {
           "command": "kong.konnect.devPortal.openPreview",

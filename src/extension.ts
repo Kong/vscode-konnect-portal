@@ -93,21 +93,28 @@ export function activate(context: ExtensionContext) {
   // Register preview commands
   const openPreviewCommand = commands.registerCommand(
     'kong.konnect.devPortal.openPreview',
-    async () => {
-      const activeEditor = window.activeTextEditor
-      if (!activeEditor) {
+    async (uri?: Uri) => {
+      let document: TextDocument | undefined
+      if (uri) {
+        document = await workspace.openTextDocument(uri)
+        await window.showTextDocument(document)
+      } else {
+        document = window.activeTextEditor?.document
+      }
+
+      if (!document) {
         window.showWarningMessage('No active editor found')
         return
       }
 
-      if (!isMarkdownOrMDC(activeEditor.document)) {
+      if (!isMarkdownOrMDC(document)) {
         window.showWarningMessage(
           'Portal Preview only supports Markdown (.md) and MDC (.mdc) files',
         )
         return
       }
 
-      await previewProvider?.openPreview(activeEditor.document)
+      await previewProvider?.openPreview(document)
       updatePreviewContextFromProvider()
     },
   )
