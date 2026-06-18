@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.9.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.27...v1.9.0) (2026-06-18)
+
+
+### Features
+
+* add open preview from file list context menu ([#95](https://github.com/Kong/vscode-konnect-portal/issues/95)) ([0d0d534](https://github.com/Kong/vscode-konnect-portal/commit/0d0d53410fc8c1a1cc4ea7eb6a91f62fc7de7ba5))
+
 ## [1.8.27](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.26...v1.8.27) (2026-06-18)
 
 ## [1.8.26](https://github.com/Kong/vscode-konnect-portal/compare/v1.8.25...v1.8.26) (2026-06-02)
