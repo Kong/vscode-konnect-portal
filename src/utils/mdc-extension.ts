@@ -70,7 +70,7 @@ export async function checkMDCExtension(): Promise<boolean> {
 export async function showMDCExtensionRecommendation(origin?: string): Promise<void> {
   const message = origin
     ? 'Installing the MDC extension will enable component auto-completions for your portal content.'
-    : 'For the best experience with MDC syntax, we recommend installing the MDC - Markdown Components extension.'
+    : 'For the best experience with MDC syntax, we recommend installing the Comark - Components in Markdown extension.'
 
   const selection = await window.showInformationMessage(
     message,

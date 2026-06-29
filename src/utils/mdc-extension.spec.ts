@@ -215,7 +215,7 @@ describe('mdc-extension', () => {
       await showMDCExtensionRecommendation()
 
       expect(vi.mocked(window.showInformationMessage)).toHaveBeenCalledWith(
-        'For the best experience with MDC syntax, we recommend installing the MDC - Markdown Components extension.',
+        'For the best experience with MDC syntax, we recommend installing the Comark - Components in Markdown extension.',
         MDCExtensionActions.INSTALL_EXTENSION,
         MDCExtensionActions.DONT_SHOW_AGAIN,
       )
