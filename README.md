@@ -2,9 +2,6 @@
 
 <p align="center">
 <a href="https://marketplace.visualstudio.com/items?itemName=konghq.vscode-konnect-dev-portal-toolkit">
-<img src="https://img.shields.io/visual-studio-marketplace/v/konghq.vscode-konnect-dev-portal-toolkit?color=42b883&label=VS%20Code%20Marketplace&logo=visual-studio-code" alt="VS Code Marketplace Version" />
-</a>
-<a href="https://marketplace.visualstudio.com/items?itemName=konghq.vscode-konnect-dev-portal-toolkit">
 <img src="https://img.shields.io/badge/Install%20on-VS%20Code-007ACC?logo=visual-studio-code" alt="Install on VS Code" />
 </a>
 </p>
