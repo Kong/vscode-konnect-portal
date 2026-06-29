@@ -1,4 +1,4 @@
-<h1 align="center">Konnect Dev Portal Toolkit [Tech Preview]</h1>
+<h1 align="center">Konnect Dev Portal Toolkit</h1>
 
 <p align="center">
 <a href="https://marketplace.visualstudio.com/items?itemName=konghq.vscode-konnect-dev-portal-toolkit">
@@ -12,10 +12,6 @@
 A VS Code extension that provides real-time preview functionality for MDC (Markdown Components) and Markdown files with Konnect portal integration.
 
 ---
-
-## Tech Preview
-
-**Important**: This extension is currently in **Tech Preview**. Features and APIs may change before the final release.
 
 ## Features
 
@@ -101,10 +97,10 @@ Once configured:
 
 ## Recommended Extensions
 
-For the best experience with MDC (Markdown Components) files, we recommend installing the **MDC - Markdown Components** extension:
+For the best experience with MDC (Markdown Components) files, we recommend installing the **Comark - Components in Markdown** extension:
 
 - **Extension ID**: `Nuxt.mdc`
-- **Marketplace Link**: [MDC - Markdown Components](https://marketplace.visualstudio.com/items?itemName=Nuxt.mdc)
+- **Marketplace Link**: [Comark - Components in Markdown](https://marketplace.visualstudio.com/items?itemName=Nuxt.mdc)
 
 This extension provides:
 
@@ -115,7 +111,7 @@ This extension provides:
 You can install it by:
 
 1. Opening the Extensions panel in VS Code (`Ctrl+Shift+X` or `Cmd+Shift+X`)
-2. Searching for "MDC" or using the extension ID `Nuxt.mdc`
+2. Searching for "Comark" or using the extension ID `Nuxt.mdc`
 3. Clicking "Install"
 
 > **Note**: Portal Preview will work without the MDC extension, but you'll get a better authoring experience with it installed.

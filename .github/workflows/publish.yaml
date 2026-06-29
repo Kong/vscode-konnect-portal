@@ -63,17 +63,14 @@ jobs:
           git push origin main --follow-tags
 
       - name: Build extension package
-        # TODO: Eventually remove --pre-release flag when ready for stable releases
-        run: pnpm package --pre-release
+        run: pnpm package
 
       - name: Publish extension to VS Code marketplace
         if: ${{ steps.version.outputs.version != '' }}
         env:
           VSCE_PAT: ${{ secrets.AZURE_DEVOPS_MARKETPLACE_PUBLISH_TOKEN }}
-        # TODO: Eventually remove --pre-release flag when ready for stable releases
         run: |
           pnpm vsce publish ${{ steps.version.outputs.version }} \
-            --pre-release \
             --no-update-package-json \
             --no-git-tag-version
 
