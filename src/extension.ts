@@ -16,13 +16,11 @@ import { KonnectApiService } from './konnect/api'
 import { showApiError } from './utils/error-handling'
 import { getOrCreateKongctlTerminal, disposeKongctlTerminal } from './terminal'
 import {
-  PortalSelectionActions,
   TokenConfigurationActions,
   CredentialActions,
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
 import { installKongctlWithFeedback } from './kongctl/install'
-import { fetchAvailableRegions } from './konnect/regions'
 import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/status'
 import { checkAndShowMDCRecommendation } from './utils/mdc-extension'
 
@@ -45,21 +43,6 @@ let extensionContext: ExtensionContext | undefined
 function updatePreviewContextFromProvider(): void {
   const hasActivePreview = previewProvider?.hasActivePreview() ?? false
   updatePreviewContext(hasActivePreview)
-}
-
-/**
- * Checks if there's an active document that can be previewed
- * @returns true if there's an active markdown or MDC document, false otherwise
- */
-function hasActivePreviewableDocument(): boolean {
-  const activeEditor = window.activeTextEditor
-  return activeEditor && (
-    activeEditor.document.languageId === 'markdown' ||
-    activeEditor.document.languageId === 'md' ||
-    activeEditor.document.languageId === 'mdc' ||
-    activeEditor.document.fileName.endsWith('.mdc') ||
-    activeEditor.document.fileName.endsWith('.md')
-  ) || false
 }
 
 /** Initialize kongctl context with proper error handling */
@@ -154,55 +137,9 @@ export function activate(context: ExtensionContext) {
 
         await storageService?.storeToken(token)
         window.showInformationMessage('Konnect token configured successfully!')
-
-        // Check if there's an active document that can be previewed
-        if (hasActivePreviewableDocument()) {
-          // Automatically open preview for the active document
-          debug.log('Auto-opening preview for active document after token configuration')
-          await commands.executeCommand('kong.konnect.devPortal.openPreview')
-          return
-        }
-
-        // No active document to preview, prompt user to select portal
-        const selectPortal = await window.showInformationMessage(
-          'Token configured! Would you like to select a portal now?',
-          PortalSelectionActions.SELECT_PORTAL,
-          PortalSelectionActions.LATER,
-        )
-
-        if (selectPortal === PortalSelectionActions.SELECT_PORTAL) {
-          // Use the dedicated selectPortal command for consistency
-          await commands.executeCommand('kong.konnect.devPortal.selectPortal')
-        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
         window.showErrorMessage(`Failed to configure token: ${errorMessage}`)
-      }
-    },
-  )
-
-  // Register Select Konnect Region command
-  const selectRegionCommand = commands.registerCommand(
-    'kong.konnect.selectRegion',
-    async () => {
-      try {
-        const config = workspace.getConfiguration()
-        const regions = await fetchAvailableRegions(storageService)
-        if (!regions.length) {
-          window.showErrorMessage('No regions available to select.')
-          return
-        }
-        const selected = await window.showQuickPick(regions, {
-          placeHolder: 'Select a Konnect region',
-          canPickMany: false,
-          ignoreFocusOut: true,
-        })
-        if (!selected) return
-        await config.update('kong.konnect.region', selected, true)
-        window.showInformationMessage(`Konnect region set to '${selected}'.`)
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        window.showErrorMessage(`Failed to select region: ${errorMessage}`)
       }
     },
   )
@@ -238,24 +175,15 @@ export function activate(context: ExtensionContext) {
             previousPortal.id !== selectedPortal.id ||
             previousPortal.origin !== selectedPortal.origin
 
-          if (previewProvider?.hasActivePreview()) {
+          if (previewProvider?.hasActivePreview() && isDifferentPortal) {
             // If there's already an active preview, update it with the new portal
-            if (isDifferentPortal) {
-              debug.log('Portal selection changed, reloading webview with new portal:', {
-                previousPortal: previousPortal?.displayName || 'none',
-                newPortal: selectedPortal.displayName,
-              })
+            debug.log('Portal selection changed, reloading webview with new portal:', {
+              previousPortal: previousPortal?.displayName || 'none',
+              newPortal: selectedPortal.displayName,
+            })
 
-              // Update the webview configuration to use the new portal
-              await previewProvider.updateConfiguration()
-            }
-          } else {
-            // No active preview, check if there's an active document that can be previewed
-            if (hasActivePreviewableDocument()) {
-              // Automatically open preview for the active document
-              debug.log('Auto-opening preview for active document after portal selection')
-              await commands.executeCommand('kong.konnect.devPortal.openPreview')
-            }
+            // Update the webview configuration to use the new portal
+            await previewProvider.updateConfiguration()
           }
         }
       } catch (error) {
@@ -451,7 +379,6 @@ export function activate(context: ExtensionContext) {
     refreshPreviewCommand,
     configureTokenCommand,
     selectPortalCommand,
-    selectRegionCommand,
     deleteTokenCommand,
     checkKongctlStatusCommand,
     showKongctlDiagnosticsCommand,
@@ -634,7 +561,7 @@ export function getConfiguration(): PortalPreviewConfig {
   return {
     autoOpenPreview: config.get<boolean>('autoOpenPreview', false),
     previewUpdateDelay: config.get<number>('previewUpdateDelay', 500),
-    readyTimeout: config.get<number>('readyTimeout', 5000),
+    readyTimeout: config.get<number>('readyTimeout', 8000),
     debug: config.get<boolean>('debug', false),
     showMDCRecommendation: config.get<boolean>('showMDCRecommendation', true),
     pagesDirectory: config.get<string>('pagesDirectory', 'pages'),

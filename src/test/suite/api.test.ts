@@ -134,7 +134,7 @@ suite('API Service Tests', () => {
       queueMockResponse(mockResponse)
 
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
         assert.fail('Should have thrown ApiError for 401')
       } catch (error) {
         assert.ok(error instanceof ApiError, 'Should throw ApiError instance')
@@ -153,7 +153,7 @@ suite('API Service Tests', () => {
       queueMockResponse(mockResponse)
 
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
         assert.fail('Should have thrown ApiError for 403')
       } catch (error) {
         assert.ok(error instanceof ApiError, 'Should throw ApiError instance')
@@ -172,7 +172,7 @@ suite('API Service Tests', () => {
       queueMockResponse(mockResponse)
 
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
         assert.fail('Should have thrown ApiError for 404')
       } catch (error) {
         assert.ok(error instanceof ApiError, 'Should throw ApiError instance')
@@ -191,7 +191,7 @@ suite('API Service Tests', () => {
       queueMockResponse(mockResponse)
 
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
         assert.fail('Should have thrown ApiError for 429')
       } catch (error) {
         assert.ok(error instanceof ApiError, 'Should throw ApiError instance')
@@ -210,7 +210,7 @@ suite('API Service Tests', () => {
       queueMockResponse(mockResponse)
 
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
         assert.fail('Should have thrown ApiError for 500')
       } catch (error) {
         assert.ok(error instanceof ApiError, 'Should throw ApiError instance')
@@ -226,7 +226,7 @@ suite('API Service Tests', () => {
       queueMockResponse(abortError)
 
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
         assert.fail('Should have thrown timeout error')
       } catch (error) {
         assert.ok(error instanceof Error, 'Should throw Error for timeout')
@@ -242,7 +242,7 @@ suite('API Service Tests', () => {
       queueMockResponse(mockResponse)
 
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
         assert.fail('Should have thrown JSON parse error')
       } catch (error) {
         assert.ok(error instanceof SyntaxError, 'Should throw SyntaxError for invalid JSON')
@@ -266,7 +266,7 @@ suite('API Service Tests', () => {
       queueMockResponse(mockResponse)
 
       // Test actual API call execution
-      const portals = await apiService.fetchAllPortals(validToken)
+      const portals = await apiService.fetchAllPortals(validToken, 'us')
 
       // Verify actual network request was made correctly
       const lastCall = getLastFetchCall()
@@ -291,6 +291,30 @@ suite('API Service Tests', () => {
       assert.strictEqual(portals[0].name, samplePortal.name, 'Should correctly parse portal name')
       assert.strictEqual(portals[0].default_domain, samplePortal.default_domain, 'Should parse domain correctly')
       assert.strictEqual(portals[0].authentication_enabled, samplePortal.authentication_enabled, 'Should parse boolean flags correctly')
+    })
+
+    test('should build the request URL from the passed region on every call', async () => {
+      // Regression test for the stale-baseUrl bug: the region must be read
+      // fresh from the argument on every call, never cached on the service.
+      const usResponse = createMockResponse({
+        data: [],
+        meta: { page: { number: 1, size: 0, total: 0 } },
+      })
+      const euResponse = createMockResponse({
+        data: [],
+        meta: { page: { number: 1, size: 0, total: 0 } },
+      })
+      queueMockResponse(usResponse)
+      queueMockResponse(euResponse)
+
+      await apiService.fetchAllPortals(validToken, 'us')
+      const [firstUrl] = mockFetchCalls[0]
+      assert.ok(firstUrl.startsWith('https://us.api.konghq.com/'), 'First call should target the us region')
+
+      // Same service instance, different region on the very next call
+      await apiService.fetchAllPortals(validToken, 'eu')
+      const [secondUrl] = mockFetchCalls[1]
+      assert.ok(secondUrl.startsWith('https://eu.api.konghq.com/'), 'Second call should target the eu region, not a cached us URL')
     })
 
     test('should handle pagination by making multiple sequential API calls', async () => {
@@ -335,7 +359,7 @@ suite('API Service Tests', () => {
       queueMockResponse(thirdPageResponse)
 
       // Execute API call that should automatically handle pagination
-      const portals = await apiService.fetchAllPortals(validToken)
+      const portals = await apiService.fetchAllPortals(validToken, 'us')
 
       // Verify pagination behavior: multiple sequential requests
       assert.strictEqual(mockFetchCalls.length, 3, 'Should make exactly 3 sequential requests for 3 pages')
@@ -366,7 +390,7 @@ suite('API Service Tests', () => {
 
       let timeoutError = null
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
       } catch (error) {
         timeoutError = error
       }
@@ -399,7 +423,7 @@ suite('API Service Tests', () => {
 
       let rateLimitError = null
       try {
-        await apiService.fetchAllPortals(validToken)
+        await apiService.fetchAllPortals(validToken, 'us')
       } catch (error) {
         rateLimitError = error
       }
@@ -427,7 +451,7 @@ suite('API Service Tests', () => {
       })
       queueMockResponse(mockResponse)
 
-      const portals = await apiService.fetchAllPortals(validToken)
+      const portals = await apiService.fetchAllPortals(validToken, 'us')
 
       assert.strictEqual(portals.length, 0, 'Should return empty array')
     })
@@ -446,7 +470,7 @@ suite('API Service Tests', () => {
       })
       queueMockResponse(mockResponse)
 
-      await customTimeoutService.fetchAllPortals(validToken)
+      await customTimeoutService.fetchAllPortals(validToken, 'us')
 
       const lastCall = getLastFetchCall()
       assert.ok(lastCall, 'Should have made a fetch call')
@@ -487,7 +511,7 @@ suite('API Service Tests', () => {
       queueMockResponse(abortError)
 
       try {
-        await timeoutService.fetchAllPortals(validToken)
+        await timeoutService.fetchAllPortals(validToken, 'us')
         assert.fail('Should have timed out')
       } catch (error) {
         assert.ok(error instanceof Error, 'Should throw Error for timeout')
@@ -508,7 +532,7 @@ suite('API Service Tests', () => {
       })
       queueMockResponse(mockResponse)
 
-      const portals = await timeoutService.fetchAllPortals(validToken)
+      const portals = await timeoutService.fetchAllPortals(validToken, 'us')
       assert.strictEqual(portals.length, 1, 'Should successfully fetch portals within timeout')
     })
   })

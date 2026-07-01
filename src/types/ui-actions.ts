@@ -11,14 +11,6 @@
  */
 
 /**
- * Actions for portal selection prompts after token configuration
- */
-export enum PortalSelectionActions {
-  SELECT_PORTAL = 'Select Portal',
-  LATER = 'Later',
-}
-
-/**
  * Actions for token configuration prompts
  */
 export enum TokenConfigurationActions {

@@ -51,10 +51,50 @@ export interface KonnectPortalsResponse {
  * Stored portal configuration
  */
 export interface StoredPortalConfig {
+  /** Unique identifier of the portal */
   id: string
+  /** Internal name of the portal */
   name: string
+  /** Human-readable display name of the portal */
   displayName: string
+  /** Description of the portal */
   description: string
+  /** HTTPS origin used to load the portal preview */
   origin: string
+  /** Canonical domain of the portal */
   canonicalDomain: string
+  /**
+   * Konnect region the portal lives in (e.g. 'us', 'eu').
+   * Drives the region used for all subsequent API/kongctl calls for this portal.
+   * Optional for backwards compatibility with configs stored before region support was added.
+   */
+  region?: string
+}
+
+/**
+ * A Konnect portal tagged with the region it was discovered in
+ */
+export interface KonnectPortalWithRegion extends KonnectPortal {
+  /** Konnect region this portal was fetched from (e.g. 'us', 'eu') */
+  region: string
+}
+
+/**
+ * A failure that occurred while fetching portals from a single region
+ */
+export interface RegionFetchError {
+  /** Konnect region that failed to fetch */
+  region: string
+  /** The error that occurred while fetching this region */
+  error: Error
+}
+
+/**
+ * Aggregated result of fetching portals across multiple Konnect regions
+ */
+export interface MultiRegionPortalsResult {
+  /** Portals successfully fetched, each tagged with its region */
+  portals: KonnectPortalWithRegion[]
+  /** Per-region failures encountered while fetching (e.g. opt-in region not enabled) */
+  errors: RegionFetchError[]
 }

@@ -55,7 +55,7 @@ let timeoutWarningShown = false
 
 
 /** Timeout in milliseconds to wait for portal ready signal (replaced at runtime via template variable) */
-const readyTimeoutMs: number = parseInt('{%%READY_TIMEOUT_MS%%}') || 5000
+const readyTimeoutMs: number = parseInt('{%%READY_TIMEOUT_MS%%}') || 8000
 
 
 /** Prefix for debug log messages */

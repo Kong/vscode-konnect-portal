@@ -1,7 +1,6 @@
 import type { KonnectPortal, KonnectPortalsResponse } from '../types/konnect'
 import type { ApiErrorInfo } from '../types'
 import { API_ERROR_MESSAGES } from '../constants/messages'
-import { workspace } from 'vscode'
 
 /**
  * Custom error class for API errors with trace ID support
@@ -41,25 +40,25 @@ export class ApiError extends Error {
 
 
 /**
- * Returns the Konnect API base URL for the selected region
- * @returns Base URL string (e.g., 'https://us.api.konghq.com')
+ * Konnect API version path segment
  */
-function getKonnectBaseUrl(): string {
-  // Read region from global/user settings, fallback to 'us'
-  const config = workspace.getConfiguration()
-  const region = config.get<string>('kong.konnect.region', 'us')
-  return `https://${region}.api.konghq.com`
-}
-
 const API_VERSION = 'v3'
+
+/**
+ * Builds the Konnect API base URL for a given region.
+ * Computed fresh from the passed region on every call (never cached) so
+ * requests always target the region currently in use, avoiding stale state.
+ * @param region Konnect region code (e.g. 'us', 'eu')
+ * @returns Base URL string (e.g., 'https://us.api.konghq.com/v3')
+ */
+function buildKonnectApiBaseUrl(region: string): string {
+  return `https://${region}.api.konghq.com/${API_VERSION}`
+}
 
 /**
  * Service for interacting with the Konnect API
  */
 export class KonnectApiService {
-  /** Base URL for all API requests */
-  private baseUrl: string
-
   /** Request timeout in milliseconds */
   private readonly timeout: number
 
@@ -68,36 +67,27 @@ export class KonnectApiService {
    * @param timeout Request timeout in milliseconds (default: 10000)
    */
   constructor(timeout = 10000) {
-    this.baseUrl = `${getKonnectBaseUrl()}/${API_VERSION}`
     this.timeout = timeout
   }
 
   /**
-   * Updates the base URL (call if region changes at runtime)
-   */
-  updateBaseUrl(): void {
-    this.baseUrl = `${getKonnectBaseUrl()}/${API_VERSION}`
-  }
-
-  /**
-   * Fetches all portals from Konnect API with pagination support
-   * @param token Personal Access Token
+   * Fetches all portals for the authenticated user in the given region, handling
+   * pagination automatically. The base URL is computed from `region` on every
+   * page request rather than cached, so region changes take effect immediately.
+   * @param token Konnect PAT token
+   * @param region Konnect region to fetch portals from (e.g. 'us', 'eu')
    * @returns Promise resolving to array of all portals
    * @throws ApiError on API errors
    */
-  /**
-   * Fetches all portals for the authenticated user, handling pagination automatically
-   * @param token Konnect PAT token
-   * @returns Promise resolving to array of all portals
-   */
-  async fetchAllPortals(token: string): Promise<KonnectPortal[]> {
+  async fetchAllPortals(token: string, region: string): Promise<KonnectPortal[]> {
     const allPortals: KonnectPortal[] = []
     let currentPage = 1
     const pageSize = 100
+    const baseUrl = buildKonnectApiBaseUrl(region)
 
     // Continue fetching pages until we have all portals
     while (true) {
-      const url = `${this.baseUrl}/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
+      const url = `${baseUrl}/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
 
       const response = await this.fetchRequest<KonnectPortalsResponse>(url, token, {
         method: 'GET',

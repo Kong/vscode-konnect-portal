@@ -34,6 +34,8 @@ export const PORTAL_SELECTION_MESSAGES = {
   // Error messages
   NO_TOKEN: 'No Konnect token found. Please configure your Personal Access Token to continue.',
   LOAD_PORTALS_FAILED: 'Failed to load portals',
+  ALL_REGIONS_FAILED: (regions: string, sampleError: string) => `Failed to load portals from any Konnect region (tried: ${regions}). ${sampleError}`,
+  NO_REGIONS_AVAILABLE: 'Could not discover any Konnect regions. Please check your connection and try again.',
 
   // Warning messages
   NO_PORTALS_WARNING: 'No portals found in your Konnect account. Please create a portal first.',
