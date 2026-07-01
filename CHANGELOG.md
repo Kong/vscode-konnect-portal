@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.10.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.10.1...v1.10.2) (2026-07-01)
+
+
+### Bug Fixes
+
+* auto-determine portal region [TDX-8358] ([#100](https://github.com/Kong/vscode-konnect-portal/issues/100)) ([d1da7f5](https://github.com/Kong/vscode-konnect-portal/commit/d1da7f5a03e7f6db92211b72d1347b99597ac0d2))
+
 ## [1.10.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.10.0...v1.10.1) (2026-06-29)
 
 ## [1.10.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.9.0...v1.10.0) (2026-06-29)
