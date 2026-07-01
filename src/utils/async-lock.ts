@@ -10,7 +10,7 @@ export interface AsyncLock {
    * @param fn The task to run while holding the lock
    * @returns Promise resolving/rejecting with `fn`'s own outcome
    */
-  run: <T>(fn: () => Promise<T>) => Promise<T>
+  run: <T>(fn: () => T | Promise<T>) => Promise<T>
 }
 
 /**
@@ -21,7 +21,7 @@ export function createAsyncLock(): AsyncLock {
   let tail: Promise<void> = Promise.resolve()
 
   return {
-    async run<T>(fn: () => Promise<T>): Promise<T> {
+    async run<T>(fn: () => T | Promise<T>): Promise<T> {
       const previous = tail
       let release: () => void
       tail = new Promise<void>((resolve) => {
