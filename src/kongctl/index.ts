@@ -16,6 +16,14 @@ const exists = promisify(fs.exists)
  * finished corrupts output correlation between commands. Multiple callers
  * (e.g. fetching several Konnect regions in parallel) can invoke
  * `executeKongctl` concurrently, so terminal-backed runs must queue.
+ *
+ * Scope: this only serializes callers that go through `executeKongctl` with
+ * `showInTerminal` left at its default (true). It does NOT protect the
+ * shared terminal from `src/kongctl/install.ts`'s `installWithHomebrew` or
+ * `src/extension.ts`'s "Run Command" feature, both of which call
+ * `getOrCreateKongctlTerminal`/`sendText` directly. Those are single,
+ * user-initiated actions rather than fan-out from this extension's own code,
+ * so the risk is low today, but they are not covered by this lock.
  */
 const terminalLock = createAsyncLock()
 
@@ -140,20 +148,22 @@ async function runViaTerminal(
   let terminal: vscode.Terminal | undefined
   try {
     terminal = getOrCreateKongctlTerminal(env)
-    // Don't show terminal panel - let user open it manually if they want to see output
-    // Leaving commented out for possible future use
-    // terminal.show(true)
-    terminal.sendText(fullCommand, true)
   } catch {
     // If terminal API fails, continue to spawn fallback for output
     return undefined
   }
 
   if (!terminal.shellIntegration) {
+    // No shell integration available to capture output with. Don't type the
+    // command into the terminal here -- the spawn fallback below will run it
+    // independently, and running both would execute the command twice.
     return undefined
   }
 
   try {
+    // executeCommand both types the command into the terminal and runs it
+    // (visible if the user opens the terminal panel), so sendText must never
+    // also be called here -- doing both would execute the command twice.
     const execution = terminal.shellIntegration.executeCommand(fullCommand)
     const stream = execution.read()
     let stdout = ''

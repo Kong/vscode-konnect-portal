@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import { withHttps } from 'ufo'
-import type { StoredPortalConfig } from './types/konnect'
+import type { KonnectPortal, RegionFetchError, StoredPortalConfig } from './types/konnect'
 import { KonnectRequestService } from './konnect/request-service'
 import { fetchAvailableRegions } from './konnect/regions'
 import { ApiError } from './konnect/api'
@@ -70,11 +70,27 @@ export class PortalSelectionService {
       // Older configs stored before region support was added lack a region --
       // fall back to validating across every available region.
       debug.log('Fetching portal list to validate stored selection')
-      const portals = storedPortal.region
-        ? await this.requestService.fetchAllPortals(storedPortal.region)
-        : (await this.requestService.fetchAllPortalsAcrossRegions(
-          await fetchAvailableRegions(this.storageService),
-        )).portals
+
+      let portals: KonnectPortal[]
+      let errors: RegionFetchError[] = []
+      let discoveredRegion: string | undefined
+
+      if (storedPortal.region) {
+        portals = await this.requestService.fetchAllPortals(storedPortal.region)
+      } else {
+        const regions = await fetchAvailableRegions(this.storageService)
+        if (regions.length === 0) {
+          // Can't validate without knowing which regions to check -- keep the
+          // selection rather than guessing it's gone.
+          debug.warn('No Konnect regions could be discovered, skipping portal validation')
+          return storedPortal
+        }
+
+        const result = await this.requestService.fetchAllPortalsAcrossRegions(regions)
+        portals = result.portals
+        errors = result.errors
+        discoveredRegion = result.portals.find(p => p.id === storedPortal.id)?.region
+      }
 
       // Check if stored portal exists in the list
       const portalExists = portals.some(p => p.id === storedPortal.id)
@@ -82,17 +98,38 @@ export class PortalSelectionService {
       if (portalExists) {
         // Portal still valid, continue silently
         debug.log('Stored portal validated successfully')
+
+        // Backfill the region for a legacy config now that it's known, so
+        // future sessions take the fast single-region path instead of
+        // re-fetching every region forever.
+        if (discoveredRegion && discoveredRegion !== storedPortal.region) {
+          const updatedConfig: StoredPortalConfig = { ...storedPortal, region: discoveredRegion }
+          await this.storageService.storeSelectedPortal(updatedConfig)
+          return updatedConfig
+        }
+
         return storedPortal
-      } else {
-        // Portal no longer available, clear it and show warning
-        debug.log('Stored portal no longer available, clearing selection:', {
-          id: storedPortal.id,
-          displayName: storedPortal.displayName,
-          availablePortalCount: portals.length,
-        })
-        await this.storageService.clearSelectedPortal()
-        return undefined
       }
+
+      if (errors.length > 0) {
+        // Some regions failed to respond -- the portal may live in one of
+        // them, so we can't be confident it's actually gone. Keep the
+        // selection rather than clearing it over an ambiguous failure.
+        debug.warn('Could not fully validate stored portal due to per-region fetch failures, keeping selection:', {
+          id: storedPortal.id,
+          failedRegions: errors.map(e => e.region),
+        })
+        return storedPortal
+      }
+
+      // Portal no longer available, clear it and show warning
+      debug.log('Stored portal no longer available, clearing selection:', {
+        id: storedPortal.id,
+        displayName: storedPortal.displayName,
+        availablePortalCount: portals.length,
+      })
+      await this.storageService.clearSelectedPortal()
+      return undefined
     } catch (error) {
       // Handle 401 errors (bad token)
       if (error instanceof ApiError && error.statusCode === 401) {
@@ -135,6 +172,11 @@ export class PortalSelectionService {
           // Discover every available region and fetch portals from all of them
           // in parallel, so the user never has to know or pick a region.
           const regions = await fetchAvailableRegions(this.storageService)
+          if (regions.length === 0) {
+            vscode.window.showErrorMessage(PORTAL_SELECTION_MESSAGES.NO_REGIONS_AVAILABLE)
+            return undefined
+          }
+
           const { portals, errors } = await this.requestService.fetchAllPortalsAcrossRegions(regions)
 
           if (cancellationToken.isCancellationRequested) {
@@ -147,8 +189,13 @@ export class PortalSelectionService {
             if (errors.length > 0) {
               // Every region failed (as opposed to simply having no portals) --
               // this is worth surfacing as an error rather than a soft warning.
+              // Include a representative underlying error so kongctl/API
+              // specific detail isn't lost now that per-region dialogs were removed.
               vscode.window.showErrorMessage(
-                PORTAL_SELECTION_MESSAGES.ALL_REGIONS_FAILED(errors.map(e => e.region).join(', ')),
+                PORTAL_SELECTION_MESSAGES.ALL_REGIONS_FAILED(
+                  errors.map(e => e.region).join(', '),
+                  errors[0].error.message,
+                ),
               )
             } else {
               vscode.window.showWarningMessage(

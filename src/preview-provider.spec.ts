@@ -77,7 +77,7 @@ describe('PreviewProvider', () => {
   const mockConfig: PortalPreviewConfig = {
     autoOpenPreview: true,
     previewUpdateDelay: 300,
-    readyTimeout: 5000,
+    readyTimeout: 8000,
     debug: false,
     showMDCRecommendation: true,
     pagesDirectory: 'pages',

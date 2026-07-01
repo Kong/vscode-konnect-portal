@@ -37,7 +37,7 @@ suite('Configuration Tests', () => {
     // Test default values match expected defaults
     assert.strictEqual(config.get('autoOpenPreview'), false, 'autoOpenPreview should default to false')
     assert.strictEqual(config.get('previewUpdateDelay'), 500, 'previewUpdateDelay should default to 500')
-    assert.strictEqual(config.get('readyTimeout'), 5000, 'readyTimeout should default to 5000')
+    assert.strictEqual(config.get('readyTimeout'), 8000, 'readyTimeout should default to 8000')
     assert.strictEqual(config.get('debug'), false, 'debug should default to false')
     assert.strictEqual(config.get('showMDCRecommendation'), true, 'showMDCRecommendation should default to true')
     assert.strictEqual(config.get('pagesDirectory'), 'pages', 'pagesDirectory should default to "pages"')
@@ -76,7 +76,7 @@ suite('Configuration Tests', () => {
     assert.strictEqual(updatedConfig1.get('previewUpdateDelay'), 1000, 'previewUpdateDelay should be updated to 1000')
 
     // Test readyTimeout: verify default, change, verify new value
-    assert.strictEqual(updatedConfig1.get('readyTimeout'), 5000, 'readyTimeout should start with default value 5000')
+    assert.strictEqual(updatedConfig1.get('readyTimeout'), 8000, 'readyTimeout should start with default value 8000')
     await config.update('readyTimeout', 8000, vscode.ConfigurationTarget.Global)
     const updatedConfig2 = vscode.workspace.getConfiguration(configSection)
     assert.strictEqual(updatedConfig2.get('readyTimeout'), 8000, 'readyTimeout should be updated to 8000')
@@ -118,7 +118,7 @@ suite('Configuration Tests', () => {
     const config = vscode.workspace.getConfiguration(configSection)
 
     // Test minimum value: verify default, change, verify new value
-    assert.strictEqual(config.get('readyTimeout'), 5000, 'readyTimeout should start with default value 5000')
+    assert.strictEqual(config.get('readyTimeout'), 8000, 'readyTimeout should start with default value 8000')
     await config.update('readyTimeout', 1000, vscode.ConfigurationTarget.Global)
     const updatedConfig1 = vscode.workspace.getConfiguration(configSection)
     assert.strictEqual(updatedConfig1.get('readyTimeout'), 1000, 'readyTimeout should accept minimum value of 1000')

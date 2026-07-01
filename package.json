@@ -245,7 +245,7 @@
         },
         "kong.konnect.devPortal.readyTimeout": {
           "type": "number",
-          "default": 5000,
+          "default": 8000,
           "minimum": 3000,
           "maximum": 10000,
           "description": "Timeout in milliseconds to wait for the Dev Portal to signal that the preview is ready"

@@ -34,8 +34,13 @@ export class KonnectRequestService {
   /** Service for managing secure storage of portal configuration */
   private readonly storageService: PortalStorageService
 
-  /** Cache for kongctl availability to avoid repeated checks */
-  private kongctlAvailable?: boolean
+  /**
+   * Cache for the in-flight/resolved kongctl availability check. Caching the
+   * promise itself (not just its resolved value) avoids a stampede: multiple
+   * regions fetched concurrently would otherwise all observe the cache as
+   * unset before the first check resolves, each spawning its own redundant check.
+   */
+  private kongctlAvailablePromise?: Promise<boolean>
 
   /**
    * Creates a new KonnectRequestService instance
@@ -51,10 +56,10 @@ export class KonnectRequestService {
    * @returns Promise resolving to true if kongctl is available
    */
   private async isKongctlAvailable(): Promise<boolean> {
-    if (this.kongctlAvailable === undefined) {
-      this.kongctlAvailable = await checkKongctlAvailable()
+    if (!this.kongctlAvailablePromise) {
+      this.kongctlAvailablePromise = checkKongctlAvailable()
     }
-    return this.kongctlAvailable
+    return this.kongctlAvailablePromise
   }
 
   /**
@@ -228,6 +233,6 @@ export class KonnectRequestService {
    * Call this when kongctl installation status might have changed
    */
   resetKongctlAvailability(): void {
-    this.kongctlAvailable = undefined
+    this.kongctlAvailablePromise = undefined
   }
 }

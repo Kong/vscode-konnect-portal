@@ -121,7 +121,7 @@ The extension provides several configuration options in VS Code settings:
 |---------|------|---------|-------------|---------|
 | `kong.konnect.devPortal.autoOpenPreview` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
 | `kong.konnect.devPortal.previewUpdateDelay` | `number` | `500` | Delay in milliseconds before updating preview after content changes (500-3000) | Use `1000` for slower updates |
-| `kong.konnect.devPortal.readyTimeout` | `number` | `5000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
+| `kong.konnect.devPortal.readyTimeout` | `number` | `8000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
 | `kong.konnect.devPortal.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
 | `kong.konnect.devPortal.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
 | `kong.konnect.devPortal.pagesDirectory` | `string` | `"pages"` | Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Leave empty to disable path calculation. | `"pages"`, `"docs/pages"`, `"src/content/documentation"` |

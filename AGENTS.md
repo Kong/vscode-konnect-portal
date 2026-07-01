@@ -143,10 +143,12 @@ Communication between contexts happens via **message passing** using VS Code's w
   - **Critical pattern**: `refreshPreview()` uses `window.activeTextEditor?.document` first, falls back to `panelState.currentDocument`
 - **`storage.ts`** - Manages secure token storage using VS Code SecretStorage API
 - **`portal-selection.ts`** - Handles portal selection workflow
-- **`konnect/`** - Konnect API integration
-  - `api.ts` - API client for fetching portals
-  - `request-service.ts` - HTTP request handling with authentication
-  - `regions.ts` - Konnect region management
+- **`konnect/`** - Multi-region Konnect API integration
+  - `api.ts` - Direct REST client; builds each request's base URL from a `region` argument, never cached, so region changes take effect immediately
+  - `request-service.ts` - Unified request layer: tries kongctl CLI first, falls back to the API. `fetchAllPortalsAcrossRegions()` queries every discovered region in parallel; only clears the stored token when *every* region reports a 401 (a single region 401ing just means the account isn't provisioned there)
+  - `regions.ts` - Auto-discovers available regions from Konnect's global regions endpoint (no manual region picker/setting - removed in favor of auto-detection)
+- **`kongctl/`** - kongctl CLI execution
+  - `index.ts` - `executeKongctl()`: silent/programmatic calls (portal fetch, region discovery) pass `showInTerminal: false` and run via an isolated spawned process (fresh env/token per call, safe under concurrency). The shared VS Code terminal path is reserved for interactive commands (e.g. "Run Command") and is serialized via `utils/async-lock.ts` since VS Code's shell integration can't handle overlapping executions on one terminal
 
 #### Webview Side (`src/webview/`)
 

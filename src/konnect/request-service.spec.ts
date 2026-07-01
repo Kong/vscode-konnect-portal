@@ -299,6 +299,31 @@ describe('KonnectRequestService', () => {
       // checkKongctlAvailable should only be called once due to caching
       expect(checkKongctlAvailable).toHaveBeenCalledTimes(1)
     })
+
+    it('should not spawn a redundant availability check when regions race on the first concurrent fetch', async () => {
+      // Regression test for a cache stampede: fetchAllPortalsAcrossRegions
+      // kicks off one fetchPortalsForRegion call per region concurrently,
+      // and each one calls isKongctlAvailable(). If the cache is only
+      // populated after the check resolves, every region observes it as
+      // unset and independently spawns its own redundant check.
+      let resolveCheck: (value: boolean) => void = () => {}
+      vi.mocked(checkKongctlAvailable).mockImplementation(
+        () => new Promise((resolve) => {
+          resolveCheck = resolve
+        }),
+      )
+
+      const pending = service.fetchAllPortalsAcrossRegions(['us', 'eu', 'au'])
+
+      // Let all three region fetches race up to the availability check
+      await new Promise(resolve => setTimeout(resolve, 0))
+      expect(checkKongctlAvailable).toHaveBeenCalledTimes(1)
+
+      resolveCheck(true)
+      await pending
+
+      expect(checkKongctlAvailable).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('fetchAllPortalsAcrossRegions', () => {

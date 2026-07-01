@@ -192,7 +192,7 @@ describe('konnect/portal-selection', () => {
         expect(result).toBeUndefined()
       })
 
-      it('should show a grouped region error when every region failed to fetch', async () => {
+      it('should show a grouped region error, including the underlying error detail, when every region failed to fetch', async () => {
         mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
         mockFetchAvailableRegions.mockResolvedValueOnce(['us', 'sg'])
         mockFetchAllPortalsAcrossRegions.mockResolvedValueOnce({
@@ -205,10 +205,24 @@ describe('konnect/portal-selection', () => {
 
         const result = await portalSelectionService.selectPortal()
 
+        // Include a representative underlying error message so kongctl/API
+        // specific detail isn't lost now that per-region dialogs were removed.
         expect(mockShowErrorMessage).toHaveBeenCalledWith(
-          PORTAL_SELECTION_MESSAGES.ALL_REGIONS_FAILED('us, sg'),
+          PORTAL_SELECTION_MESSAGES.ALL_REGIONS_FAILED('us, sg', 'Network error'),
         )
         expect(mockShowWarningMessage).not.toHaveBeenCalled()
+        expect(result).toBeUndefined()
+      })
+
+      it('should show an error and stop when no regions could be discovered', async () => {
+        mockStorageService.getToken = vi.fn().mockResolvedValueOnce(testTokens.valid)
+        mockFetchAvailableRegions.mockResolvedValueOnce([])
+
+        const result = await portalSelectionService.selectPortal()
+
+        expect(mockFetchAllPortalsAcrossRegions).not.toHaveBeenCalled()
+        expect(mockShowErrorMessage).toHaveBeenCalledWith(PORTAL_SELECTION_MESSAGES.NO_REGIONS_AVAILABLE)
+        expect(mockShowQuickPick).not.toHaveBeenCalled()
         expect(result).toBeUndefined()
       })
 
@@ -534,6 +548,67 @@ describe('konnect/portal-selection', () => {
 
         expect(mockFetchAllPortalsAcrossRegions).toHaveBeenCalledWith(['us', 'eu'])
         expect(mockFetchAllPortals).not.toHaveBeenCalled()
+
+        // The discovered region is backfilled so future sessions take the
+        // fast single-region path instead of re-fetching every region forever.
+        expect(result).toEqual({ ...legacyConfig, region: 'us' })
+        expect(mockStorageService.storeSelectedPortal).toHaveBeenCalledWith({ ...legacyConfig, region: 'us' })
+      })
+
+      it('should not persist anything when the stored region already matches the discovered one', async () => {
+        vi.mocked(mockStorageService.getSelectedPortal).mockResolvedValueOnce(mockStoredPortalConfig)
+        vi.mocked(mockStorageService.hasValidToken).mockResolvedValueOnce(true)
+        mockFetchAllPortals.mockResolvedValueOnce([
+          { ...mockPortals[0], id: mockStoredPortalConfig.id },
+        ])
+
+        await portalSelectionService.validateStoredPortal()
+
+        expect(mockStorageService.storeSelectedPortal).not.toHaveBeenCalled()
+      })
+
+      it('should keep the stored portal when some regions failed and it was not found in the ones that succeeded', async () => {
+        // A region that failed to respond might be the one the portal
+        // actually lives in -- clearing here would be a guess, not a fact.
+        const legacyConfig = { ...mockStoredPortalConfig, region: undefined }
+        vi.mocked(mockStorageService.getSelectedPortal).mockResolvedValueOnce(legacyConfig)
+        vi.mocked(mockStorageService.hasValidToken).mockResolvedValueOnce(true)
+        mockFetchAvailableRegions.mockResolvedValueOnce(['us', 'eu'])
+        mockFetchAllPortalsAcrossRegions.mockResolvedValueOnce({
+          portals: [],
+          errors: [{ region: 'eu', error: new Error('Network unreachable') }],
+        })
+
+        const result = await portalSelectionService.validateStoredPortal()
+
+        expect(mockStorageService.clearSelectedPortal).not.toHaveBeenCalled()
+        expect(mockStorageService.storeSelectedPortal).not.toHaveBeenCalled()
+        expect(result).toEqual(legacyConfig)
+      })
+
+      it('should clear the stored portal when every region was confirmed to have no matching portal', async () => {
+        const legacyConfig = { ...mockStoredPortalConfig, region: undefined }
+        vi.mocked(mockStorageService.getSelectedPortal).mockResolvedValueOnce(legacyConfig)
+        vi.mocked(mockStorageService.hasValidToken).mockResolvedValueOnce(true)
+        mockFetchAvailableRegions.mockResolvedValueOnce(['us', 'eu'])
+        mockFetchAllPortalsAcrossRegions.mockResolvedValueOnce({ portals: [], errors: [] })
+
+        const result = await portalSelectionService.validateStoredPortal()
+
+        expect(mockStorageService.clearSelectedPortal).toHaveBeenCalled()
+        expect(result).toBeUndefined()
+      })
+
+      it('should keep the stored portal when no regions could be discovered', async () => {
+        const legacyConfig = { ...mockStoredPortalConfig, region: undefined }
+        vi.mocked(mockStorageService.getSelectedPortal).mockResolvedValueOnce(legacyConfig)
+        vi.mocked(mockStorageService.hasValidToken).mockResolvedValueOnce(true)
+        mockFetchAvailableRegions.mockResolvedValueOnce([])
+
+        const result = await portalSelectionService.validateStoredPortal()
+
+        expect(mockFetchAllPortalsAcrossRegions).not.toHaveBeenCalled()
+        expect(mockStorageService.clearSelectedPortal).not.toHaveBeenCalled()
         expect(result).toEqual(legacyConfig)
       })
 

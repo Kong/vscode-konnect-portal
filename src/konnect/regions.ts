@@ -15,9 +15,13 @@ const UNSUPPORTED_REGIONS = ['me']
  * Shape of the available-regions response returned by both kongctl and the API
  */
 interface AvailableRegionsResponse {
+  /** Region tiers, keyed by rollout stage */
   regions?: {
+    /** Regions generally available to all accounts */
     stable?: string[]
+    /** Regions available only to accounts that have explicitly opted in */
     stable_opt_in?: string[]
+    /** Regions still in beta rollout */
     beta?: string[]
   }
 }

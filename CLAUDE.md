@@ -61,10 +61,14 @@ src/
 ├── utils/
 │   ├── page-path.ts      # Path calculation logic
 │   ├── webview.ts        # HTML generation utilities
-│   └── debug.ts          # Logging utilities
-├── konnect/              # Konnect API integration
-└── types/                # TypeScript type definitions
+│   ├── debug.ts          # Logging utilities
+│   └── async-lock.ts     # FIFO mutex (serializes the shared kongctl terminal)
+├── konnect/               # Multi-region API/kongctl request layer (api.ts, request-service.ts, regions.ts)
+├── kongctl/               # kongctl CLI execution: spawn (silent calls) vs. shared terminal (interactive)
+└── types/                 # TypeScript type definitions
 ```
+
+**Region handling**: there is no manual region setting or picker. `regions.ts` auto-discovers available regions; `request-service.ts` queries all of them in parallel and only clears the stored token if every region reports a 401.
 
 ### Testing Strategy
 

@@ -108,23 +108,41 @@ describe('executeKongctl terminal concurrency', () => {
     await new Promise(resolve => setTimeout(resolve, 0))
     await new Promise(resolve => setTimeout(resolve, 0))
 
-    expect(fakeTerminal.sendText).toHaveBeenCalledTimes(1)
     expect(fakeTerminal.shellIntegration.executeCommand).toHaveBeenCalledTimes(1)
-    expect(fakeTerminal.sendText).toHaveBeenCalledWith(`kongctl ${cmdA}`, true)
+    expect(fakeTerminal.shellIntegration.executeCommand).toHaveBeenCalledWith(`kongctl ${cmdA}`)
 
     // Finish the first command -- only now should the second be allowed to start
     await completeExecution(`kongctl ${cmdA}`)
     await new Promise(resolve => setTimeout(resolve, 0))
     await new Promise(resolve => setTimeout(resolve, 0))
 
-    expect(fakeTerminal.sendText).toHaveBeenCalledTimes(2)
     expect(fakeTerminal.shellIntegration.executeCommand).toHaveBeenCalledTimes(2)
-    expect(fakeTerminal.sendText).toHaveBeenNthCalledWith(2, `kongctl ${cmdB}`, true)
+    expect(fakeTerminal.shellIntegration.executeCommand).toHaveBeenNthCalledWith(2, `kongctl ${cmdB}`)
 
     await completeExecution(`kongctl ${cmdB}`)
 
     const [resultA, resultB] = await Promise.all([pA, pB])
     expect(resultA.success).toBe(true)
     expect(resultB.success).toBe(true)
+  })
+
+  it('does not also call sendText when shell integration is used to run the command', async () => {
+    // Regression test: runViaTerminal used to call both terminal.sendText()
+    // AND terminal.shellIntegration.executeCommand() for the same command,
+    // which actually executes it twice. executeCommand alone already types
+    // and runs the command, so sendText must never be called alongside it.
+    const { executeKongctl } = await import('./index')
+
+    const cmd = 'api get "https://us.api.konghq.com/v3/portals" --output json'
+    const pending = executeKongctl(cmd.split(' '))
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(fakeTerminal.shellIntegration.executeCommand).toHaveBeenCalledWith(`kongctl ${cmd}`)
+    expect(fakeTerminal.sendText).not.toHaveBeenCalled()
+
+    await completeExecution(`kongctl ${cmd}`)
+    await pending
   })
 })
