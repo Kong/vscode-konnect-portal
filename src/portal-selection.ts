@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import { withHttps } from 'ufo'
 import type { StoredPortalConfig } from './types/konnect'
 import { KonnectRequestService } from './konnect/request-service'
+import { fetchAvailableRegions } from './konnect/regions'
 import { ApiError } from './konnect/api'
 import type { PortalStorageService } from './storage'
 import { showApiError } from './utils/error-handling'
@@ -28,7 +29,7 @@ export class PortalSelectionService {
    * @param context VS Code extension context
    */
   constructor(storageService: PortalStorageService, context: vscode.ExtensionContext) {
-    this.requestService = new KonnectRequestService(storageService, context)
+    this.requestService = new KonnectRequestService(storageService)
     this.storageService = storageService
     this.context = context
   }
@@ -64,9 +65,16 @@ export class PortalSelectionService {
     }
 
     try {
-      // Fetch current list of portals (silently, no progress indicator)
+      // Fetch current list of portals (silently, no progress indicator).
+      // If the stored config already knows its region, only query that region.
+      // Older configs stored before region support was added lack a region --
+      // fall back to validating across every available region.
       debug.log('Fetching portal list to validate stored selection')
-      const portals = await this.requestService.fetchAllPortals()
+      const portals = storedPortal.region
+        ? await this.requestService.fetchAllPortals(storedPortal.region)
+        : (await this.requestService.fetchAllPortalsAcrossRegions(
+          await fetchAvailableRegions(this.storageService),
+        )).portals
 
       // Check if stored portal exists in the list
       const portalExists = portals.some(p => p.id === storedPortal.id)
@@ -122,9 +130,12 @@ export class PortalSelectionService {
       },
       async (progress, cancellationToken) => {
         try {
-          progress.report({ increment: 20, message: PORTAL_SELECTION_MESSAGES.FETCHING_PORTAL_LIST })
+          progress.report({ increment: 10, message: PORTAL_SELECTION_MESSAGES.FETCHING_PORTAL_LIST })
 
-          const portals = await this.requestService.fetchAllPortals()
+          // Discover every available region and fetch portals from all of them
+          // in parallel, so the user never has to know or pick a region.
+          const regions = await fetchAvailableRegions(this.storageService)
+          const { portals, errors } = await this.requestService.fetchAllPortalsAcrossRegions(regions)
 
           if (cancellationToken.isCancellationRequested) {
             return undefined
@@ -133,19 +144,38 @@ export class PortalSelectionService {
           progress.report({ increment: 60, message: PORTAL_SELECTION_MESSAGES.PREPARING_PORTAL_SELECTION })
 
           if (portals.length === 0) {
-            vscode.window.showWarningMessage(
-              PORTAL_SELECTION_MESSAGES.NO_PORTALS_WARNING,
-            )
+            if (errors.length > 0) {
+              // Every region failed (as opposed to simply having no portals) --
+              // this is worth surfacing as an error rather than a soft warning.
+              vscode.window.showErrorMessage(
+                PORTAL_SELECTION_MESSAGES.ALL_REGIONS_FAILED(errors.map(e => e.region).join(', ')),
+              )
+            } else {
+              vscode.window.showWarningMessage(
+                PORTAL_SELECTION_MESSAGES.NO_PORTALS_WARNING,
+              )
+            }
             return undefined
+          }
+
+          if (errors.length > 0) {
+            // Some regions returned portals; others failed (e.g. an opt-in
+            // region not enabled for this account). Not fatal -- log and
+            // continue with what succeeded.
+            debug.warn(
+              'Failed to fetch portals from some regions, continuing with the regions that succeeded:',
+              errors.map(e => `${e.region}: ${e.error.message}`),
+            )
           }
 
           progress.report({ increment: 20, message: PORTAL_SELECTION_MESSAGES.READY_FOR_SELECTION })
 
-          // Create quick pick items
+          // Create quick pick items, surfacing each portal's region so the
+          // user can see (and filter/search on) where it lives
           const portalItems = portals.map(portal => {
             const label = portal.display_name && portal.display_name !== 'Developer Portal' ? portal.display_name : portal.name
             const description = portal.description || undefined
-            const detail = portal.canonical_domain
+            const detail = `${portal.canonical_domain}  ·  ${portal.region.toUpperCase()}`
 
             return {
               label,
@@ -167,7 +197,8 @@ export class PortalSelectionService {
             return undefined
           }
 
-          // Create stored config
+          // Create stored config, including the region that drives all
+          // subsequent API/kongctl calls for this portal
           const config: StoredPortalConfig = {
             id: selectedItem.portal.id,
             name: selectedItem.portal.name,
@@ -175,6 +206,7 @@ export class PortalSelectionService {
             description: selectedItem.portal.description,
             origin: withHttps(selectedItem.portal.canonical_domain),
             canonicalDomain: selectedItem.portal.canonical_domain,
+            region: selectedItem.portal.region,
           }
 
           // Store the selection

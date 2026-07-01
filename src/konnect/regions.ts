@@ -5,6 +5,38 @@ import type { PortalStorageService } from '../storage'
 import { debug } from '../utils/debug'
 
 /**
+ * Regions that are excluded from discovery for now.
+ * TODO: 'me' region is not currently supported by the extension. Remove it from this
+ * list to re-enable it once support is added.
+ */
+const UNSUPPORTED_REGIONS = ['me']
+
+/**
+ * Shape of the available-regions response returned by both kongctl and the API
+ */
+interface AvailableRegionsResponse {
+  regions?: {
+    stable?: string[]
+    stable_opt_in?: string[]
+    beta?: string[]
+  }
+}
+
+/**
+ * Merges the stable and stable_opt_in region tiers, de-dupes, and filters out
+ * currently unsupported regions. The stable_opt_in tier may not apply to every
+ * org, so opt-in regions are simply not enabled for accounts that lack them.
+ * @param response Raw available-regions response from kongctl or the API
+ * @returns De-duplicated, filtered array of region codes
+ */
+function extractRegions(response: AvailableRegionsResponse | undefined): string[] {
+  const stable = Array.isArray(response?.regions?.stable) ? response.regions.stable : []
+  const stableOptIn = Array.isArray(response?.regions?.stable_opt_in) ? response.regions.stable_opt_in : []
+  const merged = Array.from(new Set([...stable, ...stableOptIn]))
+  return merged.filter(region => !UNSUPPORTED_REGIONS.includes(region))
+}
+
+/**
  * Fetches the list of available Konnect regions using kongctl CLI or API fallback
  * @param storageService PortalStorageService instance for token injection
  * @returns Promise resolving to array of region codes (e.g., ['us', 'eu'])
@@ -34,7 +66,10 @@ async function fetchRegionsWithKongctl(storageService?: PortalStorageService): P
     '--output',
     'json',
   ]
-  const result = await executeKongctl(args, {}, storageService)
+  // Silent, programmatic call -- use the isolated spawn fallback (fresh
+  // env/token per invocation) rather than the shared terminal, which only
+  // applies its env once at creation and isn't safe for concurrent commands.
+  const result = await executeKongctl(args, { showInTerminal: false }, storageService)
   if (!result.success) {
     throw new Error(result.stderr || result.stdout)
   }
@@ -45,7 +80,7 @@ async function fetchRegionsWithKongctl(storageService?: PortalStorageService): P
   } catch (parseError) {
     throw new Error(`Failed to parse kongctl response: ${parseError}`)
   }
-  return Array.isArray(response?.regions?.stable) ? response.regions.stable : []
+  return extractRegions(response)
 }
 
 /**
@@ -59,5 +94,5 @@ async function fetchRegionsWithApi(): Promise<string[]> {
     throw new Error(`Failed to fetch regions: ${response.statusText}`)
   }
   const data = await response.json()
-  return Array.isArray(data?.regions?.stable) ? data.regions.stable : []
+  return extractRegions(data)
 }

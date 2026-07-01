@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import type * as vscode from 'vscode'
 import { KonnectRequestService } from './request-service'
-import { KonnectApiService } from './api'
+import { KonnectApiService, ApiError } from './api'
 import { executeKongctl } from '../kongctl'
 import { checkKongctlAvailable } from '../kongctl/status'
-import { showApiError } from '../utils/error-handling'
+import { debug } from '../utils/debug'
 import type { PortalStorageService } from '../storage'
 import type { KonnectPortal } from '../types/konnect'
+import type * as ApiModule from './api'
 
 // Mock VS Code module (must be first)
 vi.mock('vscode', () => ({
@@ -15,26 +15,31 @@ vi.mock('vscode', () => ({
     showErrorMessage: vi.fn(),
   },
   ExtensionContext: vi.fn(),
-  workspace: {
-    getConfiguration: vi.fn(() => ({
-      get: vi.fn((key, def) => {
-        if (key === 'kong.konnect.region') return 'us'
-        return def
-      }),
-    })),
-  },
 }))
 
-// Mock dependencies
-vi.mock('./api')
+// Mock dependencies. Keep the real ApiError class (rather than a full automock)
+// so `instanceof ApiError` / `.statusCode` checks in the implementation behave
+// correctly against errors constructed in these tests.
+vi.mock('./api', async () => {
+  const actual = await vi.importActual<typeof ApiModule>('./api')
+  return {
+    ...actual,
+    KonnectApiService: vi.fn(),
+  }
+})
 vi.mock('../kongctl')
 vi.mock('../kongctl/status')
-vi.mock('../utils/error-handling')
+vi.mock('../utils/debug', () => ({
+  debug: {
+    log: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}))
 
 describe('KonnectRequestService', () => {
   let service: KonnectRequestService
   let mockStorageService: PortalStorageService
-  let mockContext: vscode.ExtensionContext
 
   const mockPortals: KonnectPortal[] = [
     {
@@ -90,11 +95,6 @@ describe('KonnectRequestService', () => {
       clearSelectedPortal: vi.fn(),
     } as any
 
-    // Setup mock context
-    mockContext = {} as vscode.ExtensionContext
-
-
-
     // Setup mock functions
     vi.mocked(checkKongctlAvailable).mockResolvedValue(true)
     vi.mocked(executeKongctl).mockResolvedValue({
@@ -113,24 +113,22 @@ describe('KonnectRequestService', () => {
       stderr: '',
     })
 
-
-
     // Setup API service mock
     const mockApiService = vi.mocked(KonnectApiService)
     mockApiService.prototype.fetchAllPortals = vi.fn().mockResolvedValue(mockPortals)
 
-    service = new KonnectRequestService(mockStorageService, mockContext)
+    service = new KonnectRequestService(mockStorageService)
   })
 
   describe('fetchAllPortals', () => {
     it('should throw error when no token is available', async () => {
       vi.mocked(mockStorageService.getToken).mockResolvedValue(undefined)
 
-      await expect(service.fetchAllPortals()).rejects.toThrow('No authentication token available')
+      await expect(service.fetchAllPortals('us')).rejects.toThrow('No authentication token available')
     })
 
     it('should use kongctl when available and return portals', async () => {
-      const result = await service.fetchAllPortals()
+      const result = await service.fetchAllPortals('us')
 
       expect(result).toEqual(mockPortals)
       expect(checkKongctlAvailable).toHaveBeenCalled()
@@ -144,7 +142,25 @@ describe('KonnectRequestService', () => {
           '--output',
           'json',
         ],
-        {},
+        { showInTerminal: false },
+        mockStorageService,
+      )
+    })
+
+    it('should build the kongctl request URL from the passed region', async () => {
+      // Regression test for the stale-region bug: the region must come from the
+      // explicit argument, not a cached or globally-read setting.
+      await service.fetchAllPortals('eu')
+
+      expect(executeKongctl).toHaveBeenCalledWith(
+        [
+          'api',
+          'get',
+          '"https://eu.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1"',
+          '--output',
+          'json',
+        ],
+        { showInTerminal: false },
         mockStorageService,
       )
     })
@@ -152,15 +168,15 @@ describe('KonnectRequestService', () => {
     it('should fall back to API when kongctl is not available', async () => {
       vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
 
-      const result = await service.fetchAllPortals()
+      const result = await service.fetchAllPortals('us')
 
       expect(result).toEqual(mockPortals)
       expect(checkKongctlAvailable).toHaveBeenCalled()
       expect(executeKongctl).not.toHaveBeenCalled()
-      expect(KonnectApiService.prototype.fetchAllPortals).toHaveBeenCalledWith('mock-token')
+      expect(KonnectApiService.prototype.fetchAllPortals).toHaveBeenCalledWith('mock-token', 'us')
     })
 
-    it('should fall back to API when kongctl command fails', async () => {
+    it('should fall back to API when kongctl command fails for a non-auth reason', async () => {
       vi.mocked(executeKongctl).mockResolvedValue({
         success: false,
         exitCode: 1,
@@ -168,11 +184,32 @@ describe('KonnectRequestService', () => {
         stderr: 'Command failed',
       })
 
-      const result = await service.fetchAllPortals()
+      const result = await service.fetchAllPortals('us')
 
       expect(result).toEqual(mockPortals)
-      expect(showApiError).toHaveBeenCalled()
-      expect(KonnectApiService.prototype.fetchAllPortals).toHaveBeenCalledWith('mock-token')
+      // The failure is logged, not surfaced as a user-facing dialog here -- this
+      // method is also used to fetch several regions concurrently, and firing a
+      // dialog per failed region would be poor UX. The caller shows one dialog
+      // for the eventual outcome.
+      expect(debug.warn).toHaveBeenCalled()
+      expect(KonnectApiService.prototype.fetchAllPortals).toHaveBeenCalledWith('mock-token', 'us')
+    })
+
+    it('should throw a 401 ApiError and NOT fall back to the API when kongctl reports an auth failure', async () => {
+      // A 401 means the PAT is missing/invalid -- the API call would fail
+      // identically, so retrying against it would be pointless.
+      vi.mocked(executeKongctl).mockResolvedValue({
+        success: false,
+        exitCode: 1,
+        stdout: '',
+        stderr: 'Error: 401 Unauthorized',
+      })
+
+      await expect(service.fetchAllPortals('us')).rejects.toMatchObject({
+        statusCode: 401,
+      })
+
+      expect(KonnectApiService.prototype.fetchAllPortals).not.toHaveBeenCalled()
     })
 
     it('should handle pagination with multiple pages', async () => {
@@ -212,7 +249,7 @@ describe('KonnectRequestService', () => {
         .mockResolvedValueOnce(firstPageResponse)
         .mockResolvedValueOnce(secondPageResponse)
 
-      const result = await service.fetchAllPortals()
+      const result = await service.fetchAllPortals('us')
 
       expect(result).toEqual(mockPortals)
       expect(executeKongctl).toHaveBeenCalledTimes(2)
@@ -224,7 +261,7 @@ describe('KonnectRequestService', () => {
           '--output',
           'json',
         ],
-        {},
+        { showInTerminal: false },
         mockStorageService,
       )
       expect(executeKongctl).toHaveBeenNthCalledWith(2,
@@ -235,7 +272,7 @@ describe('KonnectRequestService', () => {
           '--output',
           'json',
         ],
-        {},
+        { showInTerminal: false },
         mockStorageService,
       )
     })
@@ -248,27 +285,114 @@ describe('KonnectRequestService', () => {
         stderr: '',
       })
 
-      const result = await service.fetchAllPortals()
+      const result = await service.fetchAllPortals('us')
 
       expect(result).toEqual(mockPortals)
-      expect(showApiError).toHaveBeenCalled()
-      expect(KonnectApiService.prototype.fetchAllPortals).toHaveBeenCalledWith('mock-token')
+      expect(debug.warn).toHaveBeenCalled()
+      expect(KonnectApiService.prototype.fetchAllPortals).toHaveBeenCalledWith('mock-token', 'us')
     })
 
     it('should use cached kongctl availability on subsequent calls', async () => {
-      await service.fetchAllPortals()
-      await service.fetchAllPortals()
+      await service.fetchAllPortals('us')
+      await service.fetchAllPortals('us')
 
       // checkKongctlAvailable should only be called once due to caching
       expect(checkKongctlAvailable).toHaveBeenCalledTimes(1)
     })
   })
 
+  describe('fetchAllPortalsAcrossRegions', () => {
+    beforeEach(() => {
+      // Exercise the API-fallback path directly for these tests: kongctl
+      // unavailable keeps the region-tagging and aggregation logic isolated
+      // from the kongctl pagination loop, which is already covered above.
+      vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
+    })
+
+    it('should throw when no token is available', async () => {
+      vi.mocked(mockStorageService.getToken).mockResolvedValue(undefined)
+
+      await expect(service.fetchAllPortalsAcrossRegions(['us', 'eu'])).rejects.toThrow(
+        'No authentication token available',
+      )
+    })
+
+    it('should fetch all regions in parallel and tag each portal with its region', async () => {
+      const usPortal = mockPortals[0]
+      const euPortal = mockPortals[1]
+      const fetchAllPortalsMock = vi.mocked(KonnectApiService.prototype.fetchAllPortals)
+      fetchAllPortalsMock.mockImplementation(async (_token: string, region: string) =>
+        region === 'us' ? [usPortal] : [euPortal],
+      )
+
+      const result = await service.fetchAllPortalsAcrossRegions(['us', 'eu'])
+
+      expect(result.errors).toEqual([])
+      expect(result.portals).toEqual(
+        expect.arrayContaining([
+          { ...usPortal, region: 'us' },
+          { ...euPortal, region: 'eu' },
+        ]),
+      )
+      expect(result.portals).toHaveLength(2)
+
+      // Verify regions were queried concurrently, not sequentially
+      expect(fetchAllPortalsMock).toHaveBeenCalledWith('mock-token', 'us')
+      expect(fetchAllPortalsMock).toHaveBeenCalledWith('mock-token', 'eu')
+    })
+
+    it('should collect a per-region failure while still returning portals from regions that succeeded', async () => {
+      const usPortal = mockPortals[0]
+      const optInNotEnabledError = new ApiError('Access denied', undefined, 403)
+      const fetchAllPortalsMock = vi.mocked(KonnectApiService.prototype.fetchAllPortals)
+      fetchAllPortalsMock.mockImplementation(async (_token: string, region: string) => {
+        if (region === 'sg') {
+          throw optInNotEnabledError
+        }
+        return [usPortal]
+      })
+
+      const result = await service.fetchAllPortalsAcrossRegions(['us', 'sg'])
+
+      expect(result.portals).toEqual([{ ...usPortal, region: 'us' }])
+      expect(result.errors).toEqual([{ region: 'sg', error: optInNotEnabledError }])
+    })
+
+    it('should treat a single region 401 as a per-region failure, not proof the shared token is invalid', async () => {
+      // The global available-regions list includes regions the account may not
+      // be provisioned in at all, and Konnect can return 401 (not just 403) for
+      // those -- that must not be conflated with the shared PAT being invalid,
+      // or a real, valid token gets wiped based on one unrelated region.
+      const euPortal = mockPortals[1]
+      const notProvisionedError = new ApiError('Invalid or expired Personal Access Token', undefined, 401)
+      const fetchAllPortalsMock = vi.mocked(KonnectApiService.prototype.fetchAllPortals)
+      fetchAllPortalsMock.mockImplementation(async (_token: string, region: string) => {
+        if (region === 'us') {
+          throw notProvisionedError
+        }
+        return [euPortal]
+      })
+
+      const result = await service.fetchAllPortalsAcrossRegions(['us', 'eu'])
+
+      expect(result.portals).toEqual([{ ...euPortal, region: 'eu' }])
+      expect(result.errors).toEqual([{ region: 'us', error: notProvisionedError }])
+    })
+
+    it('should rethrow a 401 when every queried region reports one, since that does indicate the shared token is invalid', async () => {
+      const authError = new ApiError('Invalid or expired Personal Access Token', undefined, 401)
+      const fetchAllPortalsMock = vi.mocked(KonnectApiService.prototype.fetchAllPortals)
+      fetchAllPortalsMock.mockRejectedValue(authError)
+
+      await expect(service.fetchAllPortalsAcrossRegions(['us', 'eu'])).rejects.toBe(authError)
+    })
+  })
+
   describe('resetKongctlAvailability', () => {
     it('should reset the kongctl availability cache', async () => {
-      await service.fetchAllPortals()
+      await service.fetchAllPortals('us')
       service.resetKongctlAvailability()
-      await service.fetchAllPortals()
+      await service.fetchAllPortals('us')
 
       // Should check availability again after reset
       expect(checkKongctlAvailable).toHaveBeenCalledTimes(2)

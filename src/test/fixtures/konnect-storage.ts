@@ -15,6 +15,7 @@ export const mockStoredPortalConfig: StoredPortalConfig = {
   description: 'A test portal for testing',
   origin: 'https://test-portal.example.com',
   canonicalDomain: 'test-portal.example.com',
+  region: 'us',
 }
 
 export const mockStoredPortalConfig2: StoredPortalConfig = {
@@ -24,6 +25,7 @@ export const mockStoredPortalConfig2: StoredPortalConfig = {
   description: 'Another test portal',
   origin: 'https://another-portal.example.com',
   canonicalDomain: 'another-portal.example.com',
+  region: 'eu',
 }
 
 /**
@@ -85,25 +87,27 @@ export const mockQuickPickItems = [
   {
     label: 'Portal 1 Name',
     description: 'Test Portal 1',
-    detail: 'portal1.example.com',
+    detail: 'portal1.example.com  ·  US',
     portal: {
       id: '1',
       name: 'Portal 1',
       display_name: 'Portal 1 Name',
       description: 'Test Portal 1',
       canonical_domain: 'portal1.example.com',
+      region: 'us',
     },
   },
   {
     label: 'Portal 2 Name',
     description: 'Test Portal 2',
-    detail: 'portal2.example.com',
+    detail: 'portal2.example.com  ·  EU',
     portal: {
       id: '2',
       name: 'Portal 2',
       display_name: 'Portal 2 Name',
       description: 'Test Portal 2',
       canonical_domain: 'portal2.example.com',
+      region: 'eu',
     },
   },
 ]

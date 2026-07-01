@@ -22,7 +22,6 @@ import {
 } from './types/ui-actions'
 import { CONFIG_SECTION } from './constants/config'
 import { installKongctlWithFeedback } from './kongctl/install'
-import { fetchAvailableRegions } from './konnect/regions'
 import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/status'
 import { checkAndShowMDCRecommendation } from './utils/mdc-extension'
 
@@ -177,32 +176,6 @@ export function activate(context: ExtensionContext) {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
         window.showErrorMessage(`Failed to configure token: ${errorMessage}`)
-      }
-    },
-  )
-
-  // Register Select Konnect Region command
-  const selectRegionCommand = commands.registerCommand(
-    'kong.konnect.selectRegion',
-    async () => {
-      try {
-        const config = workspace.getConfiguration()
-        const regions = await fetchAvailableRegions(storageService)
-        if (!regions.length) {
-          window.showErrorMessage('No regions available to select.')
-          return
-        }
-        const selected = await window.showQuickPick(regions, {
-          placeHolder: 'Select a Konnect region',
-          canPickMany: false,
-          ignoreFocusOut: true,
-        })
-        if (!selected) return
-        await config.update('kong.konnect.region', selected, true)
-        window.showInformationMessage(`Konnect region set to '${selected}'.`)
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        window.showErrorMessage(`Failed to select region: ${errorMessage}`)
       }
     },
   )
@@ -451,7 +424,6 @@ export function activate(context: ExtensionContext) {
     refreshPreviewCommand,
     configureTokenCommand,
     selectPortalCommand,
-    selectRegionCommand,
     deleteTokenCommand,
     checkKongctlStatusCommand,
     showKongctlDiagnosticsCommand,

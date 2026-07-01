@@ -3,10 +3,21 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { promisify } from 'util'
 import { getOrCreateKongctlTerminal } from '../terminal'
+import { createAsyncLock } from '../utils/async-lock'
 import type { KongctlCommandResult } from '../types/kongctl'
 import type { PortalStorageService } from '../storage'
 
 const exists = promisify(fs.exists)
+
+/**
+ * Serializes access to the shared kongctl terminal. VS Code's shell
+ * integration API is not designed for overlapping concurrent executions on
+ * one terminal -- calling `executeCommand` again before a prior execution has
+ * finished corrupts output correlation between commands. Multiple callers
+ * (e.g. fetching several Konnect regions in parallel) can invoke
+ * `executeKongctl` concurrently, so terminal-backed runs must queue.
+ */
+const terminalLock = createAsyncLock()
 
 /**
  * Search for an executable in the PATH
@@ -97,78 +108,122 @@ export async function executeKongctl(
     }
   }
 
-  // If showInTerminal, always launch the terminal with the correct env
-  let terminal: vscode.Terminal | undefined
   if (showInTerminal) {
-    try {
-      terminal = getOrCreateKongctlTerminal(env)
-      // Don't show terminal panel - let user open it manually if they want to see output
-      // Leaving commented out for possible future use
-      // terminal.show(true)
-      const fullCommand = `kongctl ${args.join(' ')}`
-      terminal.sendText(fullCommand, true)
-    } catch {
-      // If terminal API fails, continue to spawn fallback for output
+    // Serialized: only one terminal-backed command may run at a time
+    const terminalResult = await terminalLock.run(() => runViaTerminal(args, env, timeout))
+    if (terminalResult) {
+      return terminalResult
     }
+    // Terminal or its shell integration was unavailable -- fall through to spawn
   }
 
-  // Try to use shell integration for output capture if available and requested
-  if (showInTerminal && terminal && terminal.shellIntegration) {
-    try {
-      const fullCommand = `kongctl ${args.join(' ')}`
-      const execution = terminal.shellIntegration.executeCommand(fullCommand)
-      const stream = execution.read()
-      let stdout = ''
-      const timeoutPromise = new Promise<KongctlCommandResult>((resolve) => {
-        setTimeout(() => {
-          resolve({
-            exitCode: -1,
-            stdout,
-            stderr: 'Command timed out',
-            success: false,
-          })
-        }, timeout)
-      })
-      const outputPromise = (async (): Promise<KongctlCommandResult> => {
-        try {
-          for await (const data of stream) {
-            stdout += data
-          }
-          return new Promise((resolve) => {
-            const onEnd = vscode.window.onDidEndTerminalShellExecution((event) => {
-              if (event.execution === execution) {
-                onEnd.dispose()
-                const exitCode = event.exitCode ?? 0
-                resolve({
-                  exitCode,
-                  stdout: stdout.trim(),
-                  stderr: '',
-                  success: exitCode === 0,
-                })
-              }
-            })
-          })
-        } catch (error) {
-          return {
-            exitCode: -1,
-            stdout,
-            stderr: error instanceof Error ? error.message : 'Unknown error occurred',
-            success: false,
-          }
+  return runViaSpawn(args, options.cwd, env, timeout)
+}
+
+/**
+ * Runs a kongctl command through the shared VS Code terminal, using shell
+ * integration to capture output. Must only be called while holding
+ * `terminalLock`, since the terminal cannot safely handle overlapping
+ * concurrent executions.
+ * @param args Command arguments to pass to kongctl
+ * @param env Environment variables for the command (including the PAT, if available)
+ * @param timeout Timeout in milliseconds before the command is considered failed
+ * @returns The command result, or undefined if the terminal/shell integration is unavailable
+ */
+async function runViaTerminal(
+  args: string[],
+  env: NodeJS.ProcessEnv,
+  timeout: number,
+): Promise<KongctlCommandResult | undefined> {
+  const fullCommand = `kongctl ${args.join(' ')}`
+
+  let terminal: vscode.Terminal | undefined
+  try {
+    terminal = getOrCreateKongctlTerminal(env)
+    // Don't show terminal panel - let user open it manually if they want to see output
+    // Leaving commented out for possible future use
+    // terminal.show(true)
+    terminal.sendText(fullCommand, true)
+  } catch {
+    // If terminal API fails, continue to spawn fallback for output
+    return undefined
+  }
+
+  if (!terminal.shellIntegration) {
+    return undefined
+  }
+
+  try {
+    const execution = terminal.shellIntegration.executeCommand(fullCommand)
+    const stream = execution.read()
+    let stdout = ''
+    const timeoutPromise = new Promise<KongctlCommandResult>((resolve) => {
+      setTimeout(() => {
+        resolve({
+          exitCode: -1,
+          stdout,
+          stderr: 'Command timed out',
+          success: false,
+        })
+      }, timeout)
+    })
+    const outputPromise = (async (): Promise<KongctlCommandResult> => {
+      try {
+        for await (const data of stream) {
+          stdout += data
         }
-      })()
-      return await Promise.race([outputPromise, timeoutPromise])
-    } catch {
-      // If shell integration fails, fall through to spawn fallback
-    }
+        return new Promise((resolve) => {
+          const onEnd = vscode.window.onDidEndTerminalShellExecution((event) => {
+            if (event.execution === execution) {
+              onEnd.dispose()
+              const exitCode = event.exitCode ?? 0
+              resolve({
+                exitCode,
+                stdout: stdout.trim(),
+                stderr: '',
+                success: exitCode === 0,
+              })
+            }
+          })
+        })
+      } catch (error) {
+        return {
+          exitCode: -1,
+          stdout,
+          stderr: error instanceof Error ? error.message : 'Unknown error occurred',
+          success: false,
+        }
+      }
+    })()
+    return await Promise.race([outputPromise, timeoutPromise])
+  } catch {
+    // If shell integration fails, fall through to spawn fallback
+    return undefined
   }
+}
 
-  // Fallback: use spawn to execute and capture output (for tests and when terminal integration fails)
+/**
+ * Runs a kongctl command via a spawned child process, capturing its output
+ * directly. Used for tests, and as a fallback when the shared terminal or its
+ * shell integration is unavailable. Each invocation is an independent
+ * process, so unlike the terminal path this is safe to run concurrently.
+ * @param args Command arguments to pass to kongctl
+ * @param cwd Optional working directory for the command
+ * @param env Environment variables for the command (including the PAT, if available)
+ * @param timeout Timeout in milliseconds before the command is killed
+ * @returns The command result
+ */
+async function runViaSpawn(
+  args: string[],
+  cwd: string | undefined,
+  env: NodeJS.ProcessEnv,
+  timeout: number,
+): Promise<KongctlCommandResult> {
   const { spawn } = await import('child_process')
   const kongctlPath = await getKongctlPath()
   return new Promise((resolve) => {
     const child = spawn(kongctlPath, args, {
-      cwd: options.cwd,
+      cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
       shell: true,
       env,

@@ -1,18 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ApiError, KonnectApiService } from './api'
-// Mock VS Code workspace.getConfiguration for region
-vi.mock('vscode', () => ({
-  workspace: {
-    getConfiguration: vi.fn(() => ({
-      get: vi.fn((key, def) => {
-        if (key === 'kong.konnect.region') return 'us'
-        return def
-      }),
-    })),
-  },
-}))
 import { API_ERROR_MESSAGES } from '../constants/messages'
 import {
+  mockPortal1,
+  mockPortal2,
   mockPortals,
   mockSinglePageResponse,
   mockPaginatedPage1Response,
@@ -168,7 +159,7 @@ describe('konnect/api', () => {
             json: vi.fn().mockResolvedValueOnce(mockEmptyResponse),
           })
 
-          const result = await apiService.fetchAllPortals(testTokens.valid)
+          const result = await apiService.fetchAllPortals(testTokens.valid, 'us')
           expect(result).toBeDefined()
         }
       })
@@ -182,7 +173,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockResponse),
         })
 
-        const result = await apiService.fetchAllPortals(testTokens.valid)
+        const result = await apiService.fetchAllPortals(testTokens.valid, 'us')
 
         // Verify request behavior
         expect(mockFetch).toHaveBeenCalledTimes(1)
@@ -212,6 +203,68 @@ describe('konnect/api', () => {
         })
       })
 
+      it('should build the request URL from the passed region, not a cached value', async () => {
+        // Regression test for the stale-baseUrl bug: the region must be read fresh
+        // on every call rather than cached at construction time.
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: vi.fn().mockResolvedValueOnce(mockEmptyResponse),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            json: vi.fn().mockResolvedValueOnce(mockEmptyResponse),
+          })
+
+        await apiService.fetchAllPortals(testTokens.valid, 'eu')
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          1,
+          'https://eu.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1',
+          expect.anything(),
+        )
+
+        // A second call with a different region on the same, already-constructed
+        // service instance must hit the new region, proving there is no stale cache.
+        await apiService.fetchAllPortals(testTokens.valid, 'au')
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          2,
+          'https://au.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1',
+          expect.anything(),
+        )
+      })
+
+      it('should not leak state between concurrent calls for different regions on the same instance', async () => {
+        // Multi-region portal discovery fetches several regions concurrently
+        // on one KonnectApiService instance. Each call's URL/response must
+        // stay correctly scoped to its own region regardless of call order or
+        // interleaving -- there is no per-instance mutable state to race on.
+        // Each region resolves in a single page so the pagination loop
+        // terminates regardless of how many times a given URL is requested.
+        mockFetch.mockImplementation(async (url: string) => {
+          if (url.startsWith('https://us.api.konghq.com/')) {
+            return {
+              ok: true,
+              json: vi.fn().mockResolvedValue({ data: [mockPortal1], meta: { page: { number: 1, size: 10, total: 1 } } }),
+            }
+          }
+          if (url.startsWith('https://eu.api.konghq.com/')) {
+            return {
+              ok: true,
+              json: vi.fn().mockResolvedValue({ data: [mockPortal2], meta: { page: { number: 1, size: 10, total: 1 } } }),
+            }
+          }
+          throw new Error(`Unexpected URL in test: ${url}`)
+        })
+
+        const [usResult, euResult] = await Promise.all([
+          apiService.fetchAllPortals(testTokens.valid, 'us'),
+          apiService.fetchAllPortals(testTokens.valid, 'eu'),
+        ])
+
+        expect(usResult).toEqual([mockPortal1])
+        expect(euResult).toEqual([mockPortal2])
+      })
+
       it('should fetch all portals with pagination and verify data aggregation', async () => {
         const page1Response = mockPaginatedPage1Response
         const page2Response = mockPaginatedPage2Response
@@ -226,7 +279,7 @@ describe('konnect/api', () => {
             json: vi.fn().mockResolvedValueOnce(page2Response),
           })
 
-        const result = await apiService.fetchAllPortals(testTokens.valid)
+        const result = await apiService.fetchAllPortals(testTokens.valid, 'us')
 
         // Verify pagination handling - combined results from both pages
         expect(result).toEqual(mockPortals)
@@ -234,6 +287,16 @@ describe('konnect/api', () => {
 
         // Verify pagination requests were made (implementation detail but necessary for pagination)
         expect(mockFetch).toHaveBeenCalledTimes(2)
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          1,
+          'https://us.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1',
+          expect.anything(),
+        )
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          2,
+          'https://us.api.konghq.com/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=2',
+          expect.anything(),
+        )
 
         // Verify data aggregation integrity
         const page1Data = page1Response.data
@@ -266,7 +329,7 @@ describe('konnect/api', () => {
         })
 
         try {
-          await apiService.fetchAllPortals(testTokens.valid)
+          await apiService.fetchAllPortals(testTokens.valid, 'us')
           expect.fail('Expected ApiError to be thrown')
         } catch (error) {
           // Verify error type and message
@@ -297,7 +360,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.ACCESS_DENIED)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.ACCESS_DENIED)
       })
 
       it('should handle 404 not found error', async () => {
@@ -311,7 +374,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.API_NOT_FOUND)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.API_NOT_FOUND)
       })
 
       it('should handle 429 rate limit error', async () => {
@@ -325,7 +388,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.RATE_LIMIT_EXCEEDED)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.RATE_LIMIT_EXCEEDED)
       })
 
       it('should handle 500 server error', async () => {
@@ -339,7 +402,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.SERVER_ERROR)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.SERVER_ERROR)
       })
 
       it('should handle generic error with custom message', async () => {
@@ -353,7 +416,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.customMessage),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.CUSTOM_MESSAGE)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.CUSTOM_MESSAGE)
       })
 
       it('should handle error with invalid JSON response', async () => {
@@ -367,7 +430,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockRejectedValueOnce(new Error('Invalid JSON')),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.BAD_REQUEST)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.BAD_REQUEST)
       })
 
       it('should handle network timeout', async () => {
@@ -376,20 +439,20 @@ describe('konnect/api', () => {
         abortError.name = 'AbortError'
         mockFetch.mockRejectedValueOnce(abortError)
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.REQUEST_TIMEOUT)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.REQUEST_TIMEOUT)
       })
 
       it('should handle unknown network error', async () => {
         mockFetch.mockRejectedValueOnce('Unknown error')
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.UNKNOWN_ERROR)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.UNKNOWN_ERROR)
       })
 
       it('should handle known Error instance', async () => {
         const knownError = new Error('Network error')
         mockFetch.mockRejectedValueOnce(knownError)
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(API_ERROR_MESSAGES.NETWORK_ERROR)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(API_ERROR_MESSAGES.NETWORK_ERROR)
       })
 
       it('should set up timeout and clear it on success', async () => {
@@ -398,7 +461,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockEmptyResponse),
         })
 
-        await apiService.fetchAllPortals(testTokens.valid)
+        await apiService.fetchAllPortals(testTokens.valid, 'us')
 
         expect(vi.mocked(setTimeout)).toHaveBeenCalledWith(expect.any(Function), 10000)
         expect(vi.mocked(clearTimeout)).toHaveBeenCalledWith(123)
@@ -412,7 +475,7 @@ describe('konnect/api', () => {
           json: vi.fn().mockResolvedValueOnce(mockErrorResponses.empty),
         })
 
-        await expect(apiService.fetchAllPortals(testTokens.valid)).rejects.toThrow(ApiError)
+        await expect(apiService.fetchAllPortals(testTokens.valid, 'us')).rejects.toThrow(ApiError)
         expect(vi.mocked(clearTimeout)).toHaveBeenCalledWith(123)
       })
     })

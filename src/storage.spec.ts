@@ -163,6 +163,23 @@ describe('konnect/storage', () => {
         expect(retrievedConfig).toEqual(originalConfig)
       })
 
+      it('should persist the portal region through a store/get round-trip', async () => {
+        // The region drives which Konnect region subsequent API/kongctl calls
+        // use, so it must survive secure-storage serialization intact.
+        const configWithRegion = { ...mockStoredPortalConfig, region: 'eu' }
+
+        await storageService.storeSelectedPortal(configWithRegion)
+
+        const serialized = JSON.stringify(configWithRegion)
+        expect(mockSecretStorage.store).toHaveBeenCalledWith('selectedPortalConfig', serialized)
+
+        mockSecretStorage.get.mockResolvedValueOnce(serialized)
+        const retrievedConfig = await storageService.getSelectedPortal()
+
+        expect(retrievedConfig?.region).toBe('eu')
+        expect(retrievedConfig).toEqual(configWithRegion)
+      })
+
       it('should store different portal config and maintain data consistency', async () => {
         const differentConfig = mockStoredPortalConfig2
         const expectedSerialized = JSON.stringify(differentConfig)

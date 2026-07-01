@@ -140,12 +140,6 @@
         "category": "Konnect Portal"
       },
       {
-        "command": "kong.konnect.selectRegion",
-        "title": "Select Konnect Region",
-        "icon": "$(globe)",
-        "category": "Konnect Portal"
-      },
-      {
         "command": "kong.konnect.kongctl.install",
         "title": "Install CLI",
         "icon": "$(cloud-download)",
@@ -290,11 +284,6 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically inject all snippets from your snippets directory, if configured, into the portal preview so the local snippet content is available in page previews. Set to false to only load published snippets in the preview."
-        },
-        "kong.konnect.region": {
-          "type": "string",
-          "default": "us",
-          "description": "The Konnect region code to use for API requests (e.g., 'us', 'eu', 'au', 'me', 'in', 'sg'). Set via the 'Select Konnect Region' command as needed."
         },
         "kong.konnect.kongctl.path": {
           "type": "string",

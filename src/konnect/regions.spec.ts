@@ -39,7 +39,13 @@ describe('fetchAvailableRegions', () => {
     const regions = await fetchAvailableRegions()
     expect(regions).toEqual(['us', 'eu'])
     expect(checkKongctlAvailable).toHaveBeenCalled()
-    expect(executeKongctl).toHaveBeenCalled()
+    // Silent, programmatic call -- must use the isolated spawn fallback
+    // (fresh env/token per call) rather than the shared, stateful terminal.
+    expect(executeKongctl).toHaveBeenCalledWith(
+      ['get', 'regions', '--output', 'json'],
+      { showInTerminal: false },
+      undefined,
+    )
     expect(parseKongctlJsonOutput).toHaveBeenCalledWith('mock')
   })
 
@@ -81,6 +87,70 @@ describe('fetchAvailableRegions', () => {
     vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
     global.fetch = vi.fn().mockResolvedValue({ ok: false, statusText: 'fail' })
     await expect(fetchAvailableRegions()).rejects.toThrow('Failed to fetch regions: fail')
+  })
+
+  it('merges stable and stable_opt_in regions from the API', async () => {
+    vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ regions: { stable: ['us', 'eu'], stable_opt_in: ['sg'] } }),
+    })
+
+    const regions = await fetchAvailableRegions()
+    expect(regions).toEqual(['us', 'eu', 'sg'])
+  })
+
+  it('merges stable and stable_opt_in regions from kongctl', async () => {
+    vi.mocked(checkKongctlAvailable).mockResolvedValue(true)
+    vi.mocked(executeKongctl).mockResolvedValue({ success: true, stdout: 'mock', stderr: '', exitCode: 0 })
+    vi.mocked(parseKongctlJsonOutput).mockReturnValue({ regions: { stable: ['us', 'au'], stable_opt_in: ['sg'] } })
+
+    const regions = await fetchAvailableRegions()
+    expect(regions).toEqual(['us', 'au', 'sg'])
+  })
+
+  it('excludes the unsupported me region even when returned by the API', async () => {
+    vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ regions: { stable: ['us', 'eu', 'me'], stable_opt_in: [] } }),
+    })
+
+    const regions = await fetchAvailableRegions()
+    expect(regions).toEqual(['us', 'eu'])
+  })
+
+  it('excludes the unsupported me region even when only present in stable_opt_in', async () => {
+    vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ regions: { stable: ['us'], stable_opt_in: ['me'] } }),
+    })
+
+    const regions = await fetchAvailableRegions()
+    expect(regions).toEqual(['us'])
+  })
+
+  it('de-dupes a region present in both stable and stable_opt_in', async () => {
+    vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ regions: { stable: ['us', 'eu'], stable_opt_in: ['eu'] } }),
+    })
+
+    const regions = await fetchAvailableRegions()
+    expect(regions).toEqual(['us', 'eu'])
+  })
+
+  it('treats a missing stable_opt_in tier as empty', async () => {
+    vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ regions: { stable: ['us'] } }),
+    })
+
+    const regions = await fetchAvailableRegions()
+    expect(regions).toEqual(['us'])
   })
 })
 
