@@ -167,8 +167,9 @@ async function runViaTerminal(
     const execution = terminal.shellIntegration.executeCommand(fullCommand)
     const stream = execution.read()
     let stdout = ''
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
     const timeoutPromise = new Promise<KongctlCommandResult>((resolve) => {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         resolve({
           exitCode: -1,
           stdout,
@@ -205,7 +206,12 @@ async function runViaTerminal(
         }
       }
     })()
-    return await Promise.race([outputPromise, timeoutPromise])
+
+    try {
+      return await Promise.race([outputPromise, timeoutPromise])
+    } finally {
+      clearTimeout(timeoutId)
+    }
   } catch {
     // If shell integration fails, fall through to spawn fallback
     return undefined

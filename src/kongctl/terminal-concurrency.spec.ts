@@ -145,4 +145,34 @@ describe('executeKongctl terminal concurrency', () => {
     await completeExecution(`kongctl ${cmd}`)
     await pending
   })
+
+  it('clears the timeout timer once the command completes successfully, instead of leaving it pending', async () => {
+    // Regression test: the timeout timer's id was never captured, so it was
+    // never cleared -- a command that finishes quickly still left a pending
+    // timer (and its captured closure) alive until the full timeout elapsed.
+    const { executeKongctl } = await import('./index')
+
+    const setTimeoutSpy = vi.spyOn(global, 'setTimeout')
+    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout')
+
+    const cmd = 'api get "https://us.api.konghq.com/v3/portals" --output json'
+    const distinctiveTimeout = 12345
+    const pending = executeKongctl(cmd.split(' '), { timeout: distinctiveTimeout })
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    // Identify the specific timer created for this command's timeout window
+    const timeoutCallIndex = setTimeoutSpy.mock.calls.findIndex(call => call[1] === distinctiveTimeout)
+    expect(timeoutCallIndex).toBeGreaterThanOrEqual(0)
+    const timeoutId = setTimeoutSpy.mock.results[timeoutCallIndex].value
+
+    await completeExecution(`kongctl ${cmd}`)
+    await pending
+
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(timeoutId)
+
+    setTimeoutSpy.mockRestore()
+    clearTimeoutSpy.mockRestore()
+  })
 })
