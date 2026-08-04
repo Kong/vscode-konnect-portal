@@ -278,6 +278,10 @@ pnpm package
 
 > **Note**: For detailed testing instructions and development workflows, see the [Contributing Guide](CONTRIBUTING.md).
 
+## Agentic reviewer
+
+[View the reference for the `/muthur` agentic reviewer](./docs/agentic-reviewer.md)
+
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed instructions.
