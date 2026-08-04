@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.10.2...v1.11.0) (2026-08-04)
+
+
+### Features
+
+* agentic reviewer ([#102](https://github.com/Kong/vscode-konnect-portal/issues/102)) ([68198c2](https://github.com/Kong/vscode-konnect-portal/commit/68198c20483b74c538dcaf67364c3a49cdfdf9f4))
+
 ## [1.10.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.10.1...v1.10.2) (2026-07-01)
 
 
