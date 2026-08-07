@@ -37,9 +37,9 @@ By default, the extension expects the following directories in your workspace ro
 
 1. **Use the default directories** (Recommended for new projects):
    - Create a `pages/` folder in your workspace root for your portal pages
-    - Organize page files in subdirectories as needed (e.g., `pages/guides/`, `pages/api/`)
+     - Organize page files in subdirectories as needed (e.g., `pages/guides/`, `pages/api/`)
    - Create a `snippets/` folder in your workspace root for your reusable snippets
-    - Keep all snippet files directly in the `snippets/` folder (no subdirectories)
+     - Keep all snippet files directly in the `snippets/` folder (no subdirectories)
 
 2. **Use custom directories** (If you have an existing structure):
    - Open VS Code Settings (`Ctrl+,` or `Cmd+,`)
