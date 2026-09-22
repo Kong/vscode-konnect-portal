@@ -1,4 +1,4 @@
-import type { KonnectPortal, KonnectPortalsResponse } from '../types/konnect'
+import type { KonnectPortal, KonnectPortalSnippet, KonnectPortalSnippetsResponse, KonnectPortalsResponse } from '../types/konnect'
 import type { ApiErrorInfo } from '../types'
 import { API_ERROR_MESSAGES } from '../constants/messages'
 
@@ -124,6 +124,38 @@ export class KonnectApiService {
     }
 
     return allPortals
+  }
+
+  /**
+   * Fetches every snippet belonging to a portal, following API pagination.
+   * @param token Konnect PAT token
+   * @param region Konnect region containing the portal
+   * @param portalId Unique identifier of the portal
+   * @returns All snippets available in the portal
+   */
+  async fetchAllPortalSnippets(token: string, region: string, portalId: string): Promise<KonnectPortalSnippet[]> {
+    const snippets: KonnectPortalSnippet[] = []
+    let currentPage = 1
+    const pageSize = 100
+    const baseUrl = buildKonnectApiBaseUrl(region)
+
+    while (true) {
+      const url = `${baseUrl}/portals/${encodeURIComponent(portalId)}/snippets?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
+      const response = await this.fetchRequest<KonnectPortalSnippetsResponse>(url, token, { method: 'GET' })
+
+      if (Array.isArray(response.data)) {
+        snippets.push(...response.data)
+      }
+
+      const page = response.meta?.page
+      if (!page || page.total === 0 || page.size === 0 || page.number >= Math.ceil(page.total / page.size)) {
+        break
+      }
+
+      currentPage = page.number + 1
+    }
+
+    return snippets
   }
 
   /**

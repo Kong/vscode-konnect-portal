@@ -4,6 +4,7 @@ import {
   workspace,
   env,
   Uri,
+  languages,
 } from 'vscode'
 import type { ExtensionContext, TextDocument, FileSystemWatcher } from 'vscode'
 import { PreviewProvider } from './preview-provider'
@@ -23,6 +24,8 @@ import { CONFIG_SECTION } from './constants/config'
 import { installKongctlWithFeedback } from './kongctl/install'
 import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/status'
 import { checkAndShowMDCRecommendation } from './utils/mdc-extension'
+import { PortalSnippetService } from './portal-resources/snippet-service'
+import { SnippetCompletionProvider } from './completions/snippet-completion-provider'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
@@ -66,6 +69,7 @@ export function activate(context: ExtensionContext) {
   // Initialize services
   storageService = new PortalStorageService(context)
   portalSelectionService = new PortalSelectionService(storageService, context)
+  const snippetService = new PortalSnippetService(storageService)
 
   // Validate stored portal on session start
   portalSelectionService?.validateStoredPortal()
@@ -108,6 +112,33 @@ export function activate(context: ExtensionContext) {
     () => {
       previewProvider?.refreshPreview()
       updatePreviewContextFromProvider()
+    },
+  )
+
+  /** Register snippet completions for Markdown and MDC documents. */
+  const snippetCompletionProvider = languages.registerCompletionItemProvider(
+    [{ language: 'markdown' }, { language: 'mdc' }, { language: 'md' }],
+    new SnippetCompletionProvider(snippetService),
+  )
+
+  /** Register an explicit cache refresh for users who changed snippets remotely. */
+  const refreshSnippetsCommand = commands.registerCommand(
+    'kong.konnect.devPortal.refreshSnippets',
+    async () => {
+      try {
+        const selectedPortal = await storageService?.getSelectedPortal()
+        if (!selectedPortal) {
+          window.showWarningMessage('Select a Konnect Portal before refreshing snippets.')
+          return
+        }
+
+        snippetService.invalidate()
+        await snippetService.getSnippets()
+        window.showInformationMessage('Konnect Portal snippets refreshed.')
+      } catch (error) {
+        debug.error('Failed to refresh Konnect Portal snippets:', error)
+        window.showWarningMessage('Unable to refresh Konnect Portal snippets. See the extension logs for details.')
+      }
     },
   )
 
@@ -174,6 +205,10 @@ export function activate(context: ExtensionContext) {
           const isDifferentPortal = !previousPortal ||
             previousPortal.id !== selectedPortal.id ||
             previousPortal.origin !== selectedPortal.origin
+
+          if (isDifferentPortal) {
+            snippetService.invalidate()
+          }
 
           if (previewProvider?.hasActivePreview() && isDifferentPortal) {
             // If there's already an active preview, update it with the new portal
@@ -377,6 +412,8 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     openPreviewCommand,
     refreshPreviewCommand,
+    refreshSnippetsCommand,
+    snippetCompletionProvider,
     configureTokenCommand,
     selectPortalCommand,
     deleteTokenCommand,

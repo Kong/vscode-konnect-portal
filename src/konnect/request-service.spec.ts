@@ -5,7 +5,7 @@ import { executeKongctl } from '../kongctl'
 import { checkKongctlAvailable } from '../kongctl/status'
 import { debug } from '../utils/debug'
 import type { PortalStorageService } from '../storage'
-import type { KonnectPortal } from '../types/konnect'
+import type { KonnectPortal, KonnectPortalSnippet } from '../types/konnect'
 import type * as ApiModule from './api'
 
 // Mock VS Code module (must be first)
@@ -80,6 +80,11 @@ describe('KonnectRequestService', () => {
     },
   ]
 
+  const mockSnippets: KonnectPortalSnippet[] = [
+    { id: 'snippet1', name: 'authentication-example' },
+    { id: 'snippet2', name: 'authorization-example' },
+  ]
+
   beforeEach(async () => {
     // Reset all mocks
     vi.clearAllMocks()
@@ -116,6 +121,7 @@ describe('KonnectRequestService', () => {
     // Setup API service mock
     const mockApiService = vi.mocked(KonnectApiService)
     mockApiService.prototype.fetchAllPortals = vi.fn().mockResolvedValue(mockPortals)
+    mockApiService.prototype.fetchAllPortalSnippets = vi.fn().mockResolvedValue(mockSnippets)
 
     service = new KonnectRequestService(mockStorageService)
   })
@@ -323,6 +329,62 @@ describe('KonnectRequestService', () => {
       await pending
 
       expect(checkKongctlAvailable).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('fetchAllPortalSnippets', () => {
+    it('should throw when no token is available', async () => {
+      vi.mocked(mockStorageService.getToken).mockResolvedValue(undefined)
+      await expect(service.fetchAllPortalSnippets('portal1', 'us')).rejects.toThrow('No authentication token available')
+    })
+
+    it('should fetch and paginate snippets with kongctl', async () => {
+      vi.mocked(executeKongctl)
+        .mockResolvedValueOnce({
+          success: true,
+          exitCode: 0,
+          stdout: JSON.stringify({ data: [mockSnippets[0]], meta: { page: { number: 1, size: 1, total: 2 } } }),
+          stderr: '',
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          exitCode: 0,
+          stdout: JSON.stringify({ data: [mockSnippets[1]], meta: { page: { number: 2, size: 1, total: 2 } } }),
+          stderr: '',
+        })
+
+      await expect(service.fetchAllPortalSnippets('portal1', 'us')).resolves.toEqual(mockSnippets)
+      expect(executeKongctl).toHaveBeenNthCalledWith(
+        2,
+        [
+          'api',
+          'get',
+          '"https://us.api.konghq.com/v3/portals/portal1/snippets?page%5Bsize%5D=100&page%5Bnumber%5D=2"',
+          '--output',
+          'json',
+        ],
+        { showInTerminal: false },
+        mockStorageService,
+      )
+    })
+
+    it('should fall back to the API when kongctl is unavailable', async () => {
+      vi.mocked(checkKongctlAvailable).mockResolvedValue(false)
+      await expect(service.fetchAllPortalSnippets('portal1', 'eu')).resolves.toEqual(mockSnippets)
+      expect(KonnectApiService.prototype.fetchAllPortalSnippets).toHaveBeenCalledWith('mock-token', 'eu', 'portal1')
+    })
+
+    it('should fall back to the API after a non-auth kongctl failure', async () => {
+      vi.mocked(executeKongctl).mockResolvedValue({ success: false, exitCode: 1, stdout: '', stderr: 'failed' })
+      await expect(service.fetchAllPortalSnippets('portal1', 'us')).resolves.toEqual(mockSnippets)
+      expect(debug.warn).toHaveBeenCalled()
+      expect(KonnectApiService.prototype.fetchAllPortalSnippets).toHaveBeenCalled()
+    })
+
+    it('should not fall back after a kongctl authentication failure', async () => {
+      vi.mocked(executeKongctl).mockResolvedValue({ success: false, exitCode: 1, stdout: '', stderr: '401 Unauthorized' })
+      await expect(service.fetchAllPortalSnippets('portal1', 'us')).rejects.toMatchObject({ statusCode: 401 })
+      expect(KonnectApiService.prototype.fetchAllPortalSnippets).not.toHaveBeenCalled()
     })
   })
 

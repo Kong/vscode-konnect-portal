@@ -165,6 +165,40 @@ describe('konnect/api', () => {
       })
     })
 
+    describe('fetchAllPortalSnippets', () => {
+      it('should fetch every page of snippets for a portal', async () => {
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: vi.fn().mockResolvedValueOnce({
+              data: [{ id: 'snippet-1', name: 'authentication-example' }],
+              meta: { page: { number: 1, size: 1, total: 2 } },
+            }),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            json: vi.fn().mockResolvedValueOnce({
+              data: [{ id: 'snippet-2', name: 'authorization-example' }],
+              meta: { page: { number: 2, size: 1, total: 2 } },
+            }),
+          })
+
+        const result = await apiService.fetchAllPortalSnippets(testTokens.valid, 'us', 'portal/id')
+
+        expect(result.map(snippet => snippet.name)).toEqual(['authentication-example', 'authorization-example'])
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          1,
+          'https://us.api.konghq.com/v3/portals/portal%2Fid/snippets?page%5Bsize%5D=100&page%5Bnumber%5D=1',
+          expect.objectContaining({ method: 'GET' }),
+        )
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          2,
+          'https://us.api.konghq.com/v3/portals/portal%2Fid/snippets?page%5Bsize%5D=100&page%5Bnumber%5D=2',
+          expect.objectContaining({ method: 'GET' }),
+        )
+      })
+    })
+
     describe('fetchAllPortals', () => {
       it('should fetch all portals with single page and verify data integrity', async () => {
         const mockResponse = mockSinglePageResponse
