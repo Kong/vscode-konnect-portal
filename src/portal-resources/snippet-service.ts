@@ -2,21 +2,10 @@ import type { KonnectPortalSnippet, StoredPortalConfig } from '../types/konnect'
 import type { PortalStorageService } from '../storage'
 import { KonnectRequestService } from '../konnect/request-service'
 
-/** Cached snippet list and its expiry time */
-interface SnippetCacheEntry {
-  /** Snippets fetched for this portal */
-  readonly snippets: readonly KonnectPortalSnippet[]
-  /** Epoch timestamp after which the entry is stale */
-  readonly expiresAt: number
-}
-
-/** Default portal snippet cache lifetime */
-const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000
-
 /** Reusable service for fetching and caching portal snippets */
 export class PortalSnippetService {
   /** Portal-scoped snippet cache */
-  private readonly cache = new Map<string, SnippetCacheEntry>()
+  private readonly cache = new Map<string, readonly KonnectPortalSnippet[]>()
 
   /** Portal-scoped requests currently in progress */
   private readonly inFlightRequests = new Map<string, Promise<readonly KonnectPortalSnippet[]>>()
@@ -30,14 +19,10 @@ export class PortalSnippetService {
   /**
    * Creates a portal snippet service.
    * @param storageService Existing authentication and portal selection storage
-   * @param cacheTtlMs Cache lifetime in milliseconds
-   * @param now Clock function used to determine cache expiry
    * @param requestService Optional request service override for tests
    */
   constructor(
     private readonly storageService: PortalStorageService,
-    private readonly cacheTtlMs = DEFAULT_CACHE_TTL_MS,
-    private readonly now: () => number = Date.now,
     requestService?: KonnectRequestService,
   ) {
     this.requestService = requestService ?? new KonnectRequestService(storageService)
@@ -50,7 +35,9 @@ export class PortalSnippetService {
 
     const key = this.getCacheKey(portal)
     const cached = this.cache.get(key)
-    if (cached && cached.expiresAt > this.now()) return cached.snippets
+    if (cached) {
+      return cached
+    }
 
     const existingRequest = this.inFlightRequests.get(key)
     if (existingRequest) return await existingRequest
@@ -101,7 +88,7 @@ export class PortalSnippetService {
       return await this.getSnippets()
     }
 
-    this.cache.set(key, { snippets, expiresAt: this.now() + this.cacheTtlMs })
+    this.cache.set(key, snippets)
     return snippets
   }
 }

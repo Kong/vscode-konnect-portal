@@ -26,13 +26,13 @@ describe('PortalSnippetService', () => {
 
   it('returns no snippets when no portal is selected', async () => {
     selectedPortal = undefined
-    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+    const service = new PortalSnippetService(storage, requests)
     expect(await service.getSnippets()).toEqual([])
     expect(requests.fetchAllPortalSnippets).not.toHaveBeenCalled()
   })
 
   it('caches snippets for the selected portal', async () => {
-    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+    const service = new PortalSnippetService(storage, requests)
     await service.getSnippets()
     await service.getSnippets()
     expect(requests.fetchAllPortalSnippets).toHaveBeenCalledTimes(1)
@@ -45,7 +45,7 @@ describe('PortalSnippetService', () => {
         resolveRequest = resolve
       }),
     )
-    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+    const service = new PortalSnippetService(storage, requests)
 
     const first = service.getSnippets()
     const second = service.getSnippets()
@@ -60,7 +60,7 @@ describe('PortalSnippetService', () => {
   })
 
   it('does not reuse snippets after the selected portal changes', async () => {
-    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+    const service = new PortalSnippetService(storage, requests)
     expect((await service.getSnippets())[0].name).toBe('portal-a-name')
     selectedPortal = PORTAL_B
     expect((await service.getSnippets())[0].name).toBe('portal-b-name')
@@ -74,7 +74,7 @@ describe('PortalSnippetService', () => {
         resolvePortalA = resolve
       }))
       .mockResolvedValueOnce([{ id: 'b-snippet', name: 'portal-b-name' }])
-    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+    const service = new PortalSnippetService(storage, requests)
 
     const pending = service.getSnippets()
     await new Promise(resolve => setTimeout(resolve, 0))
@@ -90,14 +90,14 @@ describe('PortalSnippetService', () => {
     vi.mocked(requests.fetchAllPortalSnippets)
       .mockRejectedValueOnce(new Error('network failed'))
       .mockResolvedValueOnce([{ id: 'snippet', name: 'recovered' }])
-    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+    const service = new PortalSnippetService(storage, requests)
 
     await expect(service.getSnippets()).rejects.toThrow('network failed')
     expect(await service.getSnippets()).toEqual([{ id: 'snippet', name: 'recovered' }])
   })
 
   it('invalidates only the requested portal cache entry', async () => {
-    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+    const service = new PortalSnippetService(storage, requests)
     await service.getSnippets()
     selectedPortal = PORTAL_B
     await service.getSnippets()
