@@ -23,7 +23,7 @@ interface OffsetRange {
 function getFencedCodeRanges(text: string): OffsetRange[] {
   const ranges: OffsetRange[] = []
   const linePattern = /.*(?:\r?\n|$)/g
-  let fence: { marker: string, start: number } | undefined
+  let fence: { marker: string, length: number, start: number } | undefined
   let match: RegExpExecArray | null
 
   while ((match = linePattern.exec(text)) && match[0]) {
@@ -31,8 +31,8 @@ function getFencedCodeRanges(text: string): OffsetRange[] {
     if (markerMatch) {
       const marker = markerMatch[1][0]
       if (!fence) {
-        fence = { marker, start: match.index }
-      } else if (fence.marker === marker) {
+        fence = { marker, length: markerMatch[1].length, start: match.index }
+      } else if (fence.marker === marker && markerMatch[1].length >= fence.length) {
         ranges.push({ start: fence.start, end: linePattern.lastIndex })
         fence = undefined
       }
@@ -55,10 +55,27 @@ function getValueBounds(rawValue: string, absoluteStart: number): OffsetRange {
   const leadingWhitespace = rawValue.length - rawValue.trimStart().length
   const trimmed = rawValue.trim()
   const quote = trimmed[0]
-  const isQuoted = (quote === '"' || quote === '\'') && trimmed.endsWith(quote) && trimmed.length >= 2
-  const start = absoluteStart + leadingWhitespace + (isQuoted ? 1 : 0)
-  const length = isQuoted ? trimmed.length - 2 : trimmed.length
+  const hasOpeningQuote = quote === '"' || quote === '\''
+  const isQuoted = hasOpeningQuote && trimmed.endsWith(quote) && trimmed.length >= 2
+  const start = absoluteStart + leadingWhitespace + (hasOpeningQuote ? 1 : 0)
+  const length = isQuoted ? trimmed.length - 2 : trimmed.length - (hasOpeningQuote ? 1 : 0)
   return { start, end: start + length }
+}
+
+/** Removes a YAML comment while preserving hash characters inside quotes. */
+function removeYamlComment(rawValue: string): string {
+  let quote: '"' | '\'' | undefined
+
+  for (let index = 0; index < rawValue.length; index += 1) {
+    const character = rawValue[index]
+    if ((character === '"' || character === '\'') && rawValue[index - 1] !== '\\') {
+      quote = quote === character ? undefined : (quote ?? character)
+    } else if (character === '#' && !quote && (index === 0 || /\s/.test(rawValue[index - 1]))) {
+      return rawValue.slice(0, index).trimEnd()
+    }
+  }
+
+  return rawValue
 }
 
 /** Finds an inline MDC property context on the cursor's line. */
@@ -134,9 +151,10 @@ export function getComponentPropertyAtPosition(document: TextDocument, position:
   if (!componentName) return undefined
 
   const rawValue = propertyMatch[3]
+  const scalarValue = removeYamlComment(rawValue)
   const lineStart = document.offsetAt(line.range.start)
   const rawValueStart = lineStart + propertyMatch[0].length - rawValue.length
-  const bounds = getValueBounds(rawValue, rawValueStart)
+  const bounds = getValueBounds(scalarValue, rawValueStart)
   if (cursorOffset < bounds.start || cursorOffset > bounds.end) return undefined
 
   return {

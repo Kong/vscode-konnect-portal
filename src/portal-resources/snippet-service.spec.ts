@@ -38,11 +38,51 @@ describe('PortalSnippetService', () => {
     expect(requests.fetchAllPortalSnippets).toHaveBeenCalledTimes(1)
   })
 
+  it('shares one in-flight request between concurrent completion requests', async () => {
+    let resolveRequest: (value: Array<{ id: string, name: string }>) => void = () => {}
+    vi.mocked(requests.fetchAllPortalSnippets).mockImplementation(
+      async () => await new Promise((resolve) => {
+        resolveRequest = resolve
+      }),
+    )
+    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+
+    const first = service.getSnippets()
+    const second = service.getSnippets()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(requests.fetchAllPortalSnippets).toHaveBeenCalledTimes(1)
+
+    resolveRequest([{ id: 'snippet', name: 'shared' }])
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      [{ id: 'snippet', name: 'shared' }],
+      [{ id: 'snippet', name: 'shared' }],
+    ])
+  })
+
   it('does not reuse snippets after the selected portal changes', async () => {
     const service = new PortalSnippetService(storage, 1000, Date.now, requests)
     expect((await service.getSnippets())[0].name).toBe('portal-a-name')
     selectedPortal = PORTAL_B
     expect((await service.getSnippets())[0].name).toBe('portal-b-name')
+    expect(requests.fetchAllPortalSnippets).toHaveBeenNthCalledWith(2, 'portal-b', 'eu')
+  })
+
+  it('discards an in-flight result when the selected portal changes', async () => {
+    let resolvePortalA: (value: Array<{ id: string, name: string }>) => void = () => {}
+    vi.mocked(requests.fetchAllPortalSnippets)
+      .mockImplementationOnce(async () => await new Promise((resolve) => {
+        resolvePortalA = resolve
+      }))
+      .mockResolvedValueOnce([{ id: 'b-snippet', name: 'portal-b-name' }])
+    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+
+    const pending = service.getSnippets()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    selectedPortal = PORTAL_B
+    service.invalidate()
+    resolvePortalA([{ id: 'a-snippet', name: 'portal-a-name' }])
+
+    await expect(pending).resolves.toEqual([{ id: 'b-snippet', name: 'portal-b-name' }])
     expect(requests.fetchAllPortalSnippets).toHaveBeenNthCalledWith(2, 'portal-b', 'eu')
   })
 
@@ -54,5 +94,20 @@ describe('PortalSnippetService', () => {
 
     await expect(service.getSnippets()).rejects.toThrow('network failed')
     expect(await service.getSnippets()).toEqual([{ id: 'snippet', name: 'recovered' }])
+  })
+
+  it('invalidates only the requested portal cache entry', async () => {
+    const service = new PortalSnippetService(storage, 1000, Date.now, requests)
+    await service.getSnippets()
+    selectedPortal = PORTAL_B
+    await service.getSnippets()
+
+    service.invalidate(PORTAL_A)
+    await service.getSnippets()
+    selectedPortal = PORTAL_A
+    await service.getSnippets()
+
+    expect(requests.fetchAllPortalSnippets).toHaveBeenCalledTimes(3)
+    expect(requests.fetchAllPortalSnippets).toHaveBeenLastCalledWith('portal-a', 'us')
   })
 })

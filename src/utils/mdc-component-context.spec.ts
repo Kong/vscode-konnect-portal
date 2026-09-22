@@ -45,9 +45,13 @@ describe('getComponentPropertyAtPosition', () => {
   it.each([
     ['empty inline value', '::snippet{name="|"}\n::', 'snippet', 'name', ''],
     ['partial inline value', '::snippet{name="auth|"}\n::', 'snippet', 'name', 'auth'],
+    ['unfinished double-quoted inline value', '::snippet{name="auth|}\n::', 'snippet', 'name', 'auth'],
+    ['unfinished single-quoted inline value', '::snippet{name=\'auth|}\n::', 'snippet', 'name', 'auth'],
     ['empty YAML value', '::snippet\n---\nname: |\n---\n::', 'snippet', 'name', ''],
     ['partial YAML value', '::snippet\n---\nname: auth|\n---\n::', 'snippet', 'name', 'auth'],
     ['multiple YAML properties', '::snippet\n---\nlanguage: javascript\nname: auth|\nsomeOtherProp: true\n---\n::', 'snippet', 'name', 'auth'],
+    ['YAML value with a comment', '::snippet\n---\nname: auth| # keep this comment\n---\n::', 'snippet', 'name', 'auth'],
+    ['quoted YAML hash', '::snippet\n---\nname: "auth#example|" # keep this comment\n---\n::', 'snippet', 'name', 'auth#example'],
     ['component name casing', '::Snippet\n---\nname: auth|\n---\n::', 'Snippet', 'name', 'auth'],
   ])('detects %s', async (_label, source, componentName, propertyName, value) => {
     const { document, position } = createDocument(source)
@@ -67,6 +71,11 @@ describe('getComponentPropertyAtPosition', () => {
 
   it('does not parse MDC-looking content in fenced code', async () => {
     const { document, position } = createDocument('```md\n::snippet{name="auth|"}\n::\n```')
+    expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
+  })
+
+  it('does not close a longer fence with a shorter matching marker', async () => {
+    const { document, position } = createDocument('````md\n```\n::snippet{name="auth|"}\n::\n````')
     expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
   })
 })
