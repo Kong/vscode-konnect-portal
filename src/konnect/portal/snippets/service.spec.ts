@@ -96,19 +96,36 @@ describe('PortalSnippetService', () => {
     expect(await service.getSnippets()).toEqual([{ id: 'snippet', name: 'recovered' }])
   })
 
-  it('invalidates only the requested portal cache entry', async () => {
+  it('invalidates every portal cache entry', async () => {
     const service = new PortalSnippetService(storage, requests)
     await service.getSnippets()
     selectedPortal = PORTAL_B
     await service.getSnippets()
 
-    service.invalidate(PORTAL_A)
+    service.invalidate()
     await service.getSnippets()
     selectedPortal = PORTAL_A
     await service.getSnippets()
 
-    expect(requests.fetchAllPortalSnippets).toHaveBeenCalledTimes(3)
+    expect(requests.fetchAllPortalSnippets).toHaveBeenCalledTimes(4)
     expect(requests.fetchAllPortalSnippets).toHaveBeenLastCalledWith('portal-a', 'us')
   })
-})
 
+  it('does not await its own stale request after invalidation', async () => {
+    let resolveStaleRequest: (value: Array<{ id: string, name: string }>) => void = () => {}
+    vi.mocked(requests.fetchAllPortalSnippets)
+      .mockImplementationOnce(async () => await new Promise((resolve) => {
+        resolveStaleRequest = resolve
+      }))
+      .mockResolvedValueOnce([{ id: 'fresh-snippet', name: 'fresh' }])
+    const service = new PortalSnippetService(storage, requests)
+
+    const pending = service.getSnippets()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    service.invalidate()
+    resolveStaleRequest([{ id: 'stale-snippet', name: 'stale' }])
+
+    await expect(pending).resolves.toEqual([{ id: 'fresh-snippet', name: 'fresh' }])
+    expect(requests.fetchAllPortalSnippets).toHaveBeenCalledTimes(2)
+  })
+})

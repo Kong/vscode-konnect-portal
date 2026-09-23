@@ -56,15 +56,9 @@ export class PortalSnippetService {
     }
   }
 
-  /** Clears cached snippets for one portal, or every portal when omitted. */
-  invalidate(portal?: StoredPortalConfig): void {
+  /** Clears all cached and in-flight snippet data. */
+  invalidate(): void {
     this.cacheGeneration += 1
-    if (portal) {
-      const key = this.getCacheKey(portal)
-      this.cache.delete(key)
-      this.inFlightRequests.delete(key)
-      return
-    }
     this.cache.clear()
     this.inFlightRequests.clear()
   }
@@ -93,4 +87,3 @@ export class PortalSnippetService {
     return snippets
   }
 }
-

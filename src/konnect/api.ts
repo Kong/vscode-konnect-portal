@@ -3,6 +3,7 @@ import type { KonnectPortalSnippet, KonnectPortalSnippetsResponse } from '../typ
 import type { ApiErrorInfo } from '../types'
 import { API_ERROR_MESSAGES } from '../constants/messages'
 import { getNextPageNumber } from './pagination'
+import { isKonnectPortalSnippet } from './portal/snippets/validation'
 
 /**
  * Custom error class for API errors with trace ID support
@@ -128,7 +129,7 @@ export class KonnectApiService {
       const response = await this.fetchRequest<KonnectPortalSnippetsResponse>(url, token, { method: 'GET' })
 
       if (Array.isArray(response.data)) {
-        snippets.push(...response.data)
+        snippets.push(...response.data.filter(isKonnectPortalSnippet))
       }
 
       const nextPage = getNextPageNumber(currentPage, response.meta?.page)

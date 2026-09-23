@@ -9,6 +9,7 @@ import type { KongctlCommandResult } from '../types/kongctl'
 import { API_ERROR_MESSAGES } from '../constants/messages'
 import { debug } from '../utils/debug'
 import { getNextPageNumber } from './pagination'
+import { isKonnectPortalSnippet } from './portal/snippets/validation'
 
 /**
  * Detects whether a failed kongctl command result indicates an authentication
@@ -123,7 +124,7 @@ export class KonnectRequestService {
 
       const response = parseKongctlJsonOutput(result.stdout) as KonnectPortalSnippetsResponse
       if (Array.isArray(response.data)) {
-        snippets.push(...response.data)
+        snippets.push(...response.data.filter(isKonnectPortalSnippet))
       }
 
       const nextPage = getNextPageNumber(currentPage, response.meta?.page)
