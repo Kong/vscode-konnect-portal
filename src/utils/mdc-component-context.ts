@@ -32,7 +32,7 @@ function getFencedCodeRanges(text: string): OffsetRange[] {
       const marker = markerMatch[1][0]
       if (!fence) {
         fence = { marker, length: markerMatch[1].length, start: match.index }
-      } else if (fence.marker === marker && markerMatch[1].length >= fence.length) {
+      } else if (fence.marker === marker && markerMatch[1].length >= fence.length && /^\s*(`{3,}|~{3,})\s*$/.test(match[0])) {
         ranges.push({ start: fence.start, end: linePattern.lastIndex })
         fence = undefined
       }
@@ -43,6 +43,24 @@ function getFencedCodeRanges(text: string): OffsetRange[] {
     ranges.push({ start: fence.start, end: text.length })
   }
   return ranges
+}
+
+/** Finds the first component attribute brace that is outside a quoted value. */
+function findClosingBrace(line: string, start: number): number {
+  let quote: '"' | '\'' | undefined
+
+  for (let index = start; index < line.length; index += 1) {
+    const character = line[index]
+    if (quote) {
+      if (character === quote && line[index - 1] !== '\\') quote = undefined
+    } else if (character === '"' || character === '\'') {
+      quote = character
+    } else if (character === '}') {
+      return index
+    }
+  }
+
+  return -1
 }
 
 /** Checks whether an offset is inside a fenced Markdown code block. */
@@ -86,13 +104,13 @@ function getInlineContext(document: TextDocument, position: Position, text: stri
   const componentMatch = /::([A-Za-z][\w-]*)\s*\{/.exec(line.text)
   if (!componentMatch || cursorInLine < componentMatch.index + componentMatch[0].length) return undefined
 
-  const closingBrace = line.text.indexOf('}', componentMatch.index + componentMatch[0].length)
+  const closingBrace = findClosingBrace(line.text, componentMatch.index + componentMatch[0].length)
   const propsEnd = closingBrace === -1 ? line.text.length : closingBrace
   if (cursorInLine > propsEnd) return undefined
 
   const propsStart = componentMatch.index + componentMatch[0].length
   const props = line.text.slice(propsStart, propsEnd)
-  const propertyPattern = /([\w-]+)\s*=\s*("[^"]*"|'[^']*'|[^\s}]*)/g
+  const propertyPattern = /([\w-]+)\s*=\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s}]*)/g
   let propertyMatch: RegExpExecArray | null
   while ((propertyMatch = propertyPattern.exec(props))) {
     const rawValue = propertyMatch[2]

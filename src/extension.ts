@@ -134,6 +134,11 @@ export function activate(context: ExtensionContext) {
           return
         }
 
+        if (!selectedPortal.region) {
+          window.showWarningMessage('The selected portal has no Konnect region. Select the portal again, then refresh snippets.')
+          return
+        }
+
         await completionDataService.refreshCompletionData()
         window.showInformationMessage('Konnect Portal completion data refreshed.')
       } catch (error) {

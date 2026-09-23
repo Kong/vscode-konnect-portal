@@ -45,6 +45,7 @@ describe('getComponentPropertyAtPosition', () => {
   it.each([
     ['empty inline value', '::snippet{name="|"}\n::', 'snippet', 'name', ''],
     ['partial inline value', '::snippet{name="auth|"}\n::', 'snippet', 'name', 'auth'],
+    ['inline value containing a closing brace', '::snippet{name="a}b|"}\n::', 'snippet', 'name', 'a}b'],
     ['unfinished double-quoted inline value', '::snippet{name="auth|}\n::', 'snippet', 'name', 'auth'],
     ['unfinished single-quoted inline value', '::snippet{name=\'auth|}\n::', 'snippet', 'name', 'auth'],
     ['empty YAML value', '::snippet\n---\nname: |\n---\n::', 'snippet', 'name', ''],
@@ -77,5 +78,14 @@ describe('getComponentPropertyAtPosition', () => {
   it('does not close a longer fence with a shorter matching marker', async () => {
     const { document, position } = createDocument('````md\n```\n::snippet{name="auth|"}\n::\n````')
     expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
+  })
+
+  it('does not treat a fence marker with info text as a closing fence', async () => {
+    const { document, position } = createDocument('```md\n```js\n```\n::snippet{name="auth|"}\n::')
+    expect(getComponentPropertyAtPosition(document, position)).toMatchObject({
+      componentName: 'snippet',
+      propertyName: 'name',
+      value: 'auth',
+    })
   })
 })

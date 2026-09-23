@@ -8,6 +8,7 @@ import type { KonnectPortalSnippet, KonnectPortalSnippetsResponse } from '../typ
 import type { KongctlCommandResult } from '../types/kongctl'
 import { API_ERROR_MESSAGES } from '../constants/messages'
 import { debug } from '../utils/debug'
+import { getNextPageNumber } from './pagination'
 
 /**
  * Detects whether a failed kongctl command result indicates an authentication
@@ -125,12 +126,11 @@ export class KonnectRequestService {
         snippets.push(...response.data)
       }
 
-      const page = response.meta?.page
-      if (!page || page.total === 0 || page.size === 0 || page.number >= Math.ceil(page.total / page.size)) {
+      const nextPage = getNextPageNumber(currentPage, response.meta?.page)
+      if (!nextPage) {
         break
       }
-
-      currentPage = page.number + 1
+      currentPage = nextPage
     }
 
     return snippets
@@ -260,29 +260,11 @@ export class KonnectRequestService {
         allPortals.push(...response.data)
       }
 
-      // Check if there are more pages to fetch
-      if (!response.meta?.page) {
-        // No pagination metadata, assume single page
+      const nextPage = getNextPageNumber(currentPage, response.meta?.page)
+      if (!nextPage) {
         break
       }
-
-      const { number, size, total } = response.meta.page
-
-      // Handle edge cases that could cause infinite loops
-      if (total === 0 || size === 0) {
-        // No more data to fetch
-        break
-      }
-
-      const totalPages = Math.ceil(total / size)
-
-      if (number >= totalPages) {
-        // We've fetched all pages
-        break
-      }
-
-      // Move to next page
-      currentPage = number + 1
+      currentPage = nextPage
     }
 
     return allPortals

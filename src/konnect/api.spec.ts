@@ -197,6 +197,38 @@ describe('konnect/api', () => {
           expect.objectContaining({ method: 'GET' }),
         )
       })
+
+      it('should advance and stop when the API repeats stale page metadata', async () => {
+        const repeatedPage = {
+          data: [{ id: 'snippet-1', name: 'authentication-example' }],
+          meta: { page: { number: 1, size: 1, total: 3 } },
+        }
+        mockFetch
+          .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValueOnce(repeatedPage) })
+          .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValueOnce(repeatedPage) })
+          .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValueOnce(repeatedPage) })
+
+        await apiService.fetchAllPortalSnippets(testTokens.valid, 'us', 'portal-id')
+
+        expect(mockFetch).toHaveBeenCalledTimes(3)
+        expect(mockFetch).toHaveBeenLastCalledWith(
+          expect.stringContaining('page%5Bnumber%5D=3'),
+          expect.anything(),
+        )
+      })
+
+      it('should stop when pagination metadata is malformed', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValueOnce({
+            data: [{ id: 'snippet-1', name: 'authentication-example' }],
+            meta: { page: { number: Number.NaN, size: 1, total: 3 } },
+          }),
+        })
+
+        await apiService.fetchAllPortalSnippets(testTokens.valid, 'us', 'portal-id')
+        expect(mockFetch).toHaveBeenCalledOnce()
+      })
     })
 
     describe('fetchAllPortals', () => {
