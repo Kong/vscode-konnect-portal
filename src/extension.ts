@@ -4,6 +4,7 @@ import {
   workspace,
   env,
   Uri,
+  languages,
 } from 'vscode'
 import type { ExtensionContext, TextDocument, FileSystemWatcher } from 'vscode'
 import { PreviewProvider } from './preview-provider'
@@ -23,6 +24,9 @@ import { CONFIG_SECTION } from './constants/config'
 import { installKongctlWithFeedback } from './kongctl/install'
 import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/status'
 import { checkAndShowMDCRecommendation } from './utils/mdc-extension'
+import { PortalSnippetService } from './konnect/portal/snippets/service'
+import { SnippetCompletionProvider } from './completions/snippet-completion-provider'
+import { CompletionDataService } from './completions/completion-data-service'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
@@ -66,6 +70,8 @@ export function activate(context: ExtensionContext) {
   // Initialize services
   storageService = new PortalStorageService(context)
   portalSelectionService = new PortalSelectionService(storageService, context)
+  const snippetService = new PortalSnippetService(storageService)
+  const completionDataService = new CompletionDataService(snippetService)
 
   // Validate stored portal on session start
   portalSelectionService?.validateStoredPortal()
@@ -108,6 +114,37 @@ export function activate(context: ExtensionContext) {
     () => {
       previewProvider?.refreshPreview()
       updatePreviewContextFromProvider()
+    },
+  )
+
+  /** Register snippet completions for Markdown and MDC documents. */
+  const snippetCompletionProvider = languages.registerCompletionItemProvider(
+    [{ language: 'markdown' }, { language: 'mdc' }, { language: 'md' }],
+    new SnippetCompletionProvider(snippetService),
+  )
+
+  /** Register an explicit refresh for data used by completion providers. */
+  const refreshCompletionDataCommand = commands.registerCommand(
+    'kong.konnect.devPortal.refreshCompletionData',
+    async () => {
+      try {
+        const selectedPortal = await storageService?.getSelectedPortal()
+        if (!selectedPortal) {
+          window.showWarningMessage('Select a Konnect Portal before refreshing completion data.')
+          return
+        }
+
+        if (!selectedPortal.region) {
+          window.showWarningMessage('The selected portal has no Konnect region. Select the portal again, then refresh snippets.')
+          return
+        }
+
+        await completionDataService.refreshCompletionData()
+        window.showInformationMessage('Konnect Portal completion data refreshed.')
+      } catch (error) {
+        debug.error('Failed to refresh Konnect Portal completion data:', error)
+        window.showWarningMessage('Unable to refresh Konnect Portal completion data. See the extension logs for details.')
+      }
     },
   )
 
@@ -174,6 +211,10 @@ export function activate(context: ExtensionContext) {
           const isDifferentPortal = !previousPortal ||
             previousPortal.id !== selectedPortal.id ||
             previousPortal.origin !== selectedPortal.origin
+
+          if (isDifferentPortal) {
+            completionDataService.invalidate()
+          }
 
           if (previewProvider?.hasActivePreview() && isDifferentPortal) {
             // If there's already an active preview, update it with the new portal
@@ -377,6 +418,8 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     openPreviewCommand,
     refreshPreviewCommand,
+    refreshCompletionDataCommand,
+    snippetCompletionProvider,
     configureTokenCommand,
     selectPortalCommand,
     deleteTokenCommand,

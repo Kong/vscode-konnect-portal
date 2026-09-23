@@ -122,6 +122,12 @@
         "category": "Konnect Portal"
       },
       {
+        "command": "kong.konnect.devPortal.refreshCompletionData",
+        "title": "Refresh Completion Data",
+        "icon": "$(refresh)",
+        "category": "Konnect Portal"
+      },
+      {
         "command": "kong.konnect.devPortal.configureToken",
         "title": "Configure Konnect Personal Access Token (PAT)",
         "icon": "$(key)",
@@ -202,6 +208,9 @@
         },
         {
           "command": "kong.konnect.devPortal.refreshPreview"
+        },
+        {
+          "command": "kong.konnect.devPortal.refreshCompletionData"
         },
         {
           "command": "kong.konnect.devPortal.configureToken"
