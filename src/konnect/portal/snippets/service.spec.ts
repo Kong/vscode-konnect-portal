@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { PortalSnippetService } from './snippet-service'
-import type { PortalStorageService } from '../storage'
-import type { KonnectRequestService } from '../konnect/request-service'
-import type { StoredPortalConfig } from '../types/konnect'
+import { PortalSnippetService } from './service'
+import type { PortalStorageService } from '../../../storage'
+import type { KonnectRequestService } from '../../request-service'
+import type { StoredPortalConfig } from '../../../types/konnect'
 
 const PORTAL_A: StoredPortalConfig = {
   id: 'portal-a', name: 'a', displayName: 'A', description: '', origin: 'https://a.example.com', canonicalDomain: 'a.example.com', region: 'us',
@@ -111,3 +111,4 @@ describe('PortalSnippetService', () => {
     expect(requests.fetchAllPortalSnippets).toHaveBeenLastCalledWith('portal-a', 'us')
   })
 })
+

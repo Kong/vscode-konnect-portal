@@ -5,7 +5,8 @@ import { executeKongctl } from '../kongctl'
 import { checkKongctlAvailable } from '../kongctl/status'
 import { debug } from '../utils/debug'
 import type { PortalStorageService } from '../storage'
-import type { KonnectPortal, KonnectPortalSnippet } from '../types/konnect'
+import type { KonnectPortal } from '../types/konnect'
+import type { KonnectPortalSnippet } from '../types/konnect/snippets'
 import type * as ApiModule from './api'
 
 // Mock VS Code module (must be first)

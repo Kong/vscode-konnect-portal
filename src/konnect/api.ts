@@ -1,4 +1,5 @@
-import type { KonnectPortal, KonnectPortalSnippet, KonnectPortalSnippetsResponse, KonnectPortalsResponse } from '../types/konnect'
+import type { KonnectPortal, KonnectPortalsResponse } from '../types/konnect'
+import type { KonnectPortalSnippet, KonnectPortalSnippetsResponse } from '../types/konnect/snippets'
 import type { ApiErrorInfo } from '../types'
 import { API_ERROR_MESSAGES } from '../constants/messages'
 

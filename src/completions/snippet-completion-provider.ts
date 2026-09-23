@@ -1,6 +1,6 @@
 import { CompletionItem, CompletionItemKind } from 'vscode'
 import type { CompletionItemProvider, Position, TextDocument } from 'vscode'
-import type { PortalSnippetService } from '../portal-resources/snippet-service'
+import type { PortalSnippetService } from '../konnect/portal/snippets/service'
 import { getComponentPropertyAtPosition } from '../utils/mdc-component-context'
 import { debug } from '../utils/debug'
 

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SnippetCompletionProvider } from './snippet-completion-provider'
 import { getComponentPropertyAtPosition } from '../utils/mdc-component-context'
 import { debug } from '../utils/debug'
-import type { PortalSnippetService } from '../portal-resources/snippet-service'
+import type { PortalSnippetService } from '../konnect/portal/snippets/service'
 
 vi.mock('vscode', () => ({
   CompletionItem: class CompletionItem {

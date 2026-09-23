@@ -1,6 +1,7 @@
-import type { KonnectPortalSnippet, StoredPortalConfig } from '../types/konnect'
-import type { PortalStorageService } from '../storage'
-import { KonnectRequestService } from '../konnect/request-service'
+import type { KonnectPortalSnippet } from '../../../types/konnect/snippets'
+import type { StoredPortalConfig } from '../../../types/konnect'
+import type { PortalStorageService } from '../../../storage'
+import { KonnectRequestService } from '../../request-service'
 
 /** Reusable service for fetching and caching portal snippets */
 export class PortalSnippetService {
@@ -92,3 +93,4 @@ export class PortalSnippetService {
     return snippets
   }
 }
+

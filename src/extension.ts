@@ -24,8 +24,9 @@ import { CONFIG_SECTION } from './constants/config'
 import { installKongctlWithFeedback } from './kongctl/install'
 import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAvailableMessage, showKongctlDiagnostics } from './kongctl/status'
 import { checkAndShowMDCRecommendation } from './utils/mdc-extension'
-import { PortalSnippetService } from './portal-resources/snippet-service'
+import { PortalSnippetService } from './konnect/portal/snippets/service'
 import { SnippetCompletionProvider } from './completions/snippet-completion-provider'
+import { CompletionDataService } from './completions/completion-data-service'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
@@ -70,6 +71,7 @@ export function activate(context: ExtensionContext) {
   storageService = new PortalStorageService(context)
   portalSelectionService = new PortalSelectionService(storageService, context)
   const snippetService = new PortalSnippetService(storageService)
+  const completionDataService = new CompletionDataService(snippetService)
 
   // Validate stored portal on session start
   portalSelectionService?.validateStoredPortal()
@@ -121,23 +123,22 @@ export function activate(context: ExtensionContext) {
     new SnippetCompletionProvider(snippetService),
   )
 
-  /** Register an explicit cache refresh for users who changed snippets remotely. */
-  const refreshSnippetsCommand = commands.registerCommand(
-    'kong.konnect.devPortal.refreshSnippets',
+  /** Register an explicit refresh for data used by completion providers. */
+  const refreshCompletionDataCommand = commands.registerCommand(
+    'kong.konnect.devPortal.refreshCompletionData',
     async () => {
       try {
         const selectedPortal = await storageService?.getSelectedPortal()
         if (!selectedPortal) {
-          window.showWarningMessage('Select a Konnect Portal before refreshing snippets.')
+          window.showWarningMessage('Select a Konnect Portal before refreshing completion data.')
           return
         }
 
-        snippetService.invalidate()
-        await snippetService.getSnippets()
-        window.showInformationMessage('Konnect Portal snippets refreshed.')
+        await completionDataService.refreshCompletionData()
+        window.showInformationMessage('Konnect Portal completion data refreshed.')
       } catch (error) {
-        debug.error('Failed to refresh Konnect Portal snippets:', error)
-        window.showWarningMessage('Unable to refresh Konnect Portal snippets. See the extension logs for details.')
+        debug.error('Failed to refresh Konnect Portal completion data:', error)
+        window.showWarningMessage('Unable to refresh Konnect Portal completion data. See the extension logs for details.')
       }
     },
   )
@@ -207,7 +208,7 @@ export function activate(context: ExtensionContext) {
             previousPortal.origin !== selectedPortal.origin
 
           if (isDifferentPortal) {
-            snippetService.invalidate()
+            completionDataService.invalidate()
           }
 
           if (previewProvider?.hasActivePreview() && isDifferentPortal) {
@@ -412,7 +413,7 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     openPreviewCommand,
     refreshPreviewCommand,
-    refreshSnippetsCommand,
+    refreshCompletionDataCommand,
     snippetCompletionProvider,
     configureTokenCommand,
     selectPortalCommand,
