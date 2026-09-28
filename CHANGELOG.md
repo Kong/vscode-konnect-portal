@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.4](https://github.com/Kong/vscode-konnect-portal/compare/v1.11.3...v1.11.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* switching ci from pat to app token [KHCP-2195] ([#111](https://github.com/Kong/vscode-konnect-portal/issues/111)) ([f7df9db](https://github.com/Kong/vscode-konnect-portal/commit/f7df9db85220a687d4307046ffd4b6e20ceadf1f))
+
 ## [1.11.3](https://github.com/Kong/vscode-konnect-portal/compare/v1.11.2...v1.11.3) (2026-09-22)
 
 ## [1.11.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.11.1...v1.11.2) (2026-08-20)
