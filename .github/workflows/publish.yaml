@@ -26,10 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      id-token: write
-      contents: write
-      actions: read
-      pull-requests: write
+      contents: read
 
     env:
       FORCE_COLOR: "1"
