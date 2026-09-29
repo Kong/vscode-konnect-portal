@@ -46,6 +46,7 @@ describe('getComponentPropertyAtPosition', () => {
     ['empty inline value', '::snippet{name="|"}\n::', 'snippet', 'name', ''],
     ['partial inline value', '::snippet{name="auth|"}\n::', 'snippet', 'name', 'auth'],
     ['inline value containing a closing brace', '::snippet{name="a}b|"}\n::', 'snippet', 'name', 'a}b'],
+    ['second inline component on a line', '::note{type=tip} ::snippet{name="auth|"}', 'snippet', 'name', 'auth'],
     ['unfinished double-quoted inline value', '::snippet{name="auth|}\n::', 'snippet', 'name', 'auth'],
     ['unfinished single-quoted inline value', '::snippet{name=\'auth|}\n::', 'snippet', 'name', 'auth'],
     ['empty YAML value', '::snippet\n---\nname: |\n---\n::', 'snippet', 'name', ''],
@@ -75,12 +76,34 @@ describe('getComponentPropertyAtPosition', () => {
     expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
   })
 
+  it('does not parse an unterminated fenced block at end of document', async () => {
+    const { document, position } = createDocument('```md\n::snippet{name="auth|')
+    expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
+  })
+
   it.each([
     ['single-backtick span', '`::snippet{name="auth|"}`'],
     ['multi-backtick span', '``::snippet{name="auth|"}``'],
   ])('does not parse MDC-looking content in a %s', async (_label, source) => {
     const { document, position } = createDocument(source)
     expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
+  })
+
+  it('does not pair inline backticks across a blank line', async () => {
+    const { document, position } = createDocument('Press ` to open.\n\n::snippet{name="auth|"}\n::\n\nUse ` for code.')
+    expect(getComponentPropertyAtPosition(document, position)).toMatchObject({
+      componentName: 'snippet',
+      propertyName: 'name',
+      value: 'auth',
+    })
+  })
+
+  it('returns before reading the full document for unrelated cursor lines', async () => {
+    const { document, position } = createDocument('Ordinary Markdown text|')
+    const getText = vi.spyOn(document, 'getText')
+
+    expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
+    expect(getText).not.toHaveBeenCalled()
   })
 
   it('does not close a longer fence with a shorter matching marker', async () => {

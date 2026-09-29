@@ -34,7 +34,7 @@ export class PortalSnippetService {
     const portal = await this.storageService.getSelectedPortal()
     if (!portal?.region) return []
 
-    const key = this.getCacheKey(portal)
+    const key = this.getCacheKey(portal.id, portal.region)
     const cached = this.cache.get(key)
     if (cached) {
       return cached
@@ -64,8 +64,8 @@ export class PortalSnippetService {
   }
 
   /** Builds a cache key that cannot leak results across portals or regions. */
-  private getCacheKey(portal: StoredPortalConfig): string {
-    return `${portal.region ?? 'unknown'}:${portal.id}`
+  private getCacheKey(portalId: string, region: string): string {
+    return `${region}:${portalId}`
   }
 
   /** Fetches snippets and discards the result if portal selection changes. */
@@ -77,7 +77,7 @@ export class PortalSnippetService {
   ): Promise<readonly KonnectPortalSnippet[]> {
     const snippets = await this.requestService.fetchAllPortalSnippets(portal.id, region)
     const selectedPortal = await this.storageService.getSelectedPortal()
-    const selectedKey = selectedPortal?.region ? this.getCacheKey(selectedPortal) : undefined
+    const selectedKey = selectedPortal?.region ? this.getCacheKey(selectedPortal.id, selectedPortal.region) : undefined
 
     if (generation !== this.cacheGeneration || selectedKey !== key) {
       return await this.getSnippets()

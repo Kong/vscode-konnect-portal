@@ -40,7 +40,7 @@ function getFencedCodeRanges(text: string): OffsetRange[] {
   }
 
   if (fence) {
-    ranges.push({ start: fence.start, end: text.length })
+    ranges.push({ start: fence.start, end: text.length + 1 })
   }
   return ranges
 }
@@ -63,7 +63,7 @@ function findClosingBrace(line: string, start: number): number {
   return -1
 }
 
-/** Checks whether an offset is inside a fenced Markdown code block. */
+/** Checks whether an offset falls inside any code range. */
 function isInRange(offset: number, ranges: OffsetRange[]): boolean {
   return ranges.some(range => offset >= range.start && offset < range.end)
 }
@@ -80,7 +80,7 @@ function getInlineCodeRanges(text: string, fencedRanges: OffsetRange[]): OffsetR
 
     const markerLength = match[0].length
     const start = openers.get(markerLength)
-    if (start === undefined) {
+    if (start === undefined || /\n[ \t]*\n/.test(text.slice(start, match.index))) {
       openers.set(markerLength, match.index)
       continue
     }
@@ -128,29 +128,29 @@ function getInlineContext(document: TextDocument, position: Position, text: stri
   const line = document.lineAt(position.line)
   const lineStart = document.offsetAt(line.range.start)
   const cursorInLine = cursorOffset - lineStart
-  const componentMatch = /::([A-Za-z][\w-]*)\s*\{/.exec(line.text)
-  if (!componentMatch || cursorInLine < componentMatch.index + componentMatch[0].length) return undefined
+  const componentPattern = /::([A-Za-z][\w-]*)\s*\{/g
+  let componentMatch: RegExpExecArray | null
 
-  const closingBrace = findClosingBrace(line.text, componentMatch.index + componentMatch[0].length)
-  const propsEnd = closingBrace === -1 ? line.text.length : closingBrace
-  if (cursorInLine > propsEnd) {
-    return undefined
-  }
+  while ((componentMatch = componentPattern.exec(line.text))) {
+    const propsStart = componentMatch.index + componentMatch[0].length
+    const closingBrace = findClosingBrace(line.text, propsStart)
+    const propsEnd = closingBrace === -1 ? line.text.length : closingBrace
+    if (cursorInLine < propsStart || cursorInLine > propsEnd) continue
 
-  const propsStart = componentMatch.index + componentMatch[0].length
-  const props = line.text.slice(propsStart, propsEnd)
-  const propertyPattern = /([\w-]+)\s*=\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s}]*)/g
-  let propertyMatch: RegExpExecArray | null
-  while ((propertyMatch = propertyPattern.exec(props))) {
-    const rawValue = propertyMatch[2]
-    const rawValueOffset = propertyMatch.index + propertyMatch[0].lastIndexOf(rawValue)
-    const bounds = getValueBounds(rawValue, lineStart + propsStart + rawValueOffset)
-    if (cursorOffset >= bounds.start && cursorOffset <= bounds.end) {
-      return {
-        componentName: componentMatch[1],
-        propertyName: propertyMatch[1],
-        value: text.slice(bounds.start, bounds.end),
-        range: new Range(document.positionAt(bounds.start), document.positionAt(bounds.end)),
+    const props = line.text.slice(propsStart, propsEnd)
+    const propertyPattern = /([\w-]+)\s*=\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s}]*)/g
+    let propertyMatch: RegExpExecArray | null
+    while ((propertyMatch = propertyPattern.exec(props))) {
+      const rawValue = propertyMatch[2]
+      const rawValueOffset = propertyMatch.index + propertyMatch[0].lastIndexOf(rawValue)
+      const bounds = getValueBounds(rawValue, lineStart + propsStart + rawValueOffset)
+      if (cursorOffset >= bounds.start && cursorOffset <= bounds.end) {
+        return {
+          componentName: componentMatch[1],
+          propertyName: propertyMatch[1],
+          value: text.slice(bounds.start, bounds.end),
+          range: new Range(document.positionAt(bounds.start), document.positionAt(bounds.end)),
+        }
       }
     }
   }
@@ -187,6 +187,11 @@ function getYamlComponentName(document: TextDocument, propertyLine: number): str
  * Supports inline attributes and component-owned YAML property blocks.
  */
 export function getComponentPropertyAtPosition(document: TextDocument, position: Position): MdcComponentPropertyContext | undefined {
+  const cursorLine = document.lineAt(position.line).text
+  const mightContainInlineProperty = /::[A-Za-z][\w-]*\s*\{/.test(cursorLine)
+  const mightContainYamlProperty = /^\s*[\w-]+\s*:/.test(cursorLine)
+  if (!mightContainInlineProperty && !mightContainYamlProperty) return undefined
+
   const text = document.getText()
   const cursorOffset = document.offsetAt(position)
   const fencedCodeRanges = getFencedCodeRanges(text)
