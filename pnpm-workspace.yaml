@@ -13,3 +13,7 @@ minimumReleaseAgeExclude:
   - pnpm@10.34.4
 # When set to no-downgrade, pnpm will fail if a package's trust level has decreased compared to previous releases
 trustPolicy: no-downgrade
+# semver@5.7.2 and chokidar@4.0.3 are legitimate older releases; the trust check false-positives on them
+trustPolicyExclude:
+  - 'semver@5.7.2'
+  - 'chokidar@4.0.3'
