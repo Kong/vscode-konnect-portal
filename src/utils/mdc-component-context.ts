@@ -68,6 +68,30 @@ function isInRange(offset: number, ranges: OffsetRange[]): boolean {
   return ranges.some(range => offset >= range.start && offset < range.end)
 }
 
+/** Returns inline backtick code spans outside fenced code blocks. */
+function getInlineCodeRanges(text: string, fencedRanges: OffsetRange[]): OffsetRange[] {
+  const ranges: OffsetRange[] = []
+  const openers = new Map<number, number>()
+  const backtickPattern = /`+/g
+  let match: RegExpExecArray | null
+
+  while ((match = backtickPattern.exec(text))) {
+    if (isInRange(match.index, fencedRanges)) continue
+
+    const markerLength = match[0].length
+    const start = openers.get(markerLength)
+    if (start === undefined) {
+      openers.set(markerLength, match.index)
+      continue
+    }
+
+    ranges.push({ start, end: backtickPattern.lastIndex })
+    openers.delete(markerLength)
+  }
+
+  return ranges
+}
+
 /** Removes matching YAML or inline quotes and returns value offsets. */
 function getValueBounds(rawValue: string, absoluteStart: number): OffsetRange {
   const leadingWhitespace = rawValue.length - rawValue.trimStart().length
@@ -77,7 +101,10 @@ function getValueBounds(rawValue: string, absoluteStart: number): OffsetRange {
   const isQuoted = hasOpeningQuote && trimmed.endsWith(quote) && trimmed.length >= 2
   const start = absoluteStart + leadingWhitespace + (hasOpeningQuote ? 1 : 0)
   const length = isQuoted ? trimmed.length - 2 : trimmed.length - (hasOpeningQuote ? 1 : 0)
-  return { start, end: start + length }
+  return {
+    start,
+    end: start + length,
+  }
 }
 
 /** Removes a YAML comment while preserving hash characters inside quotes. */
@@ -106,7 +133,9 @@ function getInlineContext(document: TextDocument, position: Position, text: stri
 
   const closingBrace = findClosingBrace(line.text, componentMatch.index + componentMatch[0].length)
   const propsEnd = closingBrace === -1 ? line.text.length : closingBrace
-  if (cursorInLine > propsEnd) return undefined
+  if (cursorInLine > propsEnd) {
+    return undefined
+  }
 
   const propsStart = componentMatch.index + componentMatch[0].length
   const props = line.text.slice(propsStart, propsEnd)
@@ -137,9 +166,13 @@ function getYamlComponentName(document: TextDocument, propertyLine: number): str
       delimiterLine = lineNumber
       break
     }
-    if (/^\s*::/.test(line)) return undefined
+    if (/^\s*::/.test(line)) {
+      return undefined
+    }
   }
-  if (delimiterLine < 0) return undefined
+  if (delimiterLine < 0) {
+    return undefined
+  }
 
   for (let lineNumber = delimiterLine - 1; lineNumber >= 0; lineNumber -= 1) {
     const line = document.lineAt(lineNumber).text
@@ -156,24 +189,36 @@ function getYamlComponentName(document: TextDocument, propertyLine: number): str
 export function getComponentPropertyAtPosition(document: TextDocument, position: Position): MdcComponentPropertyContext | undefined {
   const text = document.getText()
   const cursorOffset = document.offsetAt(position)
-  if (isInRange(cursorOffset, getFencedCodeRanges(text))) return undefined
+  const fencedCodeRanges = getFencedCodeRanges(text)
+  const codeRanges = [...fencedCodeRanges, ...getInlineCodeRanges(text, fencedCodeRanges)]
+  if (isInRange(cursorOffset, codeRanges)) {
+    return undefined
+  }
 
   const inlineContext = getInlineContext(document, position, text, cursorOffset)
-  if (inlineContext) return inlineContext
+  if (inlineContext) {
+    return inlineContext
+  }
 
   const line = document.lineAt(position.line)
   const propertyMatch = /^(\s*)([\w-]+)\s*:\s*(.*)$/.exec(line.text)
-  if (!propertyMatch) return undefined
+  if (!propertyMatch) {
+    return undefined
+  }
 
   const componentName = getYamlComponentName(document, position.line)
-  if (!componentName) return undefined
+  if (!componentName) {
+    return undefined
+  }
 
   const rawValue = propertyMatch[3]
   const scalarValue = removeYamlComment(rawValue)
   const lineStart = document.offsetAt(line.range.start)
   const rawValueStart = lineStart + propertyMatch[0].length - rawValue.length
   const bounds = getValueBounds(scalarValue, rawValueStart)
-  if (cursorOffset < bounds.start || cursorOffset > bounds.end) return undefined
+  if (cursorOffset < bounds.start || cursorOffset > bounds.end) {
+    return undefined
+  }
 
   return {
     componentName,

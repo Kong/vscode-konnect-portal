@@ -75,6 +75,14 @@ describe('getComponentPropertyAtPosition', () => {
     expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
   })
 
+  it.each([
+    ['single-backtick span', '`::snippet{name="auth|"}`'],
+    ['multi-backtick span', '``::snippet{name="auth|"}``'],
+  ])('does not parse MDC-looking content in a %s', async (_label, source) => {
+    const { document, position } = createDocument(source)
+    expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()
+  })
+
   it('does not close a longer fence with a shorter matching marker', async () => {
     const { document, position } = createDocument('````md\n```\n::snippet{name="auth|"}\n::\n````')
     expect(getComponentPropertyAtPosition(document, position)).toBeUndefined()

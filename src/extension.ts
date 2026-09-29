@@ -119,8 +119,12 @@ export function activate(context: ExtensionContext) {
 
   /** Register snippet completions for Markdown and MDC documents. */
   const snippetCompletionProvider = languages.registerCompletionItemProvider(
-    [{ language: 'markdown' }, { language: 'mdc' }, { language: 'md' }],
+    [{ language: 'markdown' }, { language: 'mdc' }],
     new SnippetCompletionProvider(snippetService),
+    ':',
+    '=',
+    '"',
+    '\'',
   )
 
   /** Register an explicit refresh for data used by completion providers. */
