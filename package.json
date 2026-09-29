@@ -1,6 +1,6 @@
 {
   "name": "vscode-konnect-dev-portal-toolkit",
-  "version": "1.11.4",
+  "version": "1.11.3",
   "displayName": "Konnect Dev Portal Toolkit",
   "description": "Live preview for MDC and Markdown files with dev portal integration",
   "icon": "images/icon.png",
@@ -55,7 +55,7 @@
     "@vitest/coverage-v8": "4.1.7",
     "@vitest/ui": "^4.1.7",
     "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.9.1",
     "commit-and-tag-version": "^12.7.3",
     "commitizen": "^4.3.1",
@@ -118,6 +118,12 @@
       {
         "command": "kong.konnect.devPortal.refreshPreview",
         "title": "Refresh Portal Preview",
+        "icon": "$(refresh)",
+        "category": "Konnect Portal"
+      },
+      {
+        "command": "kong.konnect.devPortal.refreshSnippets",
+        "title": "Refresh Snippets",
         "icon": "$(refresh)",
         "category": "Konnect Portal"
       },
@@ -202,6 +208,9 @@
         },
         {
           "command": "kong.konnect.devPortal.refreshPreview"
+        },
+        {
+          "command": "kong.konnect.devPortal.refreshSnippets"
         },
         {
           "command": "kong.konnect.devPortal.configureToken"
