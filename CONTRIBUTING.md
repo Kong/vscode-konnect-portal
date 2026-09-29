@@ -4,7 +4,7 @@ Thank you for your interest in contributing to the Konnect Dev Portal Toolkit! T
 
 ## Getting Started
 
-### 1. Fork and Clone
+### 1. Clone or fork the repository
 
 ```bash
 git clone https://github.com/Kong/vscode-konnect-portal.git
@@ -43,6 +43,9 @@ The extension includes pre-configured debug setups in `.vscode/launch.json`:
    - Automatically run `pnpm build` (pre-launch task)
    - Open a new VS Code window with your extension loaded
    - Enable debugging with breakpoints in TypeScript files (if present)
+
+   > [!NOTE]
+   > Alternatively, you may run with `pnpm build && code --extensionDevelopmentPath=$PWD` from the project root in order to not use the pre-configured debug setup.
 
 2. **Development with Watch Mode** (Recommended)
    ```bash
