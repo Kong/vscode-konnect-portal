@@ -44,8 +44,8 @@ The extension includes pre-configured debug setups in `.vscode/launch.json`:
    - Open a new VS Code window with your extension loaded
    - Enable debugging with breakpoints in TypeScript files (if present)
 
-   > [!NOTE]
-   > Alternatively, you may run with `pnpm build && code --extensionDevelopmentPath=$PWD` from the project root in order to not use the pre-configured debug setup.
+> [!NOTE]
+> Alternatively, you may run with `pnpm build && code --extensionDevelopmentPath=$PWD` from the project root in order to not use the pre-configured debug setup.
 
 2. **Development with Watch Mode** (Recommended)
    ```bash
