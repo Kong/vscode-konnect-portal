@@ -122,8 +122,8 @@
         "category": "Konnect Portal"
       },
       {
-        "command": "kong.konnect.devPortal.refreshSnippets",
-        "title": "Refresh Snippets",
+        "command": "kong.konnect.devPortal.refreshCompletionData",
+        "title": "Refresh Completion Data",
         "icon": "$(refresh)",
         "category": "Konnect Portal"
       },
@@ -210,7 +210,7 @@
           "command": "kong.konnect.devPortal.refreshPreview"
         },
         {
-          "command": "kong.konnect.devPortal.refreshSnippets"
+          "command": "kong.konnect.devPortal.refreshCompletionData"
         },
         {
           "command": "kong.konnect.devPortal.configureToken"

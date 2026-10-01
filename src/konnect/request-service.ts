@@ -4,9 +4,12 @@ import { checkKongctlAvailable } from '../kongctl/status'
 import { KonnectApiService, ApiError } from './api'
 import type { PortalStorageService } from '../storage'
 import type { KonnectPortal, KonnectPortalWithRegion, MultiRegionPortalsResult, RegionFetchError } from '../types/konnect'
+import type { KonnectPortalSnippet, KonnectPortalSnippetsResponse } from '../types/konnect/snippets'
 import type { KongctlCommandResult } from '../types/kongctl'
 import { API_ERROR_MESSAGES } from '../constants/messages'
 import { debug } from '../utils/debug'
+import { getNextPageNumber } from './pagination'
+import { isKonnectPortalSnippet } from './portal/snippets/validation'
 
 /**
  * Detects whether a failed kongctl command result indicates an authentication
@@ -74,6 +77,64 @@ export class KonnectRequestService {
     }
 
     return await this.fetchPortalsForRegion(token, region)
+  }
+
+  /**
+   * Fetches all snippets for one portal using kongctl with an API fallback.
+   * @param portalId Unique identifier of the portal
+   * @param region Konnect region containing the portal
+   * @returns All snippets belonging to the portal
+   */
+  async fetchAllPortalSnippets(portalId: string, region: string): Promise<KonnectPortalSnippet[]> {
+    const token = await this.storageService.getToken()
+    if (!token) {
+      throw new Error('No authentication token available')
+    }
+
+    if (await this.isKongctlAvailable()) {
+      try {
+        return await this.fetchPortalSnippetsWithKongctl(portalId, region)
+      } catch (error) {
+        if (error instanceof ApiError && error.statusCode === 401) {
+          throw error
+        }
+        debug.warn(`Failed to fetch snippets with kongctl for portal '${portalId}', falling back to API`, error)
+      }
+    }
+
+    return await this.apiService.fetchAllPortalSnippets(token, region, portalId)
+  }
+
+  /** Fetches portal snippets through isolated kongctl API requests. */
+  private async fetchPortalSnippetsWithKongctl(portalId: string, region: string): Promise<KonnectPortalSnippet[]> {
+    const snippets: KonnectPortalSnippet[] = []
+    let currentPage = 1
+    const pageSize = 100
+
+    while (true) {
+      const url = `https://${region}.api.konghq.com/v3/portals/${encodeURIComponent(portalId)}/snippets?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
+      const result = await executeKongctl(['api', 'get', `"${url}"`, '--output', 'json'], { showInTerminal: false }, this.storageService)
+
+      if (!result.success) {
+        if (isKongctlAuthFailure(result)) {
+          throw new ApiError(API_ERROR_MESSAGES.INVALID_TOKEN, undefined, 401)
+        }
+        throw new Error(result.stderr || result.stdout)
+      }
+
+      const response = parseKongctlJsonOutput(result.stdout) as KonnectPortalSnippetsResponse
+      if (Array.isArray(response.data)) {
+        snippets.push(...response.data.filter(isKonnectPortalSnippet))
+      }
+
+      const nextPage = getNextPageNumber(currentPage, response.meta?.page)
+      if (!nextPage) {
+        break
+      }
+      currentPage = nextPage
+    }
+
+    return snippets
   }
 
   /**
@@ -200,29 +261,11 @@ export class KonnectRequestService {
         allPortals.push(...response.data)
       }
 
-      // Check if there are more pages to fetch
-      if (!response.meta?.page) {
-        // No pagination metadata, assume single page
+      const nextPage = getNextPageNumber(currentPage, response.meta?.page)
+      if (!nextPage) {
         break
       }
-
-      const { number, size, total } = response.meta.page
-
-      // Handle edge cases that could cause infinite loops
-      if (total === 0 || size === 0) {
-        // No more data to fetch
-        break
-      }
-
-      const totalPages = Math.ceil(total / size)
-
-      if (number >= totalPages) {
-        // We've fetched all pages
-        break
-      }
-
-      // Move to next page
-      currentPage = number + 1
+      currentPage = nextPage
     }
 
     return allPortals

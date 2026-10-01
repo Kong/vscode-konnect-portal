@@ -1,6 +1,9 @@
 import type { KonnectPortal, KonnectPortalsResponse } from '../types/konnect'
+import type { KonnectPortalSnippet, KonnectPortalSnippetsResponse } from '../types/konnect/snippets'
 import type { ApiErrorInfo } from '../types'
 import { API_ERROR_MESSAGES } from '../constants/messages'
+import { getNextPageNumber } from './pagination'
+import { isKonnectPortalSnippet } from './portal/snippets/validation'
 
 /**
  * Custom error class for API errors with trace ID support
@@ -98,32 +101,45 @@ export class KonnectApiService {
         allPortals.push(...response.data)
       }
 
-      // Check if there are more pages to fetch
-      if (!response.meta?.page) {
-        // No pagination metadata, assume single page
+      const nextPage = getNextPageNumber(currentPage, response.meta?.page)
+      if (!nextPage) {
         break
       }
-
-      const { number, size, total } = response.meta.page
-
-      // Handle edge cases that could cause infinite loops
-      if (total === 0 || size === 0) {
-        // No more data to fetch
-        break
-      }
-
-      const totalPages = Math.ceil(total / size)
-
-      if (number >= totalPages) {
-        // We've fetched all pages
-        break
-      }
-
-      // Move to next page
-      currentPage = number + 1
+      currentPage = nextPage
     }
 
     return allPortals
+  }
+
+  /**
+   * Fetches every snippet belonging to a portal, following API pagination.
+   * @param token Konnect PAT token
+   * @param region Konnect region containing the portal
+   * @param portalId Unique identifier of the portal
+   * @returns All snippets available in the portal
+   */
+  async fetchAllPortalSnippets(token: string, region: string, portalId: string): Promise<KonnectPortalSnippet[]> {
+    const snippets: KonnectPortalSnippet[] = []
+    let currentPage = 1
+    const pageSize = 100
+    const baseUrl = buildKonnectApiBaseUrl(region)
+
+    while (true) {
+      const url = `${baseUrl}/portals/${encodeURIComponent(portalId)}/snippets?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
+      const response = await this.fetchRequest<KonnectPortalSnippetsResponse>(url, token, { method: 'GET' })
+
+      if (Array.isArray(response.data)) {
+        snippets.push(...response.data.filter(isKonnectPortalSnippet))
+      }
+
+      const nextPage = getNextPageNumber(currentPage, response.meta?.page)
+      if (!nextPage) {
+        break
+      }
+      currentPage = nextPage
+    }
+
+    return snippets
   }
 
   /**

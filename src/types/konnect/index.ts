@@ -28,7 +28,7 @@ export interface KonnectPortal {
  * Pagination metadata from Konnect API
  */
 /** Konnect API pagination metadata */
-interface KonnectPaginationMeta {
+export interface KonnectPaginationMeta {
   /** Current page number (1-based) */
   number: number
   /** Number of items per page */
