@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.12.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.11.4...v1.12.0) (2026-10-01)
+
+
+### Features
+
+* add portal snippet name autocomplete [TDX-8991] ([#110](https://github.com/Kong/vscode-konnect-portal/issues/110)) ([a6f2e97](https://github.com/Kong/vscode-konnect-portal/commit/a6f2e97827e2d6dd74833ccd5742f2ea1bb818b0))
+
+
+### Bug Fixes
+
+* **tests:** support vs code 1.139 runner and worktree IPC socket paths ([#112](https://github.com/Kong/vscode-konnect-portal/issues/112)) ([b5ada36](https://github.com/Kong/vscode-konnect-portal/commit/b5ada361dacb054faf9bb2c3fda8449059f209ed))
+
 ## [1.11.4](https://github.com/Kong/vscode-konnect-portal/compare/v1.11.3...v1.11.4) (2026-09-28)
 
 
