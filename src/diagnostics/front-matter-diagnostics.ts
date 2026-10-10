@@ -53,7 +53,9 @@ export function getFrontMatterDiagnostics(document: TextDocument): Diagnostic[] 
   let message: string | undefined
   if (layoutProp.children.length && !opensMultilineValue(layoutProp.value)) {
     message = `'layout' must be a single-line value. Valid values: ${layoutValues.join(', ')}.`
-  } else if (!layoutValues.includes(value)) {
+  } else if (!/^[|>]/.test(layoutProp.value) && !layoutValues.includes(value)) {
+    // A block scalar body holds the real value, which cannot be validated from this line.
+    // An unterminated quote still yields a comparable value, so it stays validated.
     message = `Invalid value "${value}" for 'layout'. Valid values: ${layoutValues.join(', ')}.`
   }
   if (!message) return []
@@ -80,8 +82,8 @@ export class FrontMatterDiagnostics {
   /** Underlying VS Code diagnostic collection */
   private readonly collection: DiagnosticCollection
 
-  /** Timeout handle for debounced diagnostics updates */
-  private updateTimer: ReturnType<typeof setTimeout> | undefined
+  /** Timeout handles for debounced diagnostics updates, keyed by document URI */
+  private readonly updateTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
   /**
    * @param storageService Authentication and portal selection storage
@@ -95,19 +97,22 @@ export class FrontMatterDiagnostics {
    *
    * Typing fires one change event per keystroke; the debounce mirrors the preview
    * update cadence (`previewUpdateDelay`) so editing does not hit SecretStorage
-   * for every keystroke.
+   * for every keystroke. Timers are per document so that editing one document
+   * never cancels another document's pending update.
    * @param document The changed document
    */
   scheduleUpdate(document: TextDocument): void {
-    if (this.updateTimer) {
-      clearTimeout(this.updateTimer)
+    const uri = document.uri.toString()
+    const existing = this.updateTimers.get(uri)
+    if (existing) {
+      clearTimeout(existing)
     }
 
     const delay = workspace.getConfiguration(CONFIG_SECTION).get<number>('previewUpdateDelay', 500)
-    this.updateTimer = setTimeout(() => {
-      this.updateTimer = undefined
+    this.updateTimers.set(uri, setTimeout(() => {
+      this.updateTimers.delete(uri)
       void this.update(document)
-    }, delay)
+    }, delay))
   }
 
   /**
@@ -143,17 +148,22 @@ export class FrontMatterDiagnostics {
     await Promise.all(workspace.textDocuments.map(document => this.update(document)))
   }
 
-  /** Clears diagnostics for a document that is no longer open. */
+  /** Clears diagnostics and any pending update for a document that is no longer open. */
   remove(uri: Uri): void {
+    const timer = this.updateTimers.get(uri.toString())
+    if (timer) {
+      clearTimeout(timer)
+      this.updateTimers.delete(uri.toString())
+    }
     this.collection.delete(uri)
   }
 
-  /** Disposes the underlying diagnostic collection and any pending update. */
+  /** Disposes the underlying diagnostic collection and any pending updates. */
   dispose(): void {
-    if (this.updateTimer) {
-      clearTimeout(this.updateTimer)
-      this.updateTimer = undefined
+    for (const timer of this.updateTimers.values()) {
+      clearTimeout(timer)
     }
+    this.updateTimers.clear()
     this.collection.dispose()
   }
 }

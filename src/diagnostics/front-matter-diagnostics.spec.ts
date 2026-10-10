@@ -49,9 +49,12 @@ const MOCK_PORTAL: StoredPortalConfig = {
 }
 
 /** Creates a minimal document mock for the given content. */
-function createDocument(content: string, overrides: Partial<TextDocument> = {}): TextDocument {
+function createDocument(
+  content: string,
+  overrides: Partial<Omit<TextDocument, 'uri'>> & { uri?: { fsPath: string, toString: () => string } } = {},
+): TextDocument {
   return {
-    uri: { fsPath: '/pages/home.md' },
+    uri: { fsPath: '/pages/home.md', toString: () => 'file:///pages/home.md' },
     languageId: 'markdown',
     fileName: '/pages/home.md',
     getText: () => content,
@@ -111,6 +114,12 @@ describe('getFrontMatterDiagnostics', () => {
 
   it('does not warn on unrecognized properties', () => {
     expect(getFrontMatterDiagnostics(createDocument('---\nslug: "/foo"\nunknown: sidebar\n---\nbody'))).toEqual([])
+  })
+
+  it('does not warn when the layout value uses a multiline block scalar', () => {
+    // The folded block scalar body holds the real value, which cannot be validated from this line
+    expect(getFrontMatterDiagnostics(createDocument('---\nlayout: >-\n  guide\n---\nbody'))).toEqual([])
+    expect(getFrontMatterDiagnostics(createDocument('---\nlayout: |\n  sidebar\n---\nbody'))).toEqual([])
   })
 
   it('warns when layout holds child properties', () => {
@@ -243,10 +252,51 @@ describe('FrontMatterDiagnostics', () => {
     }
   })
 
-  it('removes diagnostics for a closed document', () => {
-    service.remove({ fsPath: '/pages/home.md' } as never)
+  it('keeps pending updates for other documents when one document is rescheduled', async () => {
+    vi.useFakeTimers()
+    try {
+      const documentA = createDocument('---\nlayout: sidebar\n---\nbody', {
+        uri: { fsPath: '/pages/a.md', toString: () => 'file:///pages/a.md' },
+        fileName: '/pages/a.md',
+      })
+      const documentB = createDocument('---\nlayout: sidebar\n---\nbody', {
+        uri: { fsPath: '/pages/b.md', toString: () => 'file:///pages/b.md' },
+        fileName: '/pages/b.md',
+      })
+      setOpenDocuments([documentA, documentB])
 
-    expect(collection.delete).toHaveBeenCalledWith({ fsPath: '/pages/home.md' })
+      service.scheduleUpdate(documentA)
+      await vi.advanceTimersByTimeAsync(250)
+      service.scheduleUpdate(documentB)
+      await vi.advanceTimersByTimeAsync(250)
+
+      // Document A's update must not have been cancelled by document B's schedule
+      expect(collection.set).toHaveBeenCalledTimes(1)
+
+      await vi.advanceTimersByTimeAsync(250)
+
+      expect(collection.set).toHaveBeenCalledTimes(2)
+      expect(collection.set).toHaveBeenLastCalledWith(documentB.uri, expect.anything())
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('removes diagnostics and pending updates for a closed document', async () => {
+    vi.useFakeTimers()
+    try {
+      const document = createDocument('---\nlayout: sidebar\n---\nbody')
+      setOpenDocuments([document])
+      service.scheduleUpdate(document)
+
+      service.remove(document.uri)
+      await vi.advanceTimersByTimeAsync(500)
+
+      expect(collection.delete).toHaveBeenCalled()
+      expect(collection.set).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('disposes the underlying collection', () => {
