@@ -13,6 +13,7 @@ A VS Code extension that provides real-time preview functionality for MDC (Markd
 ## Features
 
 - **Real-time Preview**: Live Portal preview updates as you type in MDC and Markdown files
+- **Front Matter Autocompletion**: Property, layout, and snippet name suggestions inside page front matter when a portal is selected, with validation warnings for the `layout` property
 - **Konnect Integration**: Token-based authentication with Kong Konnect allows you to interact securely with Konnect APIs
 - **kongctl CLI Integration**: Seamless integration with [`kongctl` CLI](https://github.com/Kong/kongctl) for enhanced portal management
 
@@ -145,6 +146,25 @@ The extension supports the following file types:
 
 - **Markdown**: `.md` files
 - **MDC (Markdown Components)**: `.mdc` files
+
+## Page Front Matter Autocompletion and Validation
+
+When editing a Markdown or MDC document, the extension enhances the YAML front matter block at the top of the document:
+
+**Property suggestions**
+- Typing inside the front matter block suggests the known page front matter properties: `title`, `description`, `tagline`, `image`, `layout`, and `layout-options`
+- Properties that already exist in the block are not suggested again
+- `layout-options` opens a child mapping with `sidebar-left`, `sidebar-right`, and `header` child properties
+
+**Value suggestions**
+- `layout` suggests the valid layout names: `guide`, `reference`, `wide`, `center`, and `custom`
+- `layout-options` child properties (`sidebar-left`, `sidebar-right`, `header`) suggest the snippet names available in your selected portal, using the same snippet data as the Snippet component completions
+
+**Validation**
+- The `layout` property is validated as you type. An unrecognized value shows a warning in the Problems panel with the list of valid values
+- Warnings never block saving the document, and unrecognized front matter properties are never flagged
+
+> **Note**: Front matter autocompletion and validation require a selected Konnect portal (see [Select a Portal](#3-select-a-portal)). They apply to any `.md`/`.mdc` document whose front matter syntax matches: a closed `---` block at the very top of the file. Documents in your configured `kong.konnect.devPortal.snippetsDirectory` are excluded, since snippets render their own front matter, as is front matter owned by MDC components (for example, a `::snippet` YAML block). Keep in mind that plain Markdown files using front matter for other purposes (for example Jekyll `layout` values) will also receive suggestions and `layout` warnings while a portal is selected.
 
 ## Pages vs Snippets
 

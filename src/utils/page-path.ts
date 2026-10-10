@@ -1,6 +1,7 @@
 import { relative, join, sep } from 'path'
 import { workspace, window } from 'vscode'
 import type { TextDocument } from 'vscode'
+import { CONFIG_SECTION } from '../constants/config'
 import { debug } from './debug'
 
 /** Helper function to show warning message with proper async handling */
@@ -205,6 +206,21 @@ function getSnippetName(document: TextDocument, snippetsDirectory: string): stri
   })
 
   return sanitizedName
+}
+
+/**
+ * Checks whether a document lives inside the configured snippets directory
+ * @param document The VS Code document to check
+ * @param snippetsDirectory The configured snippets directory relative to workspace root
+ * @returns true when the document resolves to a portal snippet, including snippet subdirectories
+ */
+export function isSnippetDocument(document: TextDocument, snippetsDirectory: string): boolean {
+  return getSnippetName(document, snippetsDirectory) !== null
+}
+
+/** Reads the configured snippets directory relative to the workspace root */
+export function getSnippetsDirectory(): string {
+  return workspace.getConfiguration(CONFIG_SECTION).get<string>('snippetsDirectory', 'snippets') ?? 'snippets'
 }
 
 /**
