@@ -220,6 +220,29 @@ describe('FrontMatterDiagnostics', () => {
     expect(collection.set).toHaveBeenCalledTimes(2)
   })
 
+  it('debounces scheduled updates and drops the pending update on dispose', async () => {
+    vi.useFakeTimers()
+    try {
+      const document = createDocument('---\nlayout: sidebar\n---\nbody')
+      setOpenDocuments([document])
+
+      service.scheduleUpdate(document)
+      service.scheduleUpdate(document)
+      await vi.advanceTimersByTimeAsync(500)
+
+      expect(collection.set).toHaveBeenCalledOnce()
+
+      service.scheduleUpdate(document)
+      service.dispose()
+      await vi.advanceTimersByTimeAsync(500)
+
+      expect(collection.set).toHaveBeenCalledOnce()
+      expect(collection.dispose).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('removes diagnostics for a closed document', () => {
     service.remove({ fsPath: '/pages/home.md' } as never)
 

@@ -148,9 +148,9 @@ export function activate(context: ExtensionContext) {
     })
   }
 
-  /** Keep front matter diagnostics in sync with document edits. */
-  const frontMatterChangeListener = workspace.onDidChangeTextDocument(async (event) => {
-    await frontMatterDiagnostics.update(event.document)
+  /** Keep front matter diagnostics in sync with document edits (debounced like the preview). */
+  const frontMatterChangeListener = workspace.onDidChangeTextDocument((event) => {
+    frontMatterDiagnostics.scheduleUpdate(event.document)
   })
 
   /** Compute front matter diagnostics when a document is opened. */

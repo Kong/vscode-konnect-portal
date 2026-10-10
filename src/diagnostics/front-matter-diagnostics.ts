@@ -8,6 +8,7 @@ import {
   parseMdcFrontMatterProps,
 } from '../utils/mdc-front-matter'
 import { getSnippetsDirectory, isSnippetDocument } from '../utils/page-path'
+import { CONFIG_SECTION } from '../constants/config'
 import type { PortalStorageService } from '../storage'
 import { debug } from '../utils/debug'
 
@@ -79,11 +80,34 @@ export class FrontMatterDiagnostics {
   /** Underlying VS Code diagnostic collection */
   private readonly collection: DiagnosticCollection
 
+  /** Timeout handle for debounced diagnostics updates */
+  private updateTimer: ReturnType<typeof setTimeout> | undefined
+
   /**
    * @param storageService Authentication and portal selection storage
    */
   constructor(private readonly storageService: PortalStorageService) {
     this.collection = languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE)
+  }
+
+  /**
+   * Schedules a debounced diagnostics recompute for a changed document.
+   *
+   * Typing fires one change event per keystroke; the debounce mirrors the preview
+   * update cadence (`previewUpdateDelay`) so editing does not hit SecretStorage
+   * for every keystroke.
+   * @param document The changed document
+   */
+  scheduleUpdate(document: TextDocument): void {
+    if (this.updateTimer) {
+      clearTimeout(this.updateTimer)
+    }
+
+    const delay = workspace.getConfiguration(CONFIG_SECTION).get<number>('previewUpdateDelay', 500)
+    this.updateTimer = setTimeout(() => {
+      this.updateTimer = undefined
+      void this.update(document)
+    }, delay)
   }
 
   /**
@@ -124,8 +148,12 @@ export class FrontMatterDiagnostics {
     this.collection.delete(uri)
   }
 
-  /** Disposes the underlying diagnostic collection. */
+  /** Disposes the underlying diagnostic collection and any pending update. */
   dispose(): void {
+    if (this.updateTimer) {
+      clearTimeout(this.updateTimer)
+      this.updateTimer = undefined
+    }
     this.collection.dispose()
   }
 }

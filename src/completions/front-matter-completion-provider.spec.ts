@@ -148,11 +148,22 @@ describe('FrontMatterCompletionProvider', () => {
   })
 
   it('does not suggest properties on a blank line inside a multiline scalar', async () => {
-    expect(await provide('---\ndescription: |\n|\n---\nbody')).toEqual([])
+    expect(await provide('---\ndescription: >\n|\n---\nbody')).toEqual([])
+  })
+
+  it('does not suggest properties on a blank line inside a second multiline scalar', async () => {
+    // The line closing the first scalar opens the second one; the blank line is scalar content
+    expect(await provide('---\ndescription: >\n  text\ntagline: >\n  text\n|\n---\nbody')).toEqual([])
+  })
+
+  it('suggests properties on a blank line after a multiline scalar has closed', async () => {
+    const items = await provide('---\ndescription: >\n  text\ntitle: "x"\n|\n---\nbody')
+
+    expect(getLabels(items as never)).toEqual(['tagline', 'image', 'layout', 'layout-options'])
   })
 
   it('does not suggest properties inside a multiline string continuation', async () => {
-    expect(await provide('---\ndescription: |\n  |\n---\nbody')).toEqual([])
+    expect(await provide('---\ndescription: >\n  |\n---\nbody')).toEqual([])
   })
 
   it('does not suggest child properties under a parent with a quoted inline value', async () => {
@@ -162,7 +173,7 @@ describe('FrontMatterCompletionProvider', () => {
     expect(await provide('---\nlayout-options: "\n  |\n---\nbody')).toEqual([])
   })
 
-  it('does not suggest child properties when a comment separates the parent and its children', async () => {
+  it('suggests child properties when a comment separates the parent and its children', async () => {
     const items = await provide('---\nlayout-options: # note\n# a comment\n  |\n---\nbody')
 
     expect(getLabels(items as never)).toEqual(['sidebar-left', 'sidebar-right', 'header'])
@@ -211,7 +222,7 @@ describe('FrontMatterCompletionProvider', () => {
   })
 
   it('does not suggest values inside a multiline string continuation', async () => {
-    expect(await provide('---\ndescription: |\n  layout: gui|\n---\nbody')).toEqual([])
+    expect(await provide('---\ndescription: >\n  layout: gui|\n---\nbody')).toEqual([])
   })
 
   it('suggests portal snippet names for layout-options children', async () => {

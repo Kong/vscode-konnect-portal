@@ -63,7 +63,8 @@ export class FrontMatterCompletionProvider implements CompletionItemProvider {
       const portal = await this.storageService.getSelectedPortal()
       if (!portal) return []
 
-      const line = document.lineAt(position.line).text
+      // Use the pre-await snapshot so schema resolution and ranges come from one consistent read
+      const line = lines[position.line] ?? ''
 
       const valueItems = await this.getValueCompletions(lines, block, line, position)
       if (valueItems.length > 0) return valueItems
@@ -296,9 +297,10 @@ function isInsideMultilineScalar(
 
     const indent = line.length - line.trimStart().length
     if (scalarOpenAtIndent >= 0) {
-      // A less-indented line closes the open scalar
-      if (indent <= scalarOpenAtIndent) scalarOpenAtIndent = -1
-      continue
+      // A more-indented line is scalar content
+      if (indent > scalarOpenAtIndent) continue
+      // The closing line may itself open the next multiline value
+      scalarOpenAtIndent = -1
     }
 
     const match = FRONT_MATTER_PROP_REGEX.exec(line)

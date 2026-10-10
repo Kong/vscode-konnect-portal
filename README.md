@@ -121,7 +121,7 @@ The extension provides several configuration options in VS Code settings:
 | Setting | Type | Default | Description | Example |
 |---------|------|---------|-------------|---------|
 | `kong.konnect.devPortal.autoOpenPreview` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
-| `kong.konnect.devPortal.previewUpdateDelay` | `number` | `500` | Delay in milliseconds before updating preview after content changes (500-3000) | Use `1000` for slower updates |
+| `kong.konnect.devPortal.previewUpdateDelay` | `number` | `500` | Delay in milliseconds before updating the preview and front matter validation after content changes (500-3000) | Use `1000` for slower updates |
 | `kong.konnect.devPortal.readyTimeout` | `number` | `8000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
 | `kong.konnect.devPortal.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
 | `kong.konnect.devPortal.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
@@ -162,6 +162,7 @@ When editing a Markdown or MDC document, the extension enhances the YAML front m
 
 **Validation**
 - The `layout` property is validated as you type. An unrecognized value shows a warning in the Problems panel with the list of valid values
+- Warnings update after the debounced delay configured by `kong.konnect.devPortal.previewUpdateDelay`
 - Warnings never block saving the document, and unrecognized front matter properties are never flagged
 
 > **Note**: Front matter autocompletion and validation require a selected Konnect portal (see [Select a Portal](#3-select-a-portal)). They apply to any `.md`/`.mdc` document whose front matter syntax matches: a closed `---` block at the very top of the file. Documents in your configured `kong.konnect.devPortal.snippetsDirectory` are excluded, since snippets render their own front matter, as is front matter owned by MDC components (for example, a `::snippet` YAML block). Keep in mind that plain Markdown files using front matter for other purposes (for example Jekyll `layout` values) will also receive suggestions and `layout` warnings while a portal is selected.
