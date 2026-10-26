@@ -75,9 +75,6 @@ export function activate(context: ExtensionContext) {
   const snippetService = new PortalSnippetService(storageService)
   const completionDataService = new CompletionDataService(snippetService)
 
-  // Validate stored portal on session start
-  portalSelectionService?.validateStoredPortal()
-
   // Register the preview provider
   previewProvider = new PreviewProvider(context, storageService)
 
@@ -165,6 +162,24 @@ export function activate(context: ExtensionContext) {
 
   /** Seed diagnostics for documents that are already open at activation. */
   refreshFrontMatterDiagnostics()
+
+  /**
+   * Validates the stored portal on session start, then re-seeds diagnostics.
+   *
+   * The seed above runs while validation is still in flight, so a deleted
+   * portal or expired credentials can produce warnings that outlive the
+   * cleared selection. Re-running after validation settles drops them.
+   */
+  const validatePortalAndRefreshDiagnostics = async (): Promise<void> => {
+    try {
+      await portalSelectionService?.validateStoredPortal()
+    } catch (error) {
+      debug.error('Failed to validate stored portal selection:', error)
+    } finally {
+      refreshFrontMatterDiagnostics()
+    }
+  }
+  void validatePortalAndRefreshDiagnostics()
 
   /** Register an explicit refresh for data used by completion providers. */
   const refreshCompletionDataCommand = commands.registerCommand(
