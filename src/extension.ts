@@ -26,6 +26,8 @@ import { checkKongctlAvailable, checkAndNotifyKongctlAvailability, showKongctlAv
 import { checkAndShowMDCRecommendation } from './utils/mdc-extension'
 import { PortalSnippetService } from './konnect/portal/snippets/service'
 import { SnippetCompletionProvider } from './completions/snippet-completion-provider'
+import { FrontMatterCompletionProvider } from './completions/front-matter-completion-provider'
+import { FrontMatterDiagnostics } from './diagnostics/front-matter-diagnostics'
 import { CompletionDataService } from './completions/completion-data-service'
 
 /** Global instance of the preview provider for managing webview panels */
@@ -72,9 +74,6 @@ export function activate(context: ExtensionContext) {
   portalSelectionService = new PortalSelectionService(storageService, context)
   const snippetService = new PortalSnippetService(storageService)
   const completionDataService = new CompletionDataService(snippetService)
-
-  // Validate stored portal on session start
-  portalSelectionService?.validateStoredPortal()
 
   // Register the preview provider
   previewProvider = new PreviewProvider(context, storageService)
@@ -126,6 +125,61 @@ export function activate(context: ExtensionContext) {
     '"',
     '\'',
   )
+
+  /** Register page front matter completions for Markdown and MDC documents. */
+  const frontMatterCompletionProvider = languages.registerCompletionItemProvider(
+    [{ language: 'markdown' }, { language: 'mdc' }],
+    new FrontMatterCompletionProvider(snippetService, storageService),
+    ':',
+    '"',
+    '\'',
+  )
+
+  /** Validate the front matter and report warnings in the Problems panel. */
+  const frontMatterDiagnostics = new FrontMatterDiagnostics(storageService)
+
+  /** Re-evaluates front matter diagnostics for all open documents after the portal context changes */
+  const refreshFrontMatterDiagnostics = (): void => {
+    frontMatterDiagnostics.refreshAll().catch((error) => {
+      debug.error('Failed to refresh front matter diagnostics:', error)
+    })
+  }
+
+  /** Keep front matter diagnostics in sync with document edits (debounced like the preview). */
+  const frontMatterChangeListener = workspace.onDidChangeTextDocument((event) => {
+    frontMatterDiagnostics.scheduleUpdate(event.document)
+  })
+
+  /** Compute front matter diagnostics when a document is opened. */
+  const frontMatterOpenListener = workspace.onDidOpenTextDocument(async (document) => {
+    await frontMatterDiagnostics.update(document)
+  })
+
+  /** Clear front matter diagnostics when a document is closed. */
+  const frontMatterCloseListener = workspace.onDidCloseTextDocument((document) => {
+    frontMatterDiagnostics.remove(document.uri)
+  })
+
+  /** Seed diagnostics for documents that are already open at activation. */
+  refreshFrontMatterDiagnostics()
+
+  /**
+   * Validates the stored portal on session start, then re-seeds diagnostics.
+   *
+   * The seed above runs while validation is still in flight, so a deleted
+   * portal or expired credentials can produce warnings that outlive the
+   * cleared selection. Re-running after validation settles drops them.
+   */
+  const validatePortalAndRefreshDiagnostics = async (): Promise<void> => {
+    try {
+      await portalSelectionService?.validateStoredPortal()
+    } catch (error) {
+      debug.error('Failed to validate stored portal selection:', error)
+    } finally {
+      refreshFrontMatterDiagnostics()
+    }
+  }
+  void validatePortalAndRefreshDiagnostics()
 
   /** Register an explicit refresh for data used by completion providers. */
   const refreshCompletionDataCommand = commands.registerCommand(
@@ -230,6 +284,9 @@ export function activate(context: ExtensionContext) {
             // Update the webview configuration to use the new portal
             await previewProvider.updateConfiguration()
           }
+
+          // Re-evaluate front matter diagnostics now that the portal selection is known
+          refreshFrontMatterDiagnostics()
         }
       } catch (error) {
         await showApiError('Failed to select portal', error, extensionContext)
@@ -252,6 +309,8 @@ export function activate(context: ExtensionContext) {
           await storageService?.clearAll()
           /** Dispose active kongctl terminal to purge token from environment */
           disposeKongctlTerminal()
+          // Portal selection was cleared along with the credentials; drop front matter diagnostics
+          refreshFrontMatterDiagnostics()
           window.showInformationMessage('All credentials cleared successfully.')
         }
       } catch (error) {
@@ -424,6 +483,11 @@ export function activate(context: ExtensionContext) {
     refreshPreviewCommand,
     refreshCompletionDataCommand,
     snippetCompletionProvider,
+    frontMatterCompletionProvider,
+    frontMatterDiagnostics,
+    frontMatterChangeListener,
+    frontMatterOpenListener,
+    frontMatterCloseListener,
     configureTokenCommand,
     selectPortalCommand,
     deleteTokenCommand,

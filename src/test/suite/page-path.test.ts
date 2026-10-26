@@ -1,6 +1,6 @@
 import * as assert from 'assert'
 import * as vscode from 'vscode'
-import { getDocumentPathInfo } from '../../utils/page-path'
+import { getDocumentPathInfo, getSnippetsDirectory, isSnippetDocument } from '../../utils/page-path'
 
 /** Test suite for page path resolution functionality */
 suite('Page Path Resolution Tests', () => {
@@ -259,6 +259,61 @@ suite('Page Path Resolution Tests', () => {
       } finally {
         vscode.workspace.getWorkspaceFolder = originalGetWorkspaceFolder
         vscode.window.showWarningMessage = originalShowWarningMessage
+      }
+    })
+  })
+
+  suite('Front Matter Document Gating', () => {
+    test('should detect snippet documents for front matter gating', async () => {
+      const document = createMockDocument('/test/workspace/snippets/api-example.md')
+
+      const originalGetWorkspaceFolder = vscode.workspace.getWorkspaceFolder
+      vscode.workspace.getWorkspaceFolder = () => mockWorkspaceFolder
+
+      try {
+        assert.strictEqual(isSnippetDocument(document, snippetsDirectory), true, 'Should detect snippet directory documents')
+      } finally {
+        vscode.workspace.getWorkspaceFolder = originalGetWorkspaceFolder
+      }
+    })
+
+    test('should detect snippet subdirectory documents for front matter gating', async () => {
+      const document = createMockDocument('/test/workspace/snippets/subdir/invalid.md')
+
+      const originalGetWorkspaceFolder = vscode.workspace.getWorkspaceFolder
+      vscode.workspace.getWorkspaceFolder = () => mockWorkspaceFolder
+
+      try {
+        assert.strictEqual(isSnippetDocument(document, snippetsDirectory), true, 'Should detect snippet subdirectory documents')
+      } finally {
+        vscode.workspace.getWorkspaceFolder = originalGetWorkspaceFolder
+      }
+    })
+
+    test('should not detect page or default documents as snippets', async () => {
+      const pageDocument = createMockDocument('/test/workspace/docs/welcome.md')
+      const defaultDocument = createMockDocument('/test/workspace/other/random.md')
+
+      const originalGetWorkspaceFolder = vscode.workspace.getWorkspaceFolder
+      vscode.workspace.getWorkspaceFolder = () => mockWorkspaceFolder
+
+      try {
+        assert.strictEqual(isSnippetDocument(pageDocument, snippetsDirectory), false, 'Should not detect page documents as snippets')
+        assert.strictEqual(isSnippetDocument(defaultDocument, snippetsDirectory), false, 'Should not detect default documents as snippets')
+      } finally {
+        vscode.workspace.getWorkspaceFolder = originalGetWorkspaceFolder
+      }
+    })
+
+    test('should read the configured snippets directory', async () => {
+      const config = vscode.workspace.getConfiguration('kong.konnect.devPortal')
+      const originalValue = config.get<string>('snippetsDirectory', 'snippets')
+
+      try {
+        await config.update('snippetsDirectory', 'content/snippets', vscode.ConfigurationTarget.Global)
+        assert.strictEqual(getSnippetsDirectory(), 'content/snippets', 'Should read the configured snippets directory')
+      } finally {
+        await config.update('snippetsDirectory', originalValue, vscode.ConfigurationTarget.Global)
       }
     })
   })
