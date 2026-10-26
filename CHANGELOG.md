@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.13.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.12.1...v1.13.0) (2026-10-26)
+
+
+### Features
+
+* mdc page front matter completions [TDX-9118] ([#116](https://github.com/Kong/vscode-konnect-portal/issues/116)) ([12342b6](https://github.com/Kong/vscode-konnect-portal/commit/12342b68031d39a4b199155769b925fac7336d75))
+
 ## [1.12.1](https://github.com/Kong/vscode-konnect-portal/compare/v1.12.0...v1.12.1) (2026-10-08)
 
 ## [1.12.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.11.4...v1.12.0) (2026-10-01)
