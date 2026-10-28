@@ -133,6 +133,13 @@ describe('mdc-front-matter', () => {
       expect(layoutOptions?.properties?.every(child => child.suggestions === 'snippets')).toBe(true)
     })
 
+    it('accepts the bare boolean false for the layout-options children', () => {
+      const layoutOptions = MDC_PAGE_FRONT_MATTER_PROPERTIES.find(prop => prop.name === 'layout-options')
+
+      expect(layoutOptions?.properties?.every(child => child.type === 'string | false')).toBe(true)
+      expect(layoutOptions?.properties?.every(child => child.description?.includes('`false`'))).toBe(true)
+    })
+
     it('matches property lines with the prop regex', () => {
       const match = FRONT_MATTER_PROP_REGEX.exec('  layout-options: # note')
 

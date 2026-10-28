@@ -17,6 +17,11 @@ import { debug } from '../utils/debug'
 interface FrontMatterValueSuggestion {
   /** The value text */
   value: string
+  /**
+   * Marks the unquoted boolean `false`, which hides a layout region. The value must stay
+   * unquoted: `"false"` names a snippet, not the boolean.
+   */
+  raw?: boolean
   /** Gray text shown next to the suggestion label */
   description?: string
 }
@@ -27,6 +32,10 @@ interface FrontMatterValueTarget {
   range: Range
   /** Builds the inserted text for a suggested value */
   buildInsertText: (value: string) => string
+  /** Builds the inserted text for a raw value, which must never be quoted */
+  buildRawInsertText: (value: string) => string
+  /** Whether the cursor edits the content of a quoted value, where no raw value is offered */
+  insideQuote: boolean
 }
 
 /** Provides front matter property and value completions for Markdown and MDC documents */
@@ -112,11 +121,17 @@ export class FrontMatterCompletionProvider implements CompletionItemProvider {
       }
     }
 
+    // A `string | false` property also accepts the bare boolean `false`, which hides the region.
+    // It is not offered while the cursor edits a quoted value, since the author chose a quoted value.
+    if (schema.type === 'string | false' && !target.insideQuote) {
+      suggestions.push({ value: 'false', raw: true, description: 'Hide the region' })
+    }
+
     if (!suggestions.length) return []
 
-    return suggestions.map(({ value, description }) => {
+    return suggestions.map(({ value, description, raw }) => {
       const item = new CompletionItem(value, CompletionItemKind.Value)
-      item.insertText = target.buildInsertText(value)
+      item.insertText = raw ? target.buildRawInsertText(value) : target.buildInsertText(value)
       item.range = target.range
       item.detail = description ?? schema.description
       // A snippet title takes over the detail slot, so move the schema description to the docs
@@ -179,12 +194,15 @@ export class FrontMatterCompletionProvider implements CompletionItemProvider {
 
 /**
  * Builds the snippet insert text for a front matter property name.
- * String and enum values get an empty quoted placeholder; object properties open a child mapping.
+ * String and enum values get an empty quoted placeholder; object properties
+ * open a child mapping. A `string | false` value starts unquoted so the bare
+ * `false` stays offerable.
  */
 function getFrontMatterPropInsertText(schema: MdcFrontMatterPropSchema): SnippetString {
-  return schema.type === 'object'
-    ? new SnippetString(`${schema.name}:\n  $0`)
-    : new SnippetString(`${schema.name}: "$0"`)
+  if (schema.type === 'object') return new SnippetString(`${schema.name}:\n  $0`)
+  // A `string | false` value starts unquoted so the bare `false` stays offerable
+  if (schema.type === 'string | false') return new SnippetString(`${schema.name}: $0`)
+  return new SnippetString(`${schema.name}: "$0"`)
 }
 
 /** Type hint shown next to the completion label */
@@ -317,7 +335,9 @@ function isInsideMultilineScalar(
  * Computes the replacement range and insert-text quoting for a value completion.
  *
  * Values are inserted double-quoted unless a quote already surrounds the cursor,
- * in which case only a missing closing quote is appended.
+ * in which case only a missing closing quote is appended. Raw values, such as the
+ * boolean `false` that hides a layout region, bypass the quoting through
+ * `buildRawInsertText` and are not offered while the cursor edits a quoted value.
  *
  * @param line - The full text of the property line
  * @param position - The cursor position on the line
@@ -348,6 +368,8 @@ function getFrontMatterValueTarget(line: string, position: Position): FrontMatte
     return {
       range: insertAtCursor(),
       buildInsertText: value => `${needsSpace ? ' ' : ''}"${value}"`,
+      buildRawInsertText: value => `${needsSpace ? ' ' : ''}${value}`,
+      insideQuote: false,
     }
   }
 
@@ -362,6 +384,8 @@ function getFrontMatterValueTarget(line: string, position: Position): FrontMatte
       return {
         range: new Range(position.line, valueStart + 1, position.line, cursor),
         buildInsertText: value => `${value}${quote}`,
+        buildRawInsertText: value => value,
+        insideQuote: true,
       }
     }
 
@@ -373,12 +397,16 @@ function getFrontMatterValueTarget(line: string, position: Position): FrontMatte
       return {
         range: insertAtCursor(),
         buildInsertText: value => value,
+        buildRawInsertText: value => value,
+        insideQuote: true,
       }
     }
 
     return {
       range: new Range(position.line, valueStart + 1, position.line, closingIndex),
       buildInsertText: value => value,
+      buildRawInsertText: value => value,
+      insideQuote: true,
     }
   }
 
@@ -388,6 +416,8 @@ function getFrontMatterValueTarget(line: string, position: Position): FrontMatte
     return {
       range: new Range(position.line, valueStart, position.line, valueStart + valueText.length),
       buildInsertText: value => `"${value}"`,
+      buildRawInsertText: value => value,
+      insideQuote: false,
     }
   }
 
