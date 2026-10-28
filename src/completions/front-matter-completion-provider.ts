@@ -194,12 +194,15 @@ export class FrontMatterCompletionProvider implements CompletionItemProvider {
 
 /**
  * Builds the snippet insert text for a front matter property name.
- * String and enum values get an empty quoted placeholder; object properties open a child mapping.
+ * String and enum values get an empty quoted placeholder; object properties
+ * open a child mapping. A `string | false` value starts unquoted so the bare
+ * `false` stays offerable.
  */
 function getFrontMatterPropInsertText(schema: MdcFrontMatterPropSchema): SnippetString {
-  return schema.type === 'object'
-    ? new SnippetString(`${schema.name}:\n  $0`)
-    : new SnippetString(`${schema.name}: "$0"`)
+  if (schema.type === 'object') return new SnippetString(`${schema.name}:\n  $0`)
+  // A `string | false` value starts unquoted so the bare `false` stays offerable
+  if (schema.type === 'string | false') return new SnippetString(`${schema.name}: $0`)
+  return new SnippetString(`${schema.name}: "$0"`)
 }
 
 /** Type hint shown next to the completion label */

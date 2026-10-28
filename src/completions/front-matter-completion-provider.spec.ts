@@ -133,6 +133,17 @@ describe('FrontMatterCompletionProvider', () => {
     expect(title?.insertText.value).toBe('title: "$0"')
   })
 
+  // The property completion is the primary authoring path: its placeholder must not put the
+  // cursor inside quotes, or the `insideQuote` guard suppresses the bare `false` on every
+  // keystroke and the author silently lands on the snippet name `"false"`.
+  it('starts `string | false` property values unquoted so the bare false stays offerable', async () => {
+    const items = await provide('---\nlayout-options:\n  |\n---\nbody')
+    const sidebarLeft = (items as Array<{ label: string, insertText: { value: string } }>)
+      .find(item => item.label === 'sidebar-left')
+
+    expect(sidebarLeft?.insertText.value).toBe('sidebar-left: $0')
+  })
+
   it('opens a child mapping for object properties', async () => {
     const items = await provide('---\n|\n---\nbody')
     const layoutOptions = (items as Array<{ label: string, insertText: { value: string } }>)
