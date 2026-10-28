@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.14.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.13.0...v1.14.0) (2026-10-28)
+
+
+### Features
+
+* update front matter suggestion for layout-options boolean ([#117](https://github.com/Kong/vscode-konnect-portal/issues/117)) ([157587c](https://github.com/Kong/vscode-konnect-portal/commit/157587c30a0302d63731cb8bd004850c909781dc))
+
 ## [1.13.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.12.1...v1.13.0) (2026-10-26)
 
 
