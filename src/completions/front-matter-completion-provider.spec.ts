@@ -147,6 +147,15 @@ describe('FrontMatterCompletionProvider', () => {
     expect(getLabels(items as never)).toEqual(['sidebar-left', 'sidebar-right', 'header'])
   })
 
+  it('shows the `string | false` type hint for layout-options children', async () => {
+    const items = await provide('---\nlayout-options:\n  |\n---\nbody')
+    const typed = items as Array<{ label: string, detail?: string, documentation?: { value: string } }>
+
+    expect(typed.map(item => item.detail)).toEqual(['string | false', 'string | false', 'string | false'])
+    // The description tells the author that `false` hides the region
+    expect(typed.find(item => item.label === 'sidebar-left')?.documentation?.value).toContain('`false`')
+  })
+
   it('does not suggest properties on a blank line inside a multiline scalar', async () => {
     expect(await provide('---\ndescription: >\n|\n---\nbody')).toEqual([])
   })
@@ -225,21 +234,44 @@ describe('FrontMatterCompletionProvider', () => {
     expect(await provide('---\ndescription: >\n  layout: gui|\n---\nbody')).toEqual([])
   })
 
-  it('suggests portal snippet names for layout-options children', async () => {
+  it('suggests portal snippet names and the bare false for layout-options children', async () => {
     const items = await provide('---\nlayout-options:\n  sidebar-left: |\n---\nbody')
-    const headerSnippet = (items as Array<{ label: string, insertText: string, detail?: string }>)
-      .find(item => item.label === 'header-snippet')
+    const typed = items as Array<{ label: string, insertText: string, detail?: string }>
+    const headerSnippet = typed.find(item => item.label === 'header-snippet')
 
-    expect(getLabels(items as never)).toEqual(['header-snippet', 'sidebar-snippet'])
+    expect(getLabels(items as never)).toEqual(['header-snippet', 'sidebar-snippet', 'false'])
     expect(headerSnippet?.insertText).toBe('"header-snippet"')
     expect(headerSnippet?.detail).toBe('Header')
+    // The bare boolean must never be quoted: `"false"` names a snippet, not the boolean
+    expect(typed.find(item => item.label === 'false')?.insertText).toBe('false')
     expect(snippetService.getSnippets).toHaveBeenCalled()
   })
 
-  it('returns no completions and logs when fetching snippets fails', async () => {
+  it('suggests the bare false with a leading space when the colon has no space', async () => {
+    const items = await provide('---\nlayout-options:\n  sidebar-left:|\n---\nbody')
+    const falseItem = (items as Array<{ label: string, insertText: string }>).find(item => item.label === 'false')
+
+    expect(falseItem?.insertText).toBe(' false')
+  })
+
+  it('replaces a partially typed value with the bare false', async () => {
+    const items = await provide('---\nlayout-options:\n  sidebar-left: fal|\n---\nbody')
+    const falseItem = (items as Array<{ label: string, insertText: string }>).find(item => item.label === 'false')
+
+    expect(falseItem?.insertText).toBe('false')
+  })
+
+  it('does not suggest the bare false inside a quoted value', async () => {
+    const items = await provide('---\nlayout-options:\n  sidebar-left: "fal|\n---\nbody')
+
+    expect(getLabels(items as never)).toEqual(['header-snippet', 'sidebar-snippet'])
+  })
+
+  it('still offers the bare false when fetching snippets fails', async () => {
     vi.mocked(snippetService.getSnippets).mockRejectedValueOnce(new Error('API failed'))
     const items = await provide('---\nlayout-options:\n  sidebar-left: |\n---\nbody')
 
-    expect(items).toEqual([])
+    // The bare boolean is static schema data, so it survives a failed snippet fetch
+    expect(getLabels(items as never)).toEqual(['false'])
   })
 })

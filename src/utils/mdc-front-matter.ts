@@ -7,8 +7,15 @@
  * matter diagnostics, so both stay in sync automatically.
  */
 
-/** The value types supported by Dev Portal page front matter properties */
-export type MdcFrontMatterPropType = 'string' | 'enum' | 'object'
+/**
+ * The value types supported by Dev Portal page front matter properties.
+ *
+ * - `string`: a free-form, single-line, quoted value
+ * - `string | false`: a free-form, single-line, quoted value, or the unquoted boolean `false`
+ * - `enum`: a single-line value restricted to `values`
+ * - `object`: a mapping that only holds child properties
+ */
+export type MdcFrontMatterPropType = 'string' | 'string | false' | 'enum' | 'object'
 
 /** Schema for a single page front matter property */
 export interface MdcFrontMatterPropSchema {
@@ -60,9 +67,9 @@ export const MDC_PAGE_FRONT_MATTER_PROPERTIES: MdcFrontMatterPropSchema[] = [
     description: 'Optional layout configuration options.',
     docsUrl: 'https://portaldocs.konghq.com/pages/layout-options',
     properties: [
-      { name: 'sidebar-left', type: 'string', suggestions: 'snippets', description: 'A snippet to render in the left sidebar, when supported by the layout.' },
-      { name: 'sidebar-right', type: 'string', suggestions: 'snippets', description: 'A snippet to render in the right sidebar, when supported by the layout.' },
-      { name: 'header', type: 'string', suggestions: 'snippets', description: 'A snippet to render in the page header, when supported by the layout.' },
+      { name: 'sidebar-left', type: 'string | false', suggestions: 'snippets', description: 'A snippet to render in the left sidebar, when supported by the layout. Set to `false` to hide the left sidebar region.' },
+      { name: 'sidebar-right', type: 'string | false', suggestions: 'snippets', description: 'A snippet to render in the right sidebar, when supported by the layout. Set to `false` to hide the right sidebar region.' },
+      { name: 'header', type: 'string | false', suggestions: 'snippets', description: 'A snippet to render in the page header, when supported by the layout. Set to `false` to hide the page header region.' },
     ],
   },
 ]
