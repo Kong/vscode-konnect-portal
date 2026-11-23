@@ -158,6 +158,10 @@ iframe {
   height: 100%;
   border: none;
   display: block;
+  /* The container is a flex row; without this the layout engine shrinks a
+     fixed-width frame (1440px) down to the container before the JS scale
+     transform applies, so the zoom-out double-shrinks the frame */
+  flex-shrink: 0;
 }
 
 /* Device frame look for tablet and mobile viewports */
