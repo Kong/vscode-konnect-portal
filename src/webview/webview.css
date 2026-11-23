@@ -81,12 +81,14 @@ html, body {
   outline-offset: -1px;
 }
 
-/* Hover tooltip: a small dark bubble above the button. Title attributes are
-   delayed and easy to miss, so the label doubles as a visible hint */
+/* Hover tooltip: a small bubble below the button. It must render below, not
+   above: the toolbar sits at the top edge of the webview, so an upward bubble
+   is clipped and never visible. Title attributes are delayed and easy to
+   miss, so the label doubles as a visible hint */
 .viewport-button::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: calc(100% + 6px);
+  top: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
   padding: 3px 8px;
@@ -119,7 +121,7 @@ html, body {
 }
 
 /* ========================================
- * Viewport Switcher Toolbar
+ * Status Bar & Header
  * ======================================== */
 
 /* Status indicator showing active portal URL */
@@ -136,7 +138,9 @@ html, body {
  * Iframe Container & Portal Display
  * ======================================== */
 
-/* Container for the portal iframe - takes remaining space, centers the frame */
+/* Container for the portal iframe - takes remaining space, centers the frame.
+   Spacing uses margin, not padding: applyViewport measures clientHeight, which
+   would include padding and clip the bottom of the scaled frame */
 .iframe-container {
   flex: 1;
   position: relative;
@@ -144,8 +148,7 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  margin: 0 12px 12px 12px;
-  padding-top: 12px;
+  margin: 12px 12px 12px 12px;
   min-height: 0;
 }
 
@@ -155,8 +158,6 @@ iframe {
   height: 100%;
   border: none;
   display: block;
-  /* transform-origin is set on the iframe by viewport JS; keep switches smooth */
-  transition: width 0.2s ease, height 0.2s ease, transform 0.2s ease;
 }
 
 /* Device frame look for tablet and mobile viewports */

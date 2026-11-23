@@ -488,7 +488,7 @@ if (iframe && loadingOverlay) {
 /** Preset for a viewport frame: a null height means the desktop canonical view */
 interface ViewportPreset {
   /** Fixed frame width in pixels */
-  width: number | null
+  width: number
   /** Fixed frame height in pixels used for the height-fit term, or null for desktop */
   height: number | null
 }
@@ -513,8 +513,8 @@ const VIEWPORT_STATE_KEY = 'portalPreviewViewport'
  * @param viewport - The viewport key
  * @param containerWidth - Measured container width in pixels
  * @param containerHeight - Measured container height in pixels
- * @returns Frame size in pixels and scale. Width is always a fixed preset
- *   width; height is null for desktop, which renders at container height.
+ * @returns Frame size in pixels and scale. The desktop height is
+ *   containerHeight / scale so the scaled frame fills the pane.
  */
 function computeFrameGeometry(
   viewport: string,
@@ -522,7 +522,7 @@ function computeFrameGeometry(
   containerHeight: number,
 ): { width: number, height: number | null, scale: number } {
   const preset = VIEWPORT_PRESETS[viewport] || VIEWPORT_PRESETS[DEFAULT_VIEWPORT]
-  const frameWidth = preset.width as number
+  const frameWidth = preset.width
   // Desktop: render the canonical width and zoom out to fit narrower
   // panels, capped at 1 so a wider panel never zooms in. The frame height
   // is containerHeight / scale so the scaled height fills the pane.
@@ -570,27 +570,46 @@ function applyViewport(viewport: string): void {
   for (const button of buttons) {
     const isActive = button.dataset.viewport === viewport
     button.classList.toggle('active', isActive)
-    button.setAttribute('aria-selected', isActive ? 'true' : 'false')
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false')
   }
   container.classList.toggle('viewport-tablet', viewport === 'tablet')
   container.classList.toggle('viewport-mobile', viewport === 'mobile')
 
+  // Guard degenerate measurements: a hidden or pre-layout container reports 0,
+  // which would yield scale 0 and an Infinity height. The ResizeObserver
+  // refits once real dimensions exist.
+  if (container.clientWidth === 0 || container.clientHeight === 0) return
+
   const geometry = computeFrameGeometry(viewport, container.clientWidth, container.clientHeight)
   // Explicit inline sizes plus transform: Chrome does not evaluate CSS-class
-  // sizes of a cross-origin iframe inside a transformed subtree reliably
+  // sizes of a cross-origin iframe inside a transformed subtree reliably.
+  // A transition is applied first so viewport switches animate, then removed:
+  // leaving it on would also animate the debounced resize refits, making the
+  // frame lag the panel edge during drags
+  frame.style.transition = 'width 0.2s ease, height 0.2s ease, transform 0.2s ease'
   frame.style.width = `${geometry.width}px`
   frame.style.height = `${geometry.height}px`
   frame.style.transform = `scale(${geometry.scale})`
   frame.style.transformOrigin = 'top center'
+  window.setTimeout(() => {
+    frame.style.transition = ''
+  }, 220)
 }
 
 /**
  * Validates a persisted viewport key against known presets
+ * The own-property check keeps inherited Object.prototype keys such as
+ * 'toString' from passing validation and producing invalid geometry
  * @param value - The stored value to validate
  * @returns The value if known, else the default viewport
  */
 function normalizeViewport(value: unknown): string {
-  return typeof value === 'string' && value in VIEWPORT_PRESETS ? value : DEFAULT_VIEWPORT
+  // hasOwnProperty.call rather than `in`: `in` matches inherited
+  // Object.prototype keys such as 'toString' and would produce invalid geometry
+  return typeof value === 'string' &&
+    Object.prototype.hasOwnProperty.call(VIEWPORT_PRESETS, value)
+    ? value
+    : DEFAULT_VIEWPORT
 }
 
 /** Sets up viewport switching: restore state, wire clicks, observe resizes */

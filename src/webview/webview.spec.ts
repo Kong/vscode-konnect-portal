@@ -111,6 +111,25 @@ describe('webview viewport switcher', () => {
     expect(document.getElementById('viewport-desktop')?.classList.contains('active')).toBe(true)
   })
 
+  it('applies no geometry while the container has no layout', async () => {
+    buildViewportDom()
+    containerSize = { width: 0, height: 0 }
+    await importWebview()
+
+    const iframe = document.getElementById('portal-preview') as HTMLIFrameElement
+    expect(iframe.style.width).toBe('')
+    expect(iframe.style.transform).toBe('')
+  })
+
+  it('marks the active button with aria-pressed', async () => {
+    buildViewportDom()
+    await importWebview()
+
+    document.getElementById('viewport-tablet')?.dispatchEvent(new MouseEvent('click'))
+    expect(document.getElementById('viewport-tablet')?.getAttribute('aria-pressed')).toBe('true')
+    expect(document.getElementById('viewport-desktop')?.getAttribute('aria-pressed')).toBe('false')
+  })
+
   it('applies tablet geometry at iPad portrait size and scales down', async () => {
     buildViewportDom()
     containerSize = { width: 800, height: 900 }
@@ -190,6 +209,16 @@ describe('webview viewport switcher', () => {
     buildViewportDom()
     containerSize = { width: 800, height: 900 }
     await importWebview({ portalPreviewViewport: 'widescreen' })
+
+    const iframe = document.getElementById('portal-preview') as HTMLIFrameElement
+    expect(iframe.style.width).toBe('1440px')
+    expect(document.getElementById('viewport-desktop')?.classList.contains('active')).toBe(true)
+  })
+
+  it('falls back to desktop when persisted state holds an inherited object key', async () => {
+    buildViewportDom()
+    containerSize = { width: 800, height: 900 }
+    await importWebview({ portalPreviewViewport: 'toString' })
 
     const iframe = document.getElementById('portal-preview') as HTMLIFrameElement
     expect(iframe.style.width).toBe('1440px')
