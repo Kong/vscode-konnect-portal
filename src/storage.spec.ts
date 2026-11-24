@@ -377,7 +377,7 @@ describe('konnect/storage', () => {
       it('should ignore a portal stored under a different domain', async () => {
         const stored = JSON.stringify({
           ...mockStoredPortalConfig,
-          domain: 'konghq.example.test',
+          domain: 'konghq.example',
         })
         mockSecretStorage.get.mockResolvedValueOnce(stored)
 

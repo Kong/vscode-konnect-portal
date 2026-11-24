@@ -1,5 +1,6 @@
 import type { ExtensionContext, SecretStorage } from 'vscode'
 import type { StoredPortalConfig } from './types/konnect'
+import { debug } from './utils/debug'
 import { getKonnectApiDomain, isKonnectApiOverridden, DEFAULT_API_DOMAIN } from './konnect/environment'
 
 /**
@@ -76,8 +77,8 @@ export class PortalStorageService {
 
   /**
    * Retrieves the stored portal configuration. A config stored under a
-   * different API domain than the active one is ignored, so its credentials
-   * never reach an environment the user did not select this session.
+   * different API domain than the active one is ignored, so a stale portal
+   * origin is never used against another environment.
    * @returns Promise resolving to the portal config or undefined if not found
    */
   async getSelectedPortal(): Promise<StoredPortalConfig | undefined> {
@@ -90,7 +91,15 @@ export class PortalStorageService {
       const config = JSON.parse(stored) as StoredPortalConfig
       // Legacy configs without a domain were stored under the default domain
       const configDomain = config.domain ?? DEFAULT_DOMAIN_FOR_STORAGE
-      if (configDomain !== getKonnectApiDomain()) {
+      const activeDomain = getKonnectApiDomain()
+      if (configDomain !== activeDomain) {
+        // Fail closed, but make the mismatch diagnosable: the stored config
+        // belongs to another environment and stays there until re-selected
+        debug.warn(
+          `Ignoring portal selection stored for domain '${configDomain}'. Active domain is '${activeDomain}'.`,
+          undefined,
+          true,
+        )
         return undefined
       }
       return config

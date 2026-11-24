@@ -72,7 +72,8 @@ export interface StoredPortalConfig {
   /**
    * API domain the portal was selected under (e.g. 'konghq.com').
    * A stored config whose domain does not match the active domain is ignored,
-   * so credentials never reach an environment the user did not select.
+   * so a stale portal origin is never used against another environment.
+   * The PAT is not domain-gated and follows the active domain.
    * Optional for backwards compatibility with configs stored before domain support was added.
    */
   domain?: string

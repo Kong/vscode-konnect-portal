@@ -4,9 +4,6 @@ import { debug } from '../utils/debug'
 /** Default Konnect API domain, also used to tag stored portal configs */
 export const DEFAULT_API_DOMAIN = 'konghq.com'
 
-/** Alias for readability inside this module */
-const DEFAULT_DOMAIN = DEFAULT_API_DOMAIN
-
 /**
  * Environment variable holding an alternative Konnect API domain for local
  * testing against alternative environments. Unset by default. Regional API
@@ -60,19 +57,19 @@ export function setExtensionMode(mode: vscode.ExtensionMode): void {
 export function getKonnectApiDomain(): string {
   const raw = process.env[API_DOMAIN_OVERRIDE_ENV_VAR]?.trim().toLowerCase()
   if (!raw) {
-    return DEFAULT_DOMAIN
+    return DEFAULT_API_DOMAIN
   }
   // No captured mode means unit tests: stay silent and use the default
   if (extensionMode === undefined) {
-    return DEFAULT_DOMAIN
+    return DEFAULT_API_DOMAIN
   }
   if (!DOMAIN_PATTERN.test(raw)) {
     warnAboutOverrideOnce(`Ignoring ${API_DOMAIN_OVERRIDE_ENV_VAR} value '${raw}'. Only *.konghq.* domains are allowed. Using the default API.`)
-    return DEFAULT_DOMAIN
+    return DEFAULT_API_DOMAIN
   }
   if (extensionMode === vscode.ExtensionMode.Production) {
     warnAboutOverrideOnce(`Ignoring ${API_DOMAIN_OVERRIDE_ENV_VAR} because the extension is running from an installed package. Using the default API.`)
-    return DEFAULT_DOMAIN
+    return DEFAULT_API_DOMAIN
   }
   return raw
 }
@@ -94,7 +91,7 @@ export function konnectApiBaseUrl(region: string, version: string): string {
  * @returns True when an override is in effect
  */
 export function isKonnectApiOverridden(): boolean {
-  return getKonnectApiDomain() !== DEFAULT_DOMAIN
+  return getKonnectApiDomain() !== DEFAULT_API_DOMAIN
 }
 
 /**
@@ -105,5 +102,5 @@ export function isKonnectApiOverridden(): boolean {
  */
 export function getKongctlEnvOverrides(): Record<string, string> {
   const domain = getKonnectApiDomain()
-  return domain === DEFAULT_DOMAIN ? {} : { [KONGCTL_BASE_URL_ENV_VAR]: `https://us.api.${domain}` }
+  return domain === DEFAULT_API_DOMAIN ? {} : { [KONGCTL_BASE_URL_ENV_VAR]: `https://us.api.${domain}` }
 }

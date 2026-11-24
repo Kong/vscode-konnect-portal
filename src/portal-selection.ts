@@ -255,8 +255,9 @@ export class PortalSelectionService {
             origin: withHttps(selectedItem.portal.canonical_domain),
             canonicalDomain: selectedItem.portal.canonical_domain,
             region: selectedItem.portal.region,
-            // Bind the selection to the active domain so a later switch to
-            // another domain never sends these credentials there
+            // Bind the selection to the active domain. On a later switch the
+            // mismatched config is ignored, so the stale portal origin is
+            // never used. The PAT itself is not domain-gated.
             domain: getKonnectApiDomain(),
           }
 
