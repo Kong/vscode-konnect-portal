@@ -4,6 +4,7 @@ import type { ApiErrorInfo } from '../types'
 import { API_ERROR_MESSAGES } from '../constants/messages'
 import { getNextPageNumber } from './pagination'
 import { isKonnectPortalSnippet } from './portal/snippets/validation'
+import { konnectApiBaseUrl } from './environment'
 
 /**
  * Custom error class for API errors with trace ID support
@@ -55,7 +56,7 @@ const API_VERSION = 'v3'
  * @returns Base URL string (e.g., 'https://us.api.konghq.com/v3')
  */
 function buildKonnectApiBaseUrl(region: string): string {
-  return `https://${region}.api.konghq.com/${API_VERSION}`
+  return konnectApiBaseUrl(region, API_VERSION)
 }
 
 /**

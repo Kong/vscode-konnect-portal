@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { ExtensionContext } from 'vscode'
 import { PortalStorageService } from './storage'
+import { isKonnectApiOverridden } from './konnect/environment'
+import type * as environmentModule from './konnect/environment'
 import {
   mockStoredPortalConfig,
   mockStoredPortalConfig2,
@@ -15,6 +17,15 @@ vi.mock('vscode', () => ({
   // Add any VS Code APIs used by storage service
 }))
 
+// Mock the environment resolver so tests can switch environments
+vi.mock('./konnect/environment', async () => {
+  const actual = await vi.importActual<typeof environmentModule>('./konnect/environment')
+  return {
+    ...actual,
+    isKonnectApiOverridden: vi.fn(() => false),
+  }
+})
+
 describe('konnect/storage', () => {
   let storageService: PortalStorageService
   let mockContext: ReturnType<typeof createMockContext>
@@ -22,11 +33,13 @@ describe('konnect/storage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Default every test to the default environment; individual tests override this
+    // when they exercise the override namespace
+    vi.mocked(isKonnectApiOverridden).mockReturnValue(false)
     mockContext = createMockContext()
     mockSecretStorage = mockContext.secrets
     storageService = new PortalStorageService(mockContext as unknown as ExtensionContext)
   })
-
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -310,8 +323,87 @@ describe('konnect/storage', () => {
         // Verify both deletion calls were made (implementation detail but necessary for clearAll)
         expect(mockSecretStorage.delete).toHaveBeenCalledWith('konnectaccesstoken')
         expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig')
-        expect(mockSecretStorage.delete).toHaveBeenCalledTimes(2)
+        // Both environments' keys are cleared, four deletions in total
+        expect(mockSecretStorage.delete).toHaveBeenCalledTimes(4)
         expect(afterClearPortal).toBeUndefined()
+      })
+
+      it('should also delete the override-namespace keys of both data types', async () => {
+        await storageService.clearAll()
+
+        // Both namespaces are cleared so no token of either environment survives
+        expect(mockSecretStorage.delete).toHaveBeenCalledWith('konnectaccesstoken.override')
+        expect(mockSecretStorage.delete).toHaveBeenCalledWith('selectedPortalConfig.override')
+        expect(mockSecretStorage.delete).toHaveBeenCalledTimes(4)
+      })
+    })
+
+    describe('environment scoping', () => {
+      it('should use unsuffixed keys in the default environment', async () => {
+        vi.mocked(isKonnectApiOverridden).mockReturnValue(false)
+
+        await storageService.storeToken(storageTestTokens.valid)
+
+        expect(mockSecretStorage.store).toHaveBeenCalledWith('konnectaccesstoken', storageTestTokens.valid)
+      })
+
+      it('should use override-suffixed keys when a base URL override is active', async () => {
+        vi.mocked(isKonnectApiOverridden).mockReturnValue(true)
+
+        await storageService.storeToken(storageTestTokens.valid)
+        await storageService.storeSelectedPortal(mockStoredPortalConfig)
+
+        expect(mockSecretStorage.store).toHaveBeenCalledWith('konnectaccesstoken.override', storageTestTokens.valid)
+        expect(mockSecretStorage.store).toHaveBeenCalledWith(
+          'selectedPortalConfig.override',
+          JSON.stringify(mockStoredPortalConfig),
+        )
+      })
+
+      it('should keep default and override-namespace tokens independent', async () => {
+        vi.mocked(isKonnectApiOverridden).mockReturnValue(false)
+        await storageService.storeToken(storageTestTokens.valid)
+
+        vi.mocked(isKonnectApiOverridden).mockReturnValue(true)
+        mockSecretStorage.get.mockResolvedValueOnce(undefined)
+        const overrideToken = await storageService.getToken()
+
+        expect(overrideToken).toBeUndefined()
+        expect(mockSecretStorage.get).toHaveBeenCalledWith('konnectaccesstoken.override')
+      })
+    })
+
+    describe('portal domain binding', () => {
+      it('should ignore a portal stored under a different domain', async () => {
+        const stored = JSON.stringify({
+          ...mockStoredPortalConfig,
+          domain: 'konghq.example',
+        })
+        mockSecretStorage.get.mockResolvedValueOnce(stored)
+
+        const portal = await storageService.getSelectedPortal()
+
+        // The selection belongs to another environment; using it would send
+        // its credentials there
+        expect(portal).toBeUndefined()
+      })
+
+      it('should return a portal stored under the active domain', async () => {
+        mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
+
+        const portal = await storageService.getSelectedPortal()
+
+        expect(portal).toEqual(mockStoredPortalConfig)
+      })
+
+      it('should treat a legacy config without a domain as default-domain', async () => {
+        const legacyConfig = { ...mockStoredPortalConfig }
+        delete legacyConfig.domain
+        mockSecretStorage.get.mockResolvedValueOnce(JSON.stringify(legacyConfig))
+
+        const portal = await storageService.getSelectedPortal()
+
+        expect(portal).toEqual(legacyConfig)
       })
     })
 

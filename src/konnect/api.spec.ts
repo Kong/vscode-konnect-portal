@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ApiError, KonnectApiService } from './api'
 import { API_ERROR_MESSAGES } from '../constants/messages'
+import { setExtensionMode } from './environment'
+
 import {
   mockPortal1,
   mockPortal2,
@@ -29,6 +31,22 @@ class MockAbortController {
 
 vi.stubGlobal('AbortController', MockAbortController)
 
+// Mock VS Code for the environment module (extension-mode gating)
+vi.mock('vscode', () => ({
+  // Required by debugLog, reachable through the environment module when a
+  // base URL override is present in the developer's shell
+  workspace: {
+    getConfiguration: vi.fn().mockReturnValue({
+      get: vi.fn().mockReturnValue(false),
+    }),
+  },
+  ExtensionMode: {
+    Production: 1,
+    Development: 2,
+    Test: 3,
+  },
+}))
+
 // Mock setTimeout and clearTimeout
 vi.stubGlobal('setTimeout', vi.fn(() => {
   return 123 // Mock timer ID
@@ -42,6 +60,9 @@ describe('konnect/api', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    // Reset extension-mode capture and domain override so other tests are unaffected
+    setExtensionMode(undefined as never)
+    delete process.env.KONNECT_API_DOMAIN
   })
 
   describe('ApiError', () => {
@@ -232,6 +253,31 @@ describe('konnect/api', () => {
     })
 
     describe('fetchAllPortals', () => {
+      it('should target the override domain when set on an unpackaged run', async () => {
+        // Lazy import so the mocked vscode module is in place first
+        const vscode = await import('vscode')
+
+        // Pretend the extension runs unpackaged with a domain override active
+        setExtensionMode(vscode.ExtensionMode.Development)
+        process.env.KONNECT_API_DOMAIN = 'konghq.example'
+
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValueOnce(mockSinglePageResponse),
+        })
+
+        await apiService.fetchAllPortals(testTokens.valid, 'us')
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://us.api.konghq.example/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1',
+          expect.objectContaining({ method: 'GET' }),
+        )
+
+        // Restore the default environment for subsequent tests
+        delete process.env.KONNECT_API_DOMAIN
+        setExtensionMode(undefined as never)
+      })
+
       it('should fetch all portals with single page and verify data integrity', async () => {
         const mockResponse = mockSinglePageResponse
         mockFetch.mockResolvedValueOnce({

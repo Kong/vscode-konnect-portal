@@ -9,6 +9,7 @@ import { showApiError } from './utils/error-handling'
 import { debug } from './utils/debug'
 import { PORTAL_SELECTION_MESSAGES } from './constants/messages'
 import { checkAndPromptMDCExtensionForPortal } from './utils/mdc-extension'
+import { getKonnectApiDomain } from './konnect/environment'
 
 /**
  * Service for managing portal selection workflow
@@ -254,6 +255,10 @@ export class PortalSelectionService {
             origin: withHttps(selectedItem.portal.canonical_domain),
             canonicalDomain: selectedItem.portal.canonical_domain,
             region: selectedItem.portal.region,
+            // Bind the selection to the active domain. On a later switch the
+            // mismatched config is ignored, so the stale portal origin is
+            // never used. The PAT itself is not domain-gated.
+            domain: getKonnectApiDomain(),
           }
 
           // Store the selection

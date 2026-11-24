@@ -29,6 +29,7 @@ import { SnippetCompletionProvider } from './completions/snippet-completion-prov
 import { FrontMatterCompletionProvider } from './completions/front-matter-completion-provider'
 import { FrontMatterDiagnostics } from './diagnostics/front-matter-diagnostics'
 import { CompletionDataService } from './completions/completion-data-service'
+import { setExtensionMode, getKongctlEnvOverrides } from './konnect/environment'
 
 /** Global instance of the preview provider for managing webview panels */
 let previewProvider: PreviewProvider | undefined
@@ -68,6 +69,10 @@ export function activate(context: ExtensionContext) {
 
   // Store context for use in error handling
   extensionContext = context
+
+  // The mode is only reachable here, and the override is only valid on
+  // unpackaged runs
+  setExtensionMode(context.extensionMode)
 
   // Initialize services
   storageService = new PortalStorageService(context)
@@ -391,6 +396,8 @@ export function activate(context: ExtensionContext) {
             env.KONGCTL_DEFAULT_KONNECT_PAT = token
           }
         }
+        // kongctl follows the domain override only through its environment
+        Object.assign(env, getKongctlEnvOverrides())
       } catch {
         // Silently continue without token if there's an error
       }

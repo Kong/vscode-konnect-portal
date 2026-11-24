@@ -6,6 +6,8 @@ import { getOrCreateKongctlTerminal } from '../terminal'
 import { createAsyncLock } from '../utils/async-lock'
 import type { KongctlCommandResult } from '../types/kongctl'
 import type { PortalStorageService } from '../storage'
+import { getKongctlEnvOverrides } from '../konnect/environment'
+
 
 const exists = promisify(fs.exists)
 
@@ -105,6 +107,8 @@ export async function executeKongctl(
 
   // Always prepare environment with token if available
   const env = { ...process.env }
+  // kongctl needs a full base URL to follow the domain override
+  Object.assign(env, getKongctlEnvOverrides())
   if (storageService) {
     try {
       const token = await storageService.getToken()

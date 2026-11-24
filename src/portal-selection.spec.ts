@@ -280,6 +280,7 @@ describe('konnect/portal-selection', () => {
           origin: 'https://portal1.example.com',
           canonicalDomain: selectedPortal.canonical_domain,
           region: selectedPortal.region,
+          domain: 'konghq.com',
         }
 
         // Execute portal selection

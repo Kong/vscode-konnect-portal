@@ -10,6 +10,7 @@ import { API_ERROR_MESSAGES } from '../constants/messages'
 import { debug } from '../utils/debug'
 import { getNextPageNumber } from './pagination'
 import { isKonnectPortalSnippet } from './portal/snippets/validation'
+import { konnectApiBaseUrl } from './environment'
 
 /**
  * Detects whether a failed kongctl command result indicates an authentication
@@ -112,7 +113,7 @@ export class KonnectRequestService {
     const pageSize = 100
 
     while (true) {
-      const url = `https://${region}.api.konghq.com/v3/portals/${encodeURIComponent(portalId)}/snippets?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
+      const url = `${konnectApiBaseUrl(region, 'v3')}/portals/${encodeURIComponent(portalId)}/snippets?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
       const result = await executeKongctl(['api', 'get', `"${url}"`, '--output', 'json'], { showInTerminal: false }, this.storageService)
 
       if (!result.success) {
@@ -225,7 +226,7 @@ export class KonnectRequestService {
 
     // Continue fetching pages until we have all portals
     while (true) {
-      const baseUrl = `https://${region}.api.konghq.com/v3/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
+      const baseUrl = `${konnectApiBaseUrl(region, 'v3')}/portals?page%5Bsize%5D=${pageSize}&page%5Bnumber%5D=${currentPage}`
 
       const args = [
         'api',
