@@ -12,7 +12,29 @@
 
   <body>
     <div class="container">
-      <div class="iframe-container">
+      <div class="viewport-toolbar">
+        <div class="viewport-switcher" id="viewport-switcher" role="group" aria-label="Preview viewport">
+          <button type="button" class="viewport-button active" id="viewport-desktop" data-viewport="desktop" data-tooltip="Desktop" aria-pressed="true" title="Desktop">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M1.5 2.5h13a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5.5H10v1h1.5a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1H6v-1H1.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5ZM2 4v6.5h12V4H2Zm5 7.5v1h2v-1H7Z"/>
+            </svg>
+            <span class="viewport-button-label">Desktop</span>
+          </button>
+          <button type="button" class="viewport-button" id="viewport-tablet" data-viewport="tablet" data-tooltip="Tablet" aria-pressed="false" title="Tablet">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M3.5 1h9a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 .5-.5ZM4 2.5v11h8v-11H4Zm3.5 12a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1Z"/>
+            </svg>
+            <span class="viewport-button-label">Tablet</span>
+          </button>
+          <button type="button" class="viewport-button" id="viewport-mobile" data-viewport="mobile" data-tooltip="Mobile" aria-pressed="false" title="Mobile">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M4.5 1h7a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 .5-.5ZM5 2.5v11h6v-11H5Zm2.25 12a.5.5 0 0 0 0 1h1.5a.5.5 0 0 0 0-1h-1.5Z"/>
+            </svg>
+            <span class="viewport-button-label">Mobile</span>
+          </button>
+        </div>
+      </div>
+      <div class="iframe-container" id="iframe-container">
         <div class="loading-overlay" id="loading-overlay">
           <div class="loading-content">
             <h3 class="loading-title">Loading Portal Preview</h3>

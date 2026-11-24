@@ -17,13 +17,107 @@ html, body {
   color: var(--vscode-editor-foreground);
 }
 
-/* Main container - full height with padding */
+/* Main container - full height */
 .container {
-  padding: 20px;
   height: 100vh;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+}
+
+/* ========================================
+ * Viewport Switcher Toolbar
+ * ======================================== */
+
+/* Full-width toolbar row above the preview area */
+.viewport-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  background-color: var(--vscode-editor-background);
+}
+
+/* Centered group of viewport buttons */
+.viewport-switcher {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Individual viewport button - quiet by default, accent when active */
+.viewport-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size-body, 13px);
+  cursor: pointer;
+  position: relative;
+}
+
+.viewport-button:hover {
+  background-color: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+/* Active viewport button: filled accent background plus a bottom bar, so the
+   state reads clearly in light and dark themes */
+.viewport-button.active {
+  background-color: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+  box-shadow: inset 0 -2px 0 0 var(--vscode-focusBorder);
+}
+
+.viewport-button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+/* Hover tooltip: a small bubble below the button. It must render below, not
+   above: the toolbar sits at the top edge of the webview, so an upward bubble
+   is clipped and never visible. Title attributes are delayed and easy to
+   miss, so the label doubles as a visible hint */
+.viewport-button::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: 3px;
+  background-color: var(--vscode-editorHoverWidget-background, #252526);
+  color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-panel-border);
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease 0.3s;
+  z-index: 200;
+}
+
+.viewport-button:hover::after,
+.viewport-button:focus-visible::after {
+  opacity: 1;
+}
+
+/* Button label hidden to keep the switcher compact; icons carry the meaning */
+.viewport-button-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 /* ========================================
@@ -44,19 +138,44 @@ html, body {
  * Iframe Container & Portal Display
  * ======================================== */
 
-/* Container for the portal iframe - takes remaining space */
+/* Container for the portal iframe - takes remaining space, centers the frame.
+   Spacing uses margin, not padding: applyViewport measures clientHeight, which
+   would include padding and clip the bottom of the scaled frame */
 .iframe-container {
   flex: 1;
   position: relative;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 12px 12px 12px 12px;
+  min-height: 0;
 }
 
-/* Portal iframe styling */
+/* Portal iframe styling - fills the container in desktop viewport */
 iframe {
   width: 100%;
   height: 100%;
   border: none;
   display: block;
+  /* The container is a flex row; without this the layout engine shrinks a
+     fixed-width frame (1440px) down to the container before the JS scale
+     transform applies, so the zoom-out double-shrinks the frame */
+  flex-shrink: 0;
+  /* Only the zoom animates, and always: it makes viewport switches and panel
+     drags feel fluid. Width and height must NOT animate, they are recomputed
+     to the exact fit on every refit, so animating them only adds lag */
+  transition: transform 0.2s ease;
+}
+
+/* Device frame look for tablet and mobile viewports. The ring is drawn with
+   box-shadow because the template iframe carries inline border: none, which
+   an inline declaration always outranks */
+.iframe-container.viewport-tablet iframe,
+.iframe-container.viewport-mobile iframe {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--vscode-panel-border), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 /* ========================================

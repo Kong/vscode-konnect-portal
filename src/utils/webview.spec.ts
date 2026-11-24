@@ -153,4 +153,35 @@ describe('webview utilities', () => {
       expect(result).toBe('https://user:pass@portal.example.com/?preview=true&preview_id=test-id')
     })
   })
+
+  describe('generateWebviewHTML', () => {
+    /** Builds arguments for generateWebviewHTML calls */
+    const baseArgs = () => ({
+      extensionPath: '/tmp/extension',
+      portalConfig: { origin: 'https://portal.example.com', name: 'Test Portal' },
+      previewId: 'test-preview-id',
+      cssContent: 'body {}',
+      jsContent: 'console.log(1)',
+      path: '',
+    })
+
+    it('should include the viewport switcher toolbar with three buttons', async () => {
+      const { generateWebviewHTML } = await import('./webview')
+      const args = baseArgs()
+      const html = generateWebviewHTML(
+        args.extensionPath,
+        args.portalConfig as any,
+        args.previewId,
+        args.cssContent,
+        args.jsContent,
+        args.path,
+      )
+
+      expect(html).toContain('id="viewport-switcher"')
+      expect(html).toContain('data-viewport="desktop"')
+      expect(html).toContain('data-viewport="tablet"')
+      expect(html).toContain('data-viewport="mobile"')
+      expect(html).toContain('id="iframe-container"')
+    })
+  })
 })

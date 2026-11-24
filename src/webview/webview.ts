@@ -474,3 +474,177 @@ if (iframe && loadingOverlay) {
     startReadyTimeout()
   }
 }
+
+
+/**
+ * Viewport switcher
+ *
+ * Scales the portal iframe into fixed device widths (tablet/mobile) so the page
+ * renders at its true layout width, then shrinks to fit the panel. Desktop
+ * fills the container. All logic is guarded on the toolbar elements existing,
+ * so the fallback HTML template (no toolbar) keeps working.
+ */
+
+/** Preset for a viewport frame: a null height means the desktop canonical view */
+interface ViewportPreset {
+  /** Fixed frame width in pixels */
+  width: number
+  /** Fixed frame height in pixels used for the height-fit term, or null for desktop */
+  height: number | null
+}
+
+/** Known viewport keys and their frame presets
+ * Tablet is iPad portrait (768x1024); desktop renders at the canonical
+ * 1440px portal desktop width, scaled down to fit narrower panels */
+const VIEWPORT_PRESETS: Record<string, ViewportPreset> = {
+  desktop: { width: 1440, height: null },
+  tablet: { width: 768, height: 1024 },
+  mobile: { width: 430, height: 932 },
+}
+
+/** The default viewport used when nothing valid is persisted */
+const DEFAULT_VIEWPORT = 'desktop'
+
+/** Storage key for the persisted viewport choice in webview state */
+const VIEWPORT_STATE_KEY = 'portalPreviewViewport'
+
+/**
+ * Computes the frame geometry for a viewport inside a container
+ * @param viewport - The viewport key
+ * @param containerWidth - Measured container width in pixels
+ * @param containerHeight - Measured container height in pixels
+ * @returns Frame size in pixels and scale. The desktop height is
+ *   containerHeight / scale so the scaled frame fills the pane.
+ */
+function computeFrameGeometry(
+  viewport: string,
+  containerWidth: number,
+  containerHeight: number,
+): { width: number, height: number | null, scale: number } {
+  const preset = VIEWPORT_PRESETS[viewport] || VIEWPORT_PRESETS[DEFAULT_VIEWPORT]
+  const frameWidth = preset.width
+  // Desktop: render the canonical width and zoom out to fit narrower
+  // panels, capped at 1 so a wider panel never zooms in. The frame height
+  // is containerHeight / scale so the scaled height fills the pane.
+  if (preset.height === null) {
+    const scale = Math.min(1, containerWidth / frameWidth)
+    return { width: frameWidth, height: containerHeight / scale, scale }
+  }
+  // Fixed device viewports: scale to fit both axes so a short or narrow
+  // panel never clips the frame
+  const scale = Math.min(
+    1,
+    containerWidth / frameWidth,
+    containerHeight / preset.height,
+  )
+  return { width: frameWidth, height: preset.height, scale }
+}
+
+/** Returns the iframe element if viewport switching is available, else null */
+function getViewportContext(): {
+  iframe: HTMLIFrameElement
+  container: HTMLElement
+  switcher: HTMLElement
+  buttons: HTMLButtonElement[]
+} | null {
+  if (!iframe) return null
+  const container = document.getElementById('iframe-container')
+  const switcher = document.getElementById('viewport-switcher')
+  if (!container || !switcher) return null
+  const buttons = Array.from(switcher.querySelectorAll<HTMLButtonElement>('[data-viewport]'))
+  if (buttons.length === 0) return null
+  return { iframe, container, switcher, buttons }
+}
+
+/**
+ * Applies a viewport to the iframe: renders the frame at the preset's fixed
+ * width, scaled to fit the container
+ * @param viewport - The viewport key to apply
+ */
+function applyViewport(viewport: string): void {
+  const ctx = getViewportContext()
+  if (!ctx) return
+  const { iframe: frame, container, buttons } = ctx
+
+  // Highlight the active button and update ARIA state
+  for (const button of buttons) {
+    const isActive = button.dataset.viewport === viewport
+    button.classList.toggle('active', isActive)
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false')
+  }
+  container.classList.toggle('viewport-tablet', viewport === 'tablet')
+  container.classList.toggle('viewport-mobile', viewport === 'mobile')
+
+  // Guard degenerate measurements: a hidden or pre-layout container reports 0,
+  // which would yield scale 0 and an Infinity height. The ResizeObserver
+  // refits once real dimensions exist.
+  if (container.clientWidth === 0 || container.clientHeight === 0) return
+
+  const geometry = computeFrameGeometry(viewport, container.clientWidth, container.clientHeight)
+  // Explicit inline sizes plus transform: Chrome does not evaluate CSS-class
+  // sizes of a cross-origin iframe inside a transformed subtree reliably
+  frame.style.width = `${geometry.width}px`
+  frame.style.height = `${geometry.height}px`
+  frame.style.transform = `scale(${geometry.scale})`
+  frame.style.transformOrigin = 'top center'
+}
+
+/**
+ * Validates a persisted viewport key against known presets
+ * @param value - The stored value to validate
+ * @returns The value if known, else the default viewport
+ */
+function normalizeViewport(value: unknown): string {
+  // hasOwnProperty.call rather than `in`: `in` matches inherited
+  // Object.prototype keys such as 'toString' and would produce invalid geometry
+  return typeof value === 'string' &&
+    Object.prototype.hasOwnProperty.call(VIEWPORT_PRESETS, value)
+    ? value
+    : DEFAULT_VIEWPORT
+}
+
+/** Sets up viewport switching: restore state, wire clicks, observe resizes */
+function setupViewportSwitcher(): void {
+  const ctx = getViewportContext()
+  if (!ctx) return
+  const { container } = ctx
+
+  try {
+    const saved = vscode.getState()?.[VIEWPORT_STATE_KEY]
+    currentViewport = normalizeViewport(saved)
+  } catch (error) {
+    debug.warn('Failed to read persisted viewport:', error)
+    currentViewport = DEFAULT_VIEWPORT
+  }
+
+  applyViewport(currentViewport)
+
+  for (const button of ctx.buttons) {
+    button.addEventListener('click', () => {
+      const next = normalizeViewport(button.dataset.viewport)
+      if (next === currentViewport) return
+      currentViewport = next
+      applyViewport(currentViewport)
+      try {
+        vscode.setState({ [VIEWPORT_STATE_KEY]: currentViewport })
+      } catch (error) {
+        debug.warn('Failed to persist viewport:', error)
+      }
+    })
+  }
+
+  // Re-fit when the panel resizes. ResizeObserver fires once on observe,
+  // which performs the initial fit; debounce avoids thrash during drags.
+  if (typeof ResizeObserver === 'undefined') return
+  let resizeTimer: ReturnType<typeof setTimeout> | null = null
+  const observer = new ResizeObserver(() => {
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => applyViewport(currentViewport), 50)
+  })
+  observer.observe(container)
+}
+
+/** Tracks the active viewport key */
+let currentViewport: string = DEFAULT_VIEWPORT
+
+setupViewportSwitcher()
