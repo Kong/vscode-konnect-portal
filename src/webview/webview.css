@@ -162,6 +162,10 @@ iframe {
      fixed-width frame (1440px) down to the container before the JS scale
      transform applies, so the zoom-out double-shrinks the frame */
   flex-shrink: 0;
+  /* Only the zoom animates, and always: it makes viewport switches and panel
+     drags feel fluid. Width and height must NOT animate, they are recomputed
+     to the exact fit on every refit, so animating them only adds lag */
+  transition: transform 0.2s ease;
 }
 
 /* Device frame look for tablet and mobile viewports. The ring is drawn with

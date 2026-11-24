@@ -582,14 +582,7 @@ function applyViewport(viewport: string): void {
 
   const geometry = computeFrameGeometry(viewport, container.clientWidth, container.clientHeight)
   // Explicit inline sizes plus transform: Chrome does not evaluate CSS-class
-  // sizes of a cross-origin iframe inside a transformed subtree reliably.
-  // Animate only a viewport switch; a resize refit must track the panel
-  // edge at once, so it gets transition: none
-  const switching = frame.dataset.viewport !== viewport
-  frame.dataset.viewport = viewport
-  frame.style.transition = switching
-    ? 'width 0.2s ease, height 0.2s ease, transform 0.2s ease'
-    : 'none'
+  // sizes of a cross-origin iframe inside a transformed subtree reliably
   frame.style.width = `${geometry.width}px`
   frame.style.height = `${geometry.height}px`
   frame.style.transform = `scale(${geometry.scale})`
