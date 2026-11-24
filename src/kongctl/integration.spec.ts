@@ -4,6 +4,8 @@ import * as path from 'path'
 import * as os from 'os'
 import * as vscode from 'vscode'
 import { executeKongctl, findExecutableInPath } from './index'
+import { getKongctlEnvOverrides } from '../konnect/environment'
+import type * as environmentModule from '../konnect/environment'
 
 // Mock VS Code module
 vi.mock('vscode', () => ({
@@ -14,6 +16,15 @@ vi.mock('vscode', () => ({
     showWarningMessage: vi.fn(),
   },
 }))
+
+// Mock the environment helpers so tests can switch environments
+vi.mock('../konnect/environment', async () => {
+  const actual = await vi.importActual<typeof environmentModule>('../konnect/environment')
+  return {
+    ...actual,
+    getKongctlEnvOverrides: vi.fn(() => ({})),
+  }
+})
 
 describe('kongctl integration tests', () => {
   let tempDir: string
@@ -28,6 +39,9 @@ describe('kongctl integration tests', () => {
 
     // Clear all mocks
     vi.clearAllMocks()
+
+    // Default the environment helpers to no override
+    vi.mocked(getKongctlEnvOverrides).mockReturnValue({})
 
     // Mock VS Code configuration
     vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
@@ -144,6 +158,28 @@ describe('kongctl integration tests', () => {
 
       const result = await executeKongctl(['version'], {}, mockStorageService)
       expect(result.stdout.trim()).toBe('test-pat-token')
+    })
+
+    it('should include the Konnect base URL override in the spawned process environment when active', async () => {
+      const envContent = process.platform === 'win32'
+        ? '@echo off\necho %KONGCTL_DEFAULT_KONNECT_BASE_URL%'
+        : '#!/bin/bash\necho "$KONGCTL_DEFAULT_KONNECT_BASE_URL"'
+
+      await fs.writeFile(mockKongctlScript, envContent)
+      await fs.chmod(mockKongctlScript, 0o755)
+
+      process.env.PATH = tempDir
+
+      vi.mocked(getKongctlEnvOverrides).mockReturnValue({})
+      const productionResult = await executeKongctl(['version'])
+      expect(productionResult.stdout.trim()).toBe('')
+
+      const overrideDomain = ['konghq', 'tech'].join('.')
+      vi.mocked(getKongctlEnvOverrides).mockReturnValue({
+        KONGCTL_DEFAULT_KONNECT_BASE_URL: `https://us.api.${overrideDomain}`,
+      })
+      const overrideResult = await executeKongctl(['version'])
+      expect(overrideResult.stdout.trim()).toBe(`https://us.api.${overrideDomain}`)
     })
 
     it.skip('should handle missing executable gracefully', async () => {

@@ -6,311 +6,244 @@
 </a>
 </p>
 
-A VS Code extension that provides real-time preview functionality for MDC (Markdown Components) and Markdown files with Konnect portal integration.
-
----
+A VS Code extension with a live preview for MDC and Markdown files, connected to a Konnect portal.
 
 ## Features
 
-- **Real-time Preview**: Live Portal preview updates as you type in MDC and Markdown files
-- **Front Matter Autocompletion**: Property, layout, and snippet name suggestions inside page front matter when a portal is selected, with validation warnings for the `layout` property
-- **Konnect Integration**: Token-based authentication with Kong Konnect allows you to interact securely with Konnect APIs
-- **kongctl CLI Integration**: Seamless integration with [`kongctl` CLI](https://github.com/Kong/kongctl) for enhanced portal management
+- Live preview that updates as you type in MDC and Markdown files
+- Property, layout, and snippet suggestions in page front matter, with `layout` validation
+- Token-based authentication with Kong Konnect
+- Integration with the [`kongctl` CLI](https://github.com/Kong/kongctl) for portal management
 
-## Setup and Usage
+## Setup and usage
 
-### 1. Configure Directory Structure
+### 1. Configure the directory structure
 
-Before configuring your Konnect access, you need to set up your workspace directory structure for pages and snippets.
+The extension reads pages and snippets from two directories in your workspace. The defaults are `pages/` and `snippets/`.
 
-**Default Directory Structure:**
+Pages support subdirectories. Snippets do not: keep every snippet file in the root of `snippets/`. The file name is the snippet name, so `snippets/api-example.md` has the name `api-example`.
 
-By default, the extension expects the following directories in your workspace root:
-- `pages/` - For your portal pages (`.md` and `.mdc` files)
-  - **Supports nested subdirectories** for organizing content hierarchically
-  - Example: `pages/getting-started/overview.md` is valid
-- `snippets/` - For reusable content snippets (`.md` and `.mdc` files)
-  - **Must use a flat structure** - subdirectories are **not** supported. All snippet files must be in the root of the snippets directory
-    - Example: `snippets/api-example.md` is valid, but `snippets/examples/api.md` will cause errors
-  - **File names become snippet names** (e.g., `snippets/api-example.md` → snippet name: `api-example`)
+If your files live in other folders, set both directories in VS Code settings:
 
-**Setup Options:**
+1. Open Settings (`Cmd+,`).
+2. Set `kong.konnect.devPortal.pagesDirectory` to your pages folder.
+3. Set `kong.konnect.devPortal.snippetsDirectory` to your snippets folder.
+4. Use paths relative to the workspace root, for example `docs/pages`.
 
-1. **Use the default directories** (Recommended for new projects):
-   - Create a `pages/` folder in your workspace root for your portal pages
-    - Organize page files in subdirectories as needed (e.g., `pages/guides/`, `pages/api/`)
-   - Create a `snippets/` folder in your workspace root for your reusable snippets
-    - Keep all snippet files directly in the `snippets/` folder (no subdirectories)
+Files in snippet subdirectories cause errors. Move them to the root of `snippets/`.
 
-2. **Use custom directories** (If you have an existing structure):
-   - Open VS Code Settings (`Ctrl+,` or `Cmd+,`)
-   - Update `kong.konnect.devPortal.pagesDirectory` to match your pages folder path
-   - Update `kong.konnect.devPortal.snippetsDirectory` to match your snippets folder path
-   - Paths should be relative to your workspace root (e.g., `"docs/pages"`, `"content/snippets"`)
+### 2. Configure the Konnect Personal Access Token
 
-> **Important**: Proper directory configuration is essential for optimal preview performance. Without correct configuration, you will not be able to preview snippets that haven't been already published to your portal. Remember that the snippets directory must maintain a flat structure - files in snippet subdirectories will trigger errors. See the [File Organization](#file-organization) section for detailed structure guidelines.
+Create a Personal Access Token (PAT) in Konnect:
 
-### 2. Configure Konnect Personal Access Token (PAT)
+1. Log in to Kong Konnect.
+2. Go to Account Settings, then Personal Access Tokens.
+3. Create a token and copy it. The token starts with `kpat_`.
 
-Before using the extension, you need to configure your Konnect Personal Access Token:
+Store the token in VS Code:
 
-1. **Create a Personal Access Token in Konnect**:
-    - Log in to your Kong Konnect account
-    - Go to Account Settings → Personal Access Tokens
-    - Create a new token (it will automatically be scoped with your permissions)
-    - Copy the token (it starts with `kpat_`)
+1. Open the Command Palette (`Cmd+Shift+P`).
+2. Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)".
+3. Paste the token and click OK.
 
-2. **Configure the token in VS Code**:
-    - Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-    - Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
-    - Paste your Personal Access Token
-    - Click OK
+### 3. Select a portal
 
-### 3. Select a Portal
+1. Open the Command Palette (`Cmd+Shift+P`).
+2. Run "Konnect Portal: Select Portal".
+3. Choose a Dev Portal. The extension saves the selection.
 
-Once your token is configured:
+Run the command again at any time to select another portal.
 
-1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Run "Konnect Portal: Select Portal"
-3. Choose from your available Dev Portals in Konnect
-4. The selected portal will be saved for future use
+### 4. Open the preview
 
-> **Note**: You may select a new Dev Portal at any time by running the "Select Portal" command again.
+Open the preview for the active file in one of these ways:
 
-### 4. Open Portal Preview
+- Command Palette: run "Open Portal Preview".
+- Editor menu: right-click in an MDC or Markdown file and select "Open Portal Preview".
+- Toolbar: click the preview icon in the editor toolbar.
 
-There are several ways to open the live preview:
+### 5. Edit with the live preview
 
-1. **Command Palette**: Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) and type "Open Portal Preview"
-2. **Editor Menu**: Right-click in a MDC/Markdown file and select "Open Portal Preview"
-3. **Toolbar Button**: Click the preview icon in the editor toolbar when viewing MDC/Markdown files
+Open an `.mdc` or `.md` file, open the preview, and edit. The preview updates as you type.
 
-### 5. Live Preview
+## Recommended extension
 
-Once configured:
-
-1. Open an MDC (.mdc) or Markdown (.md) file
-2. Open the preview panel using any of the methods above
-3. Start editing your file - the preview will update automatically
-
-## Recommended Extensions
-
-For the best experience with MDC (Markdown Components) files, we recommend installing the **Comark - Components in Markdown** extension:
-
-- **Extension ID**: `Nuxt.mdc`
-- **Marketplace Link**: [Comark - Components in Markdown](https://marketplace.visualstudio.com/items?itemName=Nuxt.mdc)
-
-This extension provides:
-
-- Enhanced editing experience and syntax highlighting for `.mdc` files
-- MDC support for component name and prop suggestions
-- Editor document code folding and formatting
-
-You can install it by:
-
-1. Opening the Extensions panel in VS Code (`Ctrl+Shift+X` or `Cmd+Shift+X`)
-2. Searching for "Comark" or using the extension ID `Nuxt.mdc`
-3. Clicking "Install"
-
-> **Note**: Portal Preview will work without the MDC extension, but you'll get a better authoring experience with it installed.
+Install the Comark extension (`Nuxt.mdc`) for syntax highlighting and component suggestions in `.mdc` files. Search for "Comark" in the Extensions panel and click Install. The preview works without it.
 
 ## Configuration
 
-The extension provides several configuration options in VS Code settings:
-
-| Setting | Type | Default | Description | Example |
-|---------|------|---------|-------------|---------|
-| `kong.konnect.devPortal.autoOpenPreview` | `boolean` | `false` | Automatically open a live preview when opening MDC/Markdown files | Set to `true` for automatic previews |
-| `kong.konnect.devPortal.previewUpdateDelay` | `number` | `500` | Delay in milliseconds before updating the preview and front matter validation after content changes (500-3000) | Use `1000` for slower updates |
-| `kong.konnect.devPortal.readyTimeout` | `number` | `8000` | Timeout in milliseconds to wait for the portal to signal ready (3000-10000) | Increase to `8000` for slower portals |
-| `kong.konnect.devPortal.debug` | `boolean` | `false` | Enable debug logging for troubleshooting | Set to `true` to see detailed logs in VS Code |
-| `kong.konnect.devPortal.showMDCRecommendation` | `boolean` | `true` | Show recommendation to install MDC extension | Set to `false` to hide recommendation |
-| `kong.konnect.devPortal.pagesDirectory` | `string` | `"pages"` | Directory relative to workspace root containing your pages (.md/.mdc files). When set, page paths will be calculated relative to this directory. Leave empty to disable path calculation. | `"pages"`, `"docs/pages"`, `"src/content/documentation"` |
-| `kong.konnect.devPortal.snippetsDirectory` | `string` | `"snippets"` | Directory relative to workspace root containing your snippets (.md/.mdc files). When set, snippet names will be extracted from filenames. Subdirectories are not supported. Leave empty to disable snippet detection. | `"snippets"`, `"docs/snippets"`, `"src/content/snippets"` |
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `kong.konnect.devPortal.autoOpenPreview` | `boolean` | `false` | Open the preview when an MDC or Markdown file opens |
+| `kong.konnect.devPortal.previewUpdateDelay` | `number` | `500` | Delay in milliseconds before the preview and validation update (500-3000) |
+| `kong.konnect.devPortal.readyTimeout` | `number` | `8000` | Wait time in milliseconds for the portal ready signal (3000-10000) |
+| `kong.konnect.devPortal.debug` | `boolean` | `false` | Write debug logs |
+| `kong.konnect.devPortal.showMDCRecommendation` | `boolean` | `true` | Recommend the MDC extension on `.mdc` files |
+| `kong.konnect.devPortal.pagesDirectory` | `string` | `"pages"` | Pages folder, relative to the workspace root. Empty disables path calculation. |
+| `kong.konnect.devPortal.snippetsDirectory` | `string` | `"snippets"` | Snippets folder, relative to the workspace root. Empty disables snippet detection. Subdirectories are not supported. |
 
 ## Commands
 
-The extension provides the following commands (accessible via Command Palette):
-
 | Command | Description |
 |---------|-------------|
-| `Konnect Portal: Open Portal Preview` | Opens the preview panel for the current MDC/Markdown file |
+| `Konnect Portal: Open Portal Preview` | Opens the preview panel for the current file |
 | `Konnect Portal: Refresh Portal Preview` | Refreshes the preview panel content |
 | `Konnect Portal: Configure Konnect Personal Access Token (PAT)` | Set up your Konnect Personal Access Token |
 | `Konnect Portal: Select Portal` | Choose a portal from your Konnect account |
-| `Konnect Portal: Delete Access Token` | Remove stored token and portal selection |
+| `Konnect Portal: Delete Access Token` | Remove the stored token and portal selection |
 
-## File Support
+## File support
 
-The extension supports the following file types:
+The extension previews `.md` and `.mdc` files.
 
-- **Markdown**: `.md` files
-- **MDC (Markdown Components)**: `.mdc` files
+## Front matter autocompletion and validation
 
-## Page Front Matter Autocompletion and Validation
+### Property suggestions
 
-When editing a Markdown or MDC document, the extension enhances the YAML front matter block at the top of the document:
+- Typing in the front matter block suggests `title`, `description`, `tagline`, `image`, `layout`, and `layout-options`.
+- Properties already in the block are not suggested again.
+- `layout-options` opens child properties: `sidebar-left`, `sidebar-right`, and `header`.
 
-**Property suggestions**
-- Typing inside the front matter block suggests the known page front matter properties: `title`, `description`, `tagline`, `image`, `layout`, and `layout-options`
-- Properties that already exist in the block are not suggested again
-- `layout-options` opens a child mapping with `sidebar-left`, `sidebar-right`, and `header` child properties
+### Value suggestions
 
-**Value suggestions**
-- `layout` suggests the valid layout names: `guide`, `reference`, `wide`, `center`, and `custom`
-- `layout-options` child properties (`sidebar-left`, `sidebar-right`, `header`) suggest the snippet names available in your selected portal, using the same snippet data as the Snippet component completions
+- `layout` suggests the layouts `guide`, `reference`, `wide`, `center`, and `custom`.
+- `layout-options` children suggest the snippet names from your selected portal.
 
-**Validation**
-- The `layout` property is validated as you type. An unrecognized value shows a warning in the Problems panel with the list of valid values
-- Warnings update after the debounced delay configured by `kong.konnect.devPortal.previewUpdateDelay`
-- Warnings never block saving the document, and unrecognized front matter properties are never flagged
+### Validation
 
-> **Note**: Front matter autocompletion and validation require a selected Konnect portal (see [Select a Portal](#3-select-a-portal)). They apply to any `.md`/`.mdc` document whose front matter syntax matches: a closed `---` block at the very top of the file. Documents in your configured `kong.konnect.devPortal.snippetsDirectory` are excluded, since snippets render their own front matter, as is front matter owned by MDC components (for example, a `::snippet` YAML block). Keep in mind that plain Markdown files using front matter for other purposes (for example Jekyll `layout` values) will also receive suggestions and `layout` warnings while a portal is selected.
+- An unrecognized `layout` value shows a warning in the Problems panel with the valid values.
+- Warnings update after the delay set by `kong.konnect.devPortal.previewUpdateDelay`.
+- Warnings do not block saving. Unrecognized properties are never flagged.
 
-## Pages vs Snippets
+Front matter features require a selected portal. They apply to documents with a closed `---` block at the top. Documents in the snippets directory are excluded, because snippets carry their own front matter. Front matter owned by MDC components, such as a `::snippet` block, is also excluded. Plain Markdown files that use front matter for other purposes, for example Jekyll `layout` values, still receive the suggestions and warnings.
 
-This extension supports two distinct types of content for your Kong Dev Portal:
+## Pages and snippets
 
-### Pages
-Pages are full portal documents that represent routes in your portal navigation.
+Pages are portal documents with routes in the portal navigation. Snippets are reusable blocks that pages and other snippets embed.
 
-**Configuration:**
-- Set `kong.konnect.devPortal.pagesDirectory` to your pages folder (e.g., `"pages"`, `"docs/pages"`)
-- Supports nested subdirectories for hierarchical organization
+Page paths map from the file path under `pagesDirectory`:
 
-**Path Calculation:**
-- File: `pages/getting-started/overview.md` → Portal Path: `/getting-started/overview`
-- File: `pages/home.md` or `pages/home.mdc` → Portal Path: `/` (special home page handling)
+| File | Portal path |
+|------|-------------|
+| `pages/home.md` | `/` |
+| `pages/getting-started.md` | `/getting-started` |
+| `pages/getting-started/overview.md` | `/getting-started/overview` |
 
-### Snippets
-Snippets are reusable content blocks that can be embedded in pages or other snippets.
+Snippet names map from the file name under `snippetsDirectory`:
 
-**Configuration:**
-- Set `kong.konnect.devPortal.snippetsDirectory` to your snippets folder (e.g., `"snippets"`, `"docs/snippets"`)
-- **Flat structure only** - subdirectories are not supported and will show an error
+| File | Snippet name |
+|------|--------------|
+| `snippets/api-example.md` | `api-example` |
 
-**Important:** Files in snippet subdirectories (e.g., `snippets/category/example.md`) will trigger an error and prevent preview functionality. Move such files to the root of your snippets directory.
-
-### Example Workspace Structure
+### Example workspace structure
 
 ```
 dev-portal-project/
-├── pages/                          # Configure: kong.konnect.devPortal.pagesDirectory = "pages"
-│   ├── home.md                     # → Portal Path: "/"
-│   ├── getting-started.md          # → Portal Path: "/getting-started"
+├── pages/                          # kong.konnect.devPortal.pagesDirectory = "pages"
+│   ├── home.md                     # Portal path: "/"
+│   ├── getting-started.md          # Portal path: "/getting-started"
 │   └── getting-started/
-│       ├── overview.md             # → Portal Path: "/getting-started/overview"
-│       └── installation.md         # → Portal Path: "/getting-started/installation"
-└── snippets/                       # Configure: kong.konnect.devPortal.snippetsDirectory = "snippets"
-    ├── api-example.md              # → Snippet Name: "api-example"
-    ├── code-samples.md             # → Snippet Name: "code-samples"
-    └── troubleshooting.md          # → Snippet Name: "troubleshooting"
+│       ├── overview.md             # Portal path: "/getting-started/overview"
+│       └── installation.md         # Portal path: "/getting-started/installation"
+└── snippets/                       # kong.konnect.devPortal.snippetsDirectory = "snippets"
+    ├── api-example.md              # Snippet name: "api-example"
+    ├── code-samples.md             # Snippet name: "code-samples"
+    └── troubleshooting.md          # Snippet name: "troubleshooting"
 ```
 
 ## Troubleshooting
 
-### "No portal selected" or Token Issues
+### Token problems
 
-If you see configuration warnings:
+1. Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)".
+2. Run "Konnect Portal: Select Portal".
+3. If the token expired, configure it again.
 
-1. **Configure Konnect Personal Access Token (PAT)**: Run "Konnect Portal: Configure Konnect Personal Access Token (PAT)"
-2. **Select Portal**: Run "Konnect Portal: Select Portal"
-3. **Update Token**: If your token expired, run "Konnect Portal: Configure Konnect Personal Access Token (PAT)" again
-
-### Token Format Errors
-
-Ensure your Personal Access Token:
-- Starts with `kpat_`
-- Is copied completely from Konnect
-- Has the necessary permissions for portal access
+Make sure that the token starts with `kpat_`, is complete, and has the portal permissions.
 
 ### Preview not updating
 
-If the preview isn't updating when you edit files:
-
-1. Verify your portal selection is valid
-2. Check your network connection to Konnect
-3. Try refreshing the preview panel
-4. Enable debug mode to see detailed logs
+1. Make sure that the portal selection is valid.
+2. Make sure that you can reach Konnect from your network.
+3. Refresh the preview panel.
+4. Set `kong.konnect.devPortal.debug` to `true` and read the logs.
 
 ### Extension not activating
 
-The extension only activates when:
-
-- Opening MDC (.mdc) files
-- Opening Markdown (.md) files
-- Running portal preview commands
+The extension activates when you open an `.mdc` or `.md` file, or run a preview command.
 
 ## Security
 
-- **Token Storage**: Your Konnect Personal Access Token is stored securely using VS Code's SecretStorage API
-- **No Plain Text**: Tokens are never stored in plain text configuration files
-- **Automatic Cleanup**: Tokens can be cleared using the "Clear Credentials" command
-- **Secure Communication**: All API communication uses HTTPS
+- VS Code SecretStorage holds the token. No configuration file contains it in plain text.
+- The "Delete Access Token" command clears the token and the portal selection.
+- All API communication uses HTTPS.
 
 ## Development
 
-### Building from Source
+### Build from source
 
 ```bash
-# Clone the repository
 git clone https://github.com/Kong/vscode-konnect-portal.git
 cd vscode-konnect-portal
-
-# Install dependencies
 pnpm install
-
-# Build the extension
 pnpm build
-
-# Watch for changes (development)
-pnpm watch
+pnpm watch   # watch mode for development
 ```
 
-#### Build Commands Explained
+Build commands:
 
-The extension uses multiple build processes due to different runtime requirements:
+- `pnpm build` runs the complete production build.
+- `pnpm build:webview` compiles `src/webview/webview.ts` to `src/webview/webview.js`. You do not need to run it separately.
+- `pnpm build:extension-tests` compiles the extension tests for the VS Code test runner.
 
-- **`pnpm build`** - Complete production build (runs all build steps automatically)
-- **`pnpm build:webview`** - Compiles `src/webview/webview.ts` → `src/webview/webview.js` (No need to run manually, included in `build` script above)
-- **`pnpm build:extension-tests`** - Compiles extension test files to CommonJS format for VS Code test runner
+### Local API override
+
+When you develop the extension from source, you can point all Konnect API traffic at another environment. The traffic covers the portal list, snippets, region discovery, kongctl commands, and the preview. Set the `KONNECT_API_DOMAIN` environment variable:
+
+1. Copy `.env.local.example` to `.env.local`.
+2. Set `KONNECT_API_DOMAIN` in `.env.local`.
+
+The value is the domain of the target environment. The extension builds regional hosts from it as `{region}.api.{domain}`. The production domain is `konghq.com`, and it is also the default:
+
+```dotenv
+KONNECT_API_DOMAIN=konghq.com
+```
+
+The "Run Extension" debug target loads `.env.local` at start. `.env.local` is gitignored, so local values stay out of the repository.
+
+Rules:
+
+- The variable is optional. Without it, all traffic uses the production API.
+- The value must be `konghq.<tld>`, for example `konghq.com`. Subdomains and other domains are ignored. The extension then uses the production API.
+- The override works only when the extension runs unpackaged from source. Installed builds always use the production API.
+- kongctl commands follow the same domain. A recent kongctl build is required for this.
+- You can also set the variable in your shell, or in the `env` block of a launch configuration.
 
 ### Testing
 
 ```bash
-# Run linting
 pnpm lint
-
-# Run unit tests
 pnpm test:unit
-
-# Run unit tests with coverage
 pnpm test:unit:coverage
-
-# Run unit tests with UI (interactive)
 pnpm test:unit:ui
-
-# Run integration tests
 pnpm test:extension
-
-# Package extension
 pnpm package
 ```
 
-> **Note**: For detailed testing instructions and development workflows, see the [Contributing Guide](CONTRIBUTING.md).
+See the [Contributing Guide](CONTRIBUTING.md) for testing details and workflows.
 
 ## Agentic reviewer
 
-[View the reference for the `/muthur` agentic reviewer](./docs/agentic-reviewer.md)
+See the reference for the `/muthur` agentic reviewer in [docs/agentic-reviewer.md](./docs/agentic-reviewer.md).
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed instructions.
+See the [Contributing Guide](CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+Apache License 2.0. See [LICENSE](LICENSE).
 
 ## Support
 
-If you encounter any issues or have feature requests, please file them in the GitHub repository issues section.
+File issues and feature requests in the GitHub repository issue tracker.

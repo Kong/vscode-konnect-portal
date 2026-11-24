@@ -15,6 +15,13 @@ vi.mock('vscode', () => ({
     showInformationMessage: vi.fn(),
     showErrorMessage: vi.fn(),
   },
+  // Required by debugLog, reachable through the environment module when a
+  // base URL override is present in the developer's shell
+  workspace: {
+    getConfiguration: vi.fn().mockReturnValue({
+      get: vi.fn().mockReturnValue(false),
+    }),
+  },
   ExtensionContext: vi.fn(),
 }))
 

@@ -3,6 +3,7 @@ import { checkKongctlAvailable } from '../kongctl/status'
 import { parseKongctlJsonOutput } from '../kongctl/parse'
 import type { PortalStorageService } from '../storage'
 import { debug } from '../utils/debug'
+import { konnectApiBaseUrl } from './environment'
 
 /**
  * Regions that are excluded from discovery for now.
@@ -92,7 +93,7 @@ async function fetchRegionsWithKongctl(storageService?: PortalStorageService): P
  * @returns Promise resolving to array of region codes
  */
 async function fetchRegionsWithApi(): Promise<string[]> {
-  const url = 'https://global.api.konghq.com/v3/available-regions'
+  const url = konnectApiBaseUrl('global', 'v3') + '/available-regions'
   const response = await fetch(url, { headers: { 'Accept': 'application/json' } })
   if (!response.ok) {
     throw new Error(`Failed to fetch regions: ${response.statusText}`)

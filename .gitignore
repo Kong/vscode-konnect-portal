@@ -47,6 +47,9 @@ Thumbs.db
 # dotenv environment variables file
 .env
 .env.test
+.env.local
+.env.local.*
+!.env.local.example
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test

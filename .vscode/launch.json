@@ -11,6 +11,9 @@
       "outFiles": [
         "${workspaceFolder}/dist/**/*.cjs"
       ],
+      // Local-only environment (e.g. KONNECT_API_DOMAIN) for dev runs.
+      // Optional file; the debug session starts normally when it is absent.
+      "envFile": "${workspaceFolder}/.env.local",
       "preLaunchTask": "build"
     }
   ]
