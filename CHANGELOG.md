@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.15.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.14.3...v1.15.0) (2026-11-24)
+
+
+### Features
+
+* **webview:** add desktop/tablet/mobile viewport switcher to preview ([#122](https://github.com/Kong/vscode-konnect-portal/issues/122)) ([2676556](https://github.com/Kong/vscode-konnect-portal/commit/2676556e35b7cd1173c3d644c861b740489cff85))
+
 ## [1.14.3](https://github.com/Kong/vscode-konnect-portal/compare/v1.14.2...v1.14.3) (2026-11-24)
 
 ## [1.14.2](https://github.com/Kong/vscode-konnect-portal/compare/v1.14.0...v1.14.2) (2026-11-24)
