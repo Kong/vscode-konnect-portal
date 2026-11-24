@@ -174,7 +174,7 @@ describe('kongctl integration tests', () => {
       const productionResult = await executeKongctl(['version'])
       expect(productionResult.stdout.trim()).toBe('')
 
-      const overrideDomain = ['konghq', 'tech'].join('.')
+      const overrideDomain = 'konghq.example'
       vi.mocked(getKongctlEnvOverrides).mockReturnValue({
         KONGCTL_DEFAULT_KONNECT_BASE_URL: `https://us.api.${overrideDomain}`,
       })

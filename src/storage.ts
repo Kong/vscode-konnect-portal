@@ -1,12 +1,13 @@
 import type { ExtensionContext, SecretStorage } from 'vscode'
 import type { StoredPortalConfig } from './types/konnect'
-import { isKonnectApiOverridden } from './konnect/environment'
+import { getKonnectApiDomain, isKonnectApiOverridden, DEFAULT_API_DOMAIN } from './konnect/environment'
 
 /**
  * Base keys for secret storage. When a Konnect API domain override is
  * active, keys get a suffix so credentials of the override environment and
  * the default environment never collide. All override values share one
- * namespace; switching between two override domains reuses it.
+ * namespace; the portal selection carries its domain and is ignored on a
+ * mismatch.
  */
 const SECRET_KEYS = {
   KONNECT_TOKEN: 'konnectaccesstoken',
@@ -19,6 +20,9 @@ const SECRET_KEYS = {
  * stored before override support existed continue to resolve.
  */
 const OVERRIDE_KEY_SUFFIX = '.override'
+
+/** The domain recorded on configs stored before domain support existed */
+const DEFAULT_DOMAIN_FOR_STORAGE = DEFAULT_API_DOMAIN
 
 /**
  * Service for managing secure storage of Konnect credentials and portal configuration
@@ -35,10 +39,6 @@ export class PortalStorageService {
     this.secretStorage = context.secrets
   }
 
-  /**
-   * The default environment keeps unsuffixed keys, so credentials stored
-   * before override support existed continue to resolve.
-   */
   private getScopedKey(baseKey: string): string {
     return isKonnectApiOverridden() ? `${baseKey}${OVERRIDE_KEY_SUFFIX}` : baseKey
   }
@@ -75,7 +75,9 @@ export class PortalStorageService {
   }
 
   /**
-   * Retrieves the stored portal configuration
+   * Retrieves the stored portal configuration. A config stored under a
+   * different API domain than the active one is ignored, so its credentials
+   * never reach an environment the user did not select this session.
    * @returns Promise resolving to the portal config or undefined if not found
    */
   async getSelectedPortal(): Promise<StoredPortalConfig | undefined> {
@@ -85,7 +87,13 @@ export class PortalStorageService {
     }
 
     try {
-      return JSON.parse(stored) as StoredPortalConfig
+      const config = JSON.parse(stored) as StoredPortalConfig
+      // Legacy configs without a domain were stored under the default domain
+      const configDomain = config.domain ?? DEFAULT_DOMAIN_FOR_STORAGE
+      if (configDomain !== getKonnectApiDomain()) {
+        return undefined
+      }
+      return config
     } catch {
       // If JSON parsing fails, clear the corrupted data
       await this.clearSelectedPortal()

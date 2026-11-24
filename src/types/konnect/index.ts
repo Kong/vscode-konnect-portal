@@ -69,6 +69,13 @@ export interface StoredPortalConfig {
    * Optional for backwards compatibility with configs stored before region support was added.
    */
   region?: string
+  /**
+   * API domain the portal was selected under (e.g. 'konghq.com').
+   * A stored config whose domain does not match the active domain is ignored,
+   * so credentials never reach an environment the user did not select.
+   * Optional for backwards compatibility with configs stored before domain support was added.
+   */
+  domain?: string
 }
 
 /**

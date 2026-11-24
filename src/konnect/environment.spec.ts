@@ -26,10 +26,10 @@ vi.mock('vscode', () => ({
 const ORIGINAL_ENV = process.env
 
 /**
- * Alternative domain used to exercise the override path. Built from parts
- * so no alternative environment domain appears in source.
+ * Alternative domain used to exercise the override path. A fake domain, so
+ * no real alternative environment domain appears in source.
  */
-const OVERRIDE_DOMAIN = ['konghq', 'tech'].join('.')
+const OVERRIDE_DOMAIN = 'konghq.example'
 
 describe('konnect/environment', () => {
   beforeEach(() => {

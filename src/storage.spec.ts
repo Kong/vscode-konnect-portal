@@ -373,6 +373,40 @@ describe('konnect/storage', () => {
       })
     })
 
+    describe('portal domain binding', () => {
+      it('should ignore a portal stored under a different domain', async () => {
+        const stored = JSON.stringify({
+          ...mockStoredPortalConfig,
+          domain: 'konghq.example.test',
+        })
+        mockSecretStorage.get.mockResolvedValueOnce(stored)
+
+        const portal = await storageService.getSelectedPortal()
+
+        // The selection belongs to another environment; using it would send
+        // its credentials there
+        expect(portal).toBeUndefined()
+      })
+
+      it('should return a portal stored under the active domain', async () => {
+        mockSecretStorage.get.mockResolvedValueOnce(mockSerializedPortalConfig)
+
+        const portal = await storageService.getSelectedPortal()
+
+        expect(portal).toEqual(mockStoredPortalConfig)
+      })
+
+      it('should treat a legacy config without a domain as default-domain', async () => {
+        const legacyConfig = { ...mockStoredPortalConfig }
+        delete legacyConfig.domain
+        mockSecretStorage.get.mockResolvedValueOnce(JSON.stringify(legacyConfig))
+
+        const portal = await storageService.getSelectedPortal()
+
+        expect(portal).toEqual(legacyConfig)
+      })
+    })
+
     describe('hasValidToken', () => {
       it('should return true for valid token', async () => {
         mockSecretStorage.get.mockResolvedValueOnce(storageTestTokens.valid)

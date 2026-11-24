@@ -9,6 +9,7 @@ import { showApiError } from './utils/error-handling'
 import { debug } from './utils/debug'
 import { PORTAL_SELECTION_MESSAGES } from './constants/messages'
 import { checkAndPromptMDCExtensionForPortal } from './utils/mdc-extension'
+import { getKonnectApiDomain } from './konnect/environment'
 
 /**
  * Service for managing portal selection workflow
@@ -254,6 +255,9 @@ export class PortalSelectionService {
             origin: withHttps(selectedItem.portal.canonical_domain),
             canonicalDomain: selectedItem.portal.canonical_domain,
             region: selectedItem.portal.region,
+            // Bind the selection to the active domain so a later switch to
+            // another domain never sends these credentials there
+            domain: getKonnectApiDomain(),
           }
 
           // Store the selection

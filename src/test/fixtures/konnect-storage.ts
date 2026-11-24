@@ -16,6 +16,7 @@ export const mockStoredPortalConfig: StoredPortalConfig = {
   origin: 'https://test-portal.example.com',
   canonicalDomain: 'test-portal.example.com',
   region: 'us',
+  domain: 'konghq.com',
 }
 
 export const mockStoredPortalConfig2: StoredPortalConfig = {
@@ -26,6 +27,7 @@ export const mockStoredPortalConfig2: StoredPortalConfig = {
   origin: 'https://another-portal.example.com',
   canonicalDomain: 'another-portal.example.com',
   region: 'eu',
+  domain: 'konghq.com',
 }
 
 /**

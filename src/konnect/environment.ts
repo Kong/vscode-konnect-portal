@@ -1,8 +1,11 @@
 import * as vscode from 'vscode'
 import { debug } from '../utils/debug'
 
-/** Default Konnect API domain */
-const DEFAULT_DOMAIN = 'konghq.com'
+/** Default Konnect API domain, also used to tag stored portal configs */
+export const DEFAULT_API_DOMAIN = 'konghq.com'
+
+/** Alias for readability inside this module */
+const DEFAULT_DOMAIN = DEFAULT_API_DOMAIN
 
 /**
  * Environment variable holding an alternative Konnect API domain for local
@@ -39,7 +42,9 @@ function warnAboutOverrideOnce(message: string): void {
     return
   }
   overrideWarningShown = true
-  debug.warn(message)
+  // Force the log. A silent fallback sends the developer to production while
+  // they expect the override environment.
+  debug.warn(message, undefined, true)
 }
 
 /** Captures the extension mode once at activation for override gating */

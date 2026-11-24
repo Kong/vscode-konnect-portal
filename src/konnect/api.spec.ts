@@ -259,7 +259,7 @@ describe('konnect/api', () => {
 
         // Pretend the extension runs unpackaged with a domain override active
         setExtensionMode(vscode.ExtensionMode.Development)
-        process.env.KONNECT_API_DOMAIN = ['konghq', 'tech'].join('.')
+        process.env.KONNECT_API_DOMAIN = 'konghq.example'
 
         mockFetch.mockResolvedValueOnce({
           ok: true,
@@ -269,7 +269,7 @@ describe('konnect/api', () => {
         await apiService.fetchAllPortals(testTokens.valid, 'us')
 
         expect(mockFetch).toHaveBeenCalledWith(
-          `https://us.api.${['konghq', 'tech'].join('.')}/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1`,
+          'https://us.api.konghq.example/v3/portals?page%5Bsize%5D=100&page%5Bnumber%5D=1',
           expect.objectContaining({ method: 'GET' }),
         )
 
