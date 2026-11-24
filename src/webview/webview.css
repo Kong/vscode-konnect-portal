@@ -164,12 +164,14 @@ iframe {
   flex-shrink: 0;
 }
 
-/* Device frame look for tablet and mobile viewports */
+/* Device frame look for tablet and mobile viewports. The ring is drawn with
+   box-shadow because the template iframe carries inline border: none, which
+   an inline declaration always outranks */
 .iframe-container.viewport-tablet iframe,
 .iframe-container.viewport-mobile iframe {
-  border: 1px solid var(--vscode-panel-border);
+  border: none;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 1px var(--vscode-panel-border), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 /* ========================================

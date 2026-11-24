@@ -26,11 +26,7 @@ function createVscodeStub(state: Record<string, unknown> = {}): {
 }
 
 /** Builds the DOM the viewport switcher expects, mirroring webview.html */
-function buildViewportDom(): {
-  iframe: HTMLIFrameElement
-  container: HTMLElement
-  buttons: Record<string, HTMLButtonElement>
-} {
+function buildViewportDom(): void {
   document.body.innerHTML = `
     <div class="container">
       <div class="viewport-toolbar">
@@ -45,14 +41,6 @@ function buildViewportDom(): {
       </div>
     </div>
   `
-  const iframe = document.getElementById('portal-preview') as HTMLIFrameElement
-  const container = document.getElementById('iframe-container') as HTMLElement
-  const buttons = {
-    desktop: document.getElementById('viewport-desktop') as HTMLButtonElement,
-    tablet: document.getElementById('viewport-tablet') as HTMLButtonElement,
-    mobile: document.getElementById('viewport-mobile') as HTMLButtonElement,
-  }
-  return { iframe, container, buttons }
 }
 
 describe('webview viewport switcher', () => {

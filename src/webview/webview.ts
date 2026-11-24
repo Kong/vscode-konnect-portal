@@ -583,23 +583,21 @@ function applyViewport(viewport: string): void {
   const geometry = computeFrameGeometry(viewport, container.clientWidth, container.clientHeight)
   // Explicit inline sizes plus transform: Chrome does not evaluate CSS-class
   // sizes of a cross-origin iframe inside a transformed subtree reliably.
-  // A transition is applied first so viewport switches animate, then removed:
-  // leaving it on would also animate the debounced resize refits, making the
-  // frame lag the panel edge during drags
-  frame.style.transition = 'width 0.2s ease, height 0.2s ease, transform 0.2s ease'
+  // Animate only a viewport switch; a resize refit must track the panel
+  // edge at once, so it gets transition: none
+  const switching = frame.dataset.viewport !== viewport
+  frame.dataset.viewport = viewport
+  frame.style.transition = switching
+    ? 'width 0.2s ease, height 0.2s ease, transform 0.2s ease'
+    : 'none'
   frame.style.width = `${geometry.width}px`
   frame.style.height = `${geometry.height}px`
   frame.style.transform = `scale(${geometry.scale})`
   frame.style.transformOrigin = 'top center'
-  window.setTimeout(() => {
-    frame.style.transition = ''
-  }, 220)
 }
 
 /**
  * Validates a persisted viewport key against known presets
- * The own-property check keeps inherited Object.prototype keys such as
- * 'toString' from passing validation and producing invalid geometry
  * @param value - The stored value to validate
  * @returns The value if known, else the default viewport
  */
