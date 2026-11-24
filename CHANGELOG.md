@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.16.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.15.0...v1.16.0) (2026-11-24)
+
+
+### Features
+
+* add local Konnect API domain override for development ([#123](https://github.com/Kong/vscode-konnect-portal/issues/123)) ([c01b5ae](https://github.com/Kong/vscode-konnect-portal/commit/c01b5ae53290f24e721098f0f1d42007dc8b0195))
+
 ## [1.15.0](https://github.com/Kong/vscode-konnect-portal/compare/v1.14.3...v1.15.0) (2026-11-24)
 
 
